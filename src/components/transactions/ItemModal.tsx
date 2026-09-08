@@ -122,10 +122,11 @@ export const ItemModal: React.FC<ItemModalProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {/* English Name */}
           <div>
-            <label className="block font-medium text-black dark:text-white mb-1">
+            <label htmlFor="item-name" className="block font-medium text-black dark:text-white mb-1">
               Material Name (English) <span className="text-red-500">*</span>
             </label>
             <input
+              id="item-name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -137,10 +138,11 @@ export const ItemModal: React.FC<ItemModalProps> = ({
 
           {/* Hindi Name */}
           <div>
-            <label className="block font-medium text-black dark:text-white mb-1">
+            <label htmlFor="item-local-name" className="block font-medium text-black dark:text-white mb-1">
               Material Name (हिन्दी) <span className="text-red-500">*</span>
             </label>
             <input
+              id="item-local-name"
               type="text"
               value={localName}
               onChange={(e) => setLocalName(e.target.value)}
