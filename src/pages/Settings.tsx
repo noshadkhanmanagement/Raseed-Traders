@@ -92,11 +92,23 @@ export const Settings: React.FC = () => {
     reader.readAsText(file);
   };
 
-  const handleResetData = () => {
-    if (window.confirm('क्या आप सभी डेटा रीसेट करके 25 मुख्य सामानों की साफ़ सूची वापस लाना चाहते हैं? (Reset to 25 items clean state)')) {
-      api.resetData();
-      alert('डेटा साफ़ कर दिया गया है।');
+  const [isResetting, setIsResetting] = useState(false);
+
+  const handleResetData = async () => {
+    const confirmed = window.confirm(
+      'क्या आप सभी डेटा रीसेट करके 25 मुख्य सामानों की साफ़ सूची वापस लाना चाहते हैं?\n(All transactions, stock, and rates will be reset to ₹0.00)'
+    );
+    if (!confirmed) return;
+
+    setIsResetting(true);
+    try {
+      await api.resetData();
+      alert('डेटा सफलतापूर्वक साफ़ कर दिया गया है। सभी सामान ₹0 दर व 0 स्टॉक के साथ रीसेट हो गए हैं।');
       window.location.reload();
+    } catch (err: any) {
+      alert(err.message || 'डेटा रीसेट करने में समस्या आई।');
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -375,10 +387,11 @@ export const Settings: React.FC = () => {
           <button
             type="button"
             onClick={handleResetData}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-red-300 dark:border-red-900/60 bg-red-500/10 text-red-600 dark:text-red-400 text-xs font-semibold hover:bg-red-500/20 transition-colors shadow-xs"
+            disabled={isResetting}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-red-300 dark:border-red-900/60 bg-red-500/10 text-red-600 dark:text-red-400 text-xs font-semibold hover:bg-red-500/20 transition-colors shadow-xs disabled:opacity-50"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Reset Database (डेटा रीसेट)</span>
+            <RotateCcw className={`w-3.5 h-3.5 ${isResetting ? 'animate-spin' : ''}`} />
+            <span>{isResetting ? 'Resetting Data (डेटा साफ़ हो रहा है...)' : 'Reset Database (डेटा रीसेट)'}</span>
           </button>
         </div>
       </div>

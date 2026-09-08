@@ -96,7 +96,16 @@ export const api = {
         .eq('id', id)
         .select()
         .single();
-      if (!error && data) return data;
+      if (!error && data) {
+        try {
+          localDb.updateItem(id, updates);
+        } catch {}
+        return data;
+      }
+      if (error) {
+        console.error('Supabase update item error:', error);
+        throw new Error(error.message || 'Failed to update item in database');
+      }
     }
     return localDb.updateItem(id, updates);
   },
@@ -106,12 +115,24 @@ export const api = {
       const { error } = await supabase.from('items').delete().eq('id', id);
       if (error) {
         console.error('Supabase delete item error:', error);
+        if (error.code === '23503') {
+          throw new Error('This material has recorded transactions (purchases or sales). You can edit or deactivate it instead of deleting (सामग्री का पुराना रिकॉर्ड मौजूद है, हटाने के बजाय निष्क्रिय करें)।');
+        }
+        throw new Error(error.message || 'Failed to delete item from database');
       }
     }
-    localDb.deleteItem(id);
+    try {
+      localDb.deleteItem(id);
+    } catch {}
   },
 
   async toggleItemActive(id: string): Promise<ScrapItem> {
+    if (isSupabaseConfigured && supabase) {
+      const { data: item } = await supabase.from('items').select('is_active').eq('id', id).single();
+      if (item) {
+        return this.updateItem(id, { is_active: !item.is_active });
+      }
+    }
     return localDb.toggleItemActive(id);
   },
 
@@ -424,7 +445,61 @@ export const api = {
 
   // KPIs
   async getDashboardKPIs(startDate: string, endDate: string): Promise<DashboardKPIs> {
-    return localDb.getDashboardKPIs(startDate, endDate);
+    const [purchases, sales, items, parties, expenses] = await Promise.all([
+      this.getPurchases(),
+      this.getSales(),
+      this.getItems(),
+      this.getParties(),
+      this.getExpenses(),
+    ]);
+
+    const today = new Date().toISOString().split('T')[0];
+
+    const todayPurchases = purchases.filter((p) => p.purchase_date === today && p.status === 'FINAL');
+    const todaySales = sales.filter((s) => s.sale_date === today && s.status === 'FINAL');
+
+    const todayPurchaseTotal = todayPurchases.reduce((sum, p) => sum + p.total_amount, 0);
+    const todaySalesTotal = todaySales.reduce((sum, s) => sum + s.total_amount, 0);
+    const todayProfitTotal = todaySales.reduce((sum, s) => sum + (s.total_profit || 0), 0);
+
+    const periodPurchases = purchases.filter((p) => p.purchase_date >= startDate && p.purchase_date <= endDate && p.status === 'FINAL');
+    const periodSales = sales.filter((s) => s.sale_date >= startDate && s.sale_date <= endDate && s.status === 'FINAL');
+    const periodExpenses = expenses.filter((e) => e.expense_date >= startDate && e.expense_date <= endDate);
+
+    const periodPurchaseTotal = periodPurchases.reduce((sum, p) => sum + p.total_amount, 0);
+    const periodSalesTotal = periodSales.reduce((sum, s) => sum + s.total_amount, 0);
+    const periodProfitTotal = periodSales.reduce((sum, s) => sum + (s.total_profit || 0), 0);
+    const periodExpensesTotal = periodExpenses.reduce((sum, e) => sum + e.amount, 0);
+
+    const currentStockValue = items
+      .filter((it) => it.is_active)
+      .reduce((sum, it) => sum + Math.max(0, it.current_stock) * (it.average_cost || 0), 0);
+
+    let pendingReceivables = 0;
+    let pendingPayables = 0;
+
+    parties
+      .filter((p) => p.is_active)
+      .forEach((p) => {
+        if (p.current_balance > 0) {
+          pendingReceivables += p.current_balance;
+        } else if (p.current_balance < 0) {
+          pendingPayables += Math.abs(p.current_balance);
+        }
+      });
+
+    return {
+      today_purchase: todayPurchaseTotal,
+      today_sales: todaySalesTotal,
+      today_profit: todayProfitTotal,
+      period_purchase: periodPurchaseTotal,
+      period_sales: periodSalesTotal,
+      period_profit: periodProfitTotal,
+      period_expenses: periodExpensesTotal,
+      current_stock_value: Number(currentStockValue.toFixed(2)),
+      pending_receivables: Number(pendingReceivables.toFixed(2)),
+      pending_payables: Number(pendingPayables.toFixed(2)),
+    };
   },
 
   // Search
@@ -434,11 +509,144 @@ export const api = {
 
   // Analytics
   async getDateRangeAnalytics(startDate: string, endDate: string) {
-    return localDb.getDateRangeAnalytics(startDate, endDate);
+    const [purchases, sales, items] = await Promise.all([
+      this.getPurchases(),
+      this.getSales(),
+      this.getItems(),
+    ]);
+
+    const filteredPurchases = purchases.filter(
+      (p) => p.purchase_date >= startDate && p.purchase_date <= endDate && p.status === 'FINAL'
+    );
+    const filteredSales = sales.filter(
+      (s) => s.sale_date >= startDate && s.sale_date <= endDate && s.status === 'FINAL'
+    );
+
+    const totalPurchaseAmount = filteredPurchases.reduce((sum, p) => sum + p.total_amount, 0);
+    const totalPurchaseWeight = filteredPurchases.reduce((sum, p) => sum + (p.total_weight || 0), 0);
+    const totalSaleAmount = filteredSales.reduce((sum, s) => sum + s.total_amount, 0);
+    const totalSaleWeight = filteredSales.reduce((sum, s) => sum + (s.total_weight || 0), 0);
+    const netBalance = totalSaleAmount - totalPurchaseAmount;
+
+    const itemMap: Record<
+      string,
+      {
+        itemId: string;
+        itemName: string;
+        localName: string;
+        buyQty: number;
+        buyAmount: number;
+        sellQty: number;
+        sellAmount: number;
+        unit: string;
+      }
+    > = {};
+
+    filteredPurchases.forEach((p) => {
+      p.items?.forEach((it) => {
+        if (!itemMap[it.item_id]) {
+          const master = items.find((m) => m.id === it.item_id);
+          itemMap[it.item_id] = {
+            itemId: it.item_id,
+            itemName: it.item_name || master?.name || 'Item',
+            localName: master?.local_name || '',
+            buyQty: 0,
+            buyAmount: 0,
+            sellQty: 0,
+            sellAmount: 0,
+            unit: it.unit || 'KG',
+          };
+        }
+        itemMap[it.item_id].buyQty += it.quantity;
+        itemMap[it.item_id].buyAmount += it.amount;
+      });
+    });
+
+    filteredSales.forEach((s) => {
+      s.items?.forEach((it) => {
+        if (!itemMap[it.item_id]) {
+          const master = items.find((m) => m.id === it.item_id);
+          itemMap[it.item_id] = {
+            itemId: it.item_id,
+            itemName: it.item_name || master?.name || 'Item',
+            localName: master?.local_name || '',
+            buyQty: 0,
+            buyAmount: 0,
+            sellQty: 0,
+            sellAmount: 0,
+            unit: it.unit || 'KG',
+          };
+        }
+        itemMap[it.item_id].sellQty += it.quantity;
+        itemMap[it.item_id].sellAmount += it.amount;
+      });
+    });
+
+    return {
+      startDate,
+      endDate,
+      totalPurchasesCount: filteredPurchases.length,
+      totalSalesCount: filteredSales.length,
+      totalPurchaseAmount: Number(totalPurchaseAmount.toFixed(2)),
+      totalPurchaseWeight: Number(totalPurchaseWeight.toFixed(2)),
+      totalSaleAmount: Number(totalSaleAmount.toFixed(2)),
+      totalSaleWeight: Number(totalSaleWeight.toFixed(2)),
+      netBalance: Number(netBalance.toFixed(2)),
+      purchases: filteredPurchases,
+      sales: filteredSales,
+      itemBreakdown: Object.values(itemMap),
+    };
   },
 
   async getMonthlyAnalytics(year?: number) {
-    return localDb.getMonthlyAnalytics(year);
+    const currentYear = year || new Date().getFullYear();
+    const [purchases, sales] = await Promise.all([
+      this.getPurchases(),
+      this.getSales(),
+    ]);
+
+    const months = [
+      { num: '01', name: 'January', hindi: 'जनवरी' },
+      { num: '02', name: 'February', hindi: 'फ़रवरी' },
+      { num: '03', name: 'March', hindi: 'मार्च' },
+      { num: '04', name: 'April', hindi: 'अप्रैल' },
+      { num: '05', name: 'May', hindi: 'मई' },
+      { num: '06', name: 'June', hindi: 'जून' },
+      { num: '07', name: 'July', hindi: 'जुलाई' },
+      { num: '08', name: 'August', hindi: 'अगस्त' },
+      { num: '09', name: 'September', hindi: 'सितंबर' },
+      { num: '10', name: 'October', hindi: 'अक्टूबर' },
+      { num: '11', name: 'November', hindi: 'नवंबर' },
+      { num: '12', name: 'December', hindi: 'दिसंबर' },
+    ];
+
+    return months.map((m) => {
+      const prefix = `${currentYear}-${m.num}`;
+      const monthPurchases = purchases.filter(
+        (p) => p.purchase_date.startsWith(prefix) && p.status === 'FINAL'
+      );
+      const monthSales = sales.filter(
+        (s) => s.sale_date.startsWith(prefix) && s.status === 'FINAL'
+      );
+
+      const purchaseAmount = monthPurchases.reduce((acc, p) => acc + p.total_amount, 0);
+      const purchaseWeight = monthPurchases.reduce((acc, p) => acc + (p.total_weight || 0), 0);
+      const saleAmount = monthSales.reduce((acc, s) => acc + s.total_amount, 0);
+      const saleWeight = monthSales.reduce((acc, s) => acc + (s.total_weight || 0), 0);
+
+      return {
+        monthKey: prefix,
+        monthName: m.name,
+        monthHindi: m.hindi,
+        purchaseAmount: Number(purchaseAmount.toFixed(2)),
+        purchaseWeight: Number(purchaseWeight.toFixed(2)),
+        purchaseCount: monthPurchases.length,
+        saleAmount: Number(saleAmount.toFixed(2)),
+        saleWeight: Number(saleWeight.toFixed(2)),
+        saleCount: monthSales.length,
+        netDifference: Number((saleAmount - purchaseAmount).toFixed(2)),
+      };
+    });
   },
 
   // Backup & Reset
@@ -450,7 +658,37 @@ export const api = {
     localDb.importData(data);
   },
 
-  resetData() {
-    return localDb.resetToFreshData();
+  async resetData(): Promise<void> {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('sale_items').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from('purchase_items').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from('stock_cost_history').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from('inventory_ledger').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from('stock_adjustments').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from('payments').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from('expenses').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from('sales').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from('purchases').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+
+        // Reset stock and rates on all items to 0
+        await supabase.from('items').update({
+          current_stock: 0,
+          average_cost: 0,
+          default_purchase_rate: 0,
+          default_sale_rate: 0,
+          updated_at: new Date().toISOString(),
+        }).neq('id', '00000000-0000-0000-0000-000000000000');
+
+        // Reset party balances to 0
+        await supabase.from('parties').update({
+          current_balance: 0,
+          updated_at: new Date().toISOString(),
+        }).neq('id', '00000000-0000-0000-0000-000000000000');
+      } catch (err) {
+        console.error('Supabase resetData error:', err);
+      }
+    }
+    localDb.resetToFreshData();
   },
 };

@@ -254,7 +254,25 @@ class LocalEngine {
 
   public updateItem(id: string, updates: Partial<ScrapItem>): ScrapItem {
     const idx = this.data.items.findIndex((item) => item.id === id);
-    if (idx === -1) throw new Error('Item not found');
+    if (idx === -1) {
+      const fallbackItem: ScrapItem = {
+        id,
+        business_id: this.data.business.id,
+        name: (updates.name || 'ITEM').toUpperCase(),
+        local_name: updates.local_name || '',
+        default_unit: updates.default_unit || 'KG',
+        default_purchase_rate: Number(updates.default_purchase_rate || 0),
+        default_sale_rate: Number(updates.default_sale_rate || 0),
+        current_stock: Number(updates.current_stock || 0),
+        average_cost: Number(updates.average_cost || 0),
+        is_active: updates.is_active ?? true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      this.data.items.push(fallbackItem);
+      this.saveToStorage();
+      return fallbackItem;
+    }
     this.data.items[idx] = {
       ...this.data.items[idx],
       ...updates,
@@ -266,14 +284,17 @@ class LocalEngine {
 
   public deleteItem(id: string): void {
     const idx = this.data.items.findIndex((item) => item.id === id);
-    if (idx === -1) throw new Error('Item not found');
-    this.data.items.splice(idx, 1);
-    this.saveToStorage();
+    if (idx !== -1) {
+      this.data.items.splice(idx, 1);
+      this.saveToStorage();
+    }
   }
 
   public toggleItemActive(id: string): ScrapItem {
     const item = this.getItemById(id);
-    if (!item) throw new Error('Item not found');
+    if (!item) {
+      return this.updateItem(id, { is_active: false });
+    }
     return this.updateItem(id, { is_active: !item.is_active });
   }
 
@@ -651,8 +672,10 @@ class LocalEngine {
     reason: string;
     notes?: string;
   }): StockAdjustment {
-    const item = this.getItemById(payload.item_id);
-    if (!item) throw new Error('Item not found');
+    let item = this.getItemById(payload.item_id);
+    if (!item) {
+      item = this.updateItem(payload.item_id, { current_stock: 0 });
+    }
 
     const now = new Date().toISOString();
     const todayStr = now.split('T')[0];
