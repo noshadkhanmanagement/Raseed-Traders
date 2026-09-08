@@ -20,7 +20,15 @@ export const MobileTabBar: React.FC = () => {
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-0 right-0 z-40 px-3 pointer-events-none select-none">
+    <>
+      {/* iOS Bottom Ambient Fade Up (down below nav bar pill like exact iPhone) */}
+      <div
+        className="md:hidden fixed bottom-0 left-0 right-0 z-30 pointer-events-none h-28 bg-gradient-to-t from-white via-white/85 to-transparent dark:from-black dark:via-black/85 dark:to-transparent select-none"
+        aria-hidden="true"
+      />
+
+      {/* iOS Floating Pill Navigation Bar */}
+      <nav className="md:hidden fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-0 right-0 z-40 px-3 pointer-events-none select-none">
       <div className="pointer-events-auto max-w-md mx-auto h-[62px] p-1.5 rounded-full bg-white/85 dark:bg-zinc-900/85 backdrop-blur-2xl border border-zinc-200/90 dark:border-zinc-800/90 shadow-[0_12px_36px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.6),0_2px_8px_rgba(0,0,0,0.3)] flex items-center justify-between gap-1 ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -58,5 +66,6 @@ export const MobileTabBar: React.FC = () => {
         })}
       </div>
     </nav>
+  </>
   );
 };

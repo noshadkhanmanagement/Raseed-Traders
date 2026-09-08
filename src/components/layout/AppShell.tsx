@@ -81,9 +81,15 @@ export const AppShell: React.FC = () => {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col min-w-0 pb-24 md:pb-0">
+      <main className="flex-1 flex flex-col min-w-0 pb-24 md:pb-0 relative">
+        {/* iOS Top Ambient Fade Overlay (top above top screen like exact iPhone) */}
+        <div
+          className="md:hidden fixed top-0 left-0 right-0 z-40 pointer-events-none h-[max(0.75rem,env(safe-area-inset-top,0px))] bg-gradient-to-b from-white/90 to-transparent dark:from-black/90 select-none"
+          aria-hidden="true"
+        />
+
         {/* Mobile Sticky Top Header */}
-        <header className="md:hidden sticky top-0 z-30 bg-white/95 dark:bg-black/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 px-4 py-2.5 flex items-center justify-between shadow-xs">
+        <header className="md:hidden sticky top-0 z-30 bg-white/85 dark:bg-black/85 backdrop-blur-2xl border-b border-zinc-200/80 dark:border-zinc-800/80 px-4 pt-[max(0.625rem,env(safe-area-inset-top,0px))] pb-2.5 flex items-center justify-between shadow-xs">
           <div className="flex items-center space-x-2.5">
             <img
               src={logoSrc}
@@ -138,6 +144,12 @@ export const AppShell: React.FC = () => {
             </button>
           </div>
         </header>
+
+        {/* iOS Header Feather Fade Down */}
+        <div
+          className="md:hidden sticky top-[49px] z-20 h-4 -mb-4 pointer-events-none bg-gradient-to-b from-white/90 via-white/40 to-transparent dark:from-black/90 dark:via-black/40 dark:to-transparent select-none"
+          aria-hidden="true"
+        />
 
         {/* Page Inner Viewport */}
         <div className="flex-1 p-4 md:p-6 max-w-7xl w-full mx-auto">
