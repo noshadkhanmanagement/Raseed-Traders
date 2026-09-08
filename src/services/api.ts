@@ -742,32 +742,36 @@ export const api = {
   async resetData(): Promise<void> {
     if (isSupabaseConfigured && supabase) {
       try {
-        await supabase.from('sale_items').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-        await supabase.from('purchase_items').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-        await supabase.from('stock_cost_history').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-        await supabase.from('inventory_ledger').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-        await supabase.from('stock_adjustments').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-        await supabase.from('payments').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-        await supabase.from('expenses').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-        await supabase.from('sales').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-        await supabase.from('purchases').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        // Step 1: Delete all child transaction items and ledgers in parallel
+        await Promise.all([
+          supabase.from('sale_items').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+          supabase.from('purchase_items').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+          supabase.from('stock_cost_history').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+          supabase.from('inventory_ledger').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+          supabase.from('stock_adjustments').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+          supabase.from('payments').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+          supabase.from('expenses').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+        ]);
 
-        // Reset stock and rates on all items to 0
-        await supabase.from('items').update({
-          current_stock: 0,
-          average_cost: 0,
-          default_purchase_rate: 0,
-          default_sale_rate: 0,
-          updated_at: new Date().toISOString(),
-        }).neq('id', '00000000-0000-0000-0000-000000000000');
-
-        // Reset party balances to 0
-        await supabase.from('parties').update({
-          current_balance: 0,
-          updated_at: new Date().toISOString(),
-        }).neq('id', '00000000-0000-0000-0000-000000000000');
+        // Step 2: Delete parent sales & purchases, and reset items & parties in parallel
+        await Promise.all([
+          supabase.from('sales').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+          supabase.from('purchases').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+          supabase.from('items').update({
+            current_stock: 0,
+            average_cost: 0,
+            default_purchase_rate: 0,
+            default_sale_rate: 0,
+            updated_at: new Date().toISOString(),
+          }).neq('id', '00000000-0000-0000-0000-000000000000'),
+          supabase.from('parties').update({
+            current_balance: 0,
+            updated_at: new Date().toISOString(),
+          }).neq('id', '00000000-0000-0000-0000-000000000000'),
+        ]);
       } catch (err) {
         console.error('Supabase resetData error:', err);
+        throw err;
       }
     }
     localDb.resetToFreshData();
