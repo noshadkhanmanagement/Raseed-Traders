@@ -59,7 +59,7 @@ A production-grade, ultra-responsive scrap material management system engineered
 14. BATTERY — बैटरी (KG)
 15. REGULATOR — रेगुलेटर (PIECE)
 16. STEEL — स्टील (KG)
-17. PALIYA — पालिया (KG)
+17. PALIYA — पलिया (KG)
 18. TUBE — ट्यूब (KG)
 19. TYRE — टायर (PIECE)
 20. 2 TYRE — 2 टायर (PIECE)

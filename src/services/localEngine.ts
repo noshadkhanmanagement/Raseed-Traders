@@ -55,7 +55,7 @@ export const INITIAL_SCRAP_ITEMS: Omit<ScrapItem, 'id' | 'business_id' | 'create
   { name: 'BATTERY', local_name: 'बैटरी', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
   { name: 'REGULATOR', local_name: 'रेगुलेटर', default_unit: 'PIECE', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
   { name: 'STEEL', local_name: 'स्टील', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
-  { name: 'PALIYA', local_name: 'पालिया', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
+  { name: 'PALIYA', local_name: 'पलिया', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
   { name: 'TUBE', local_name: 'ट्यूब', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
   { name: 'TYRE', local_name: 'टायर', default_unit: 'PIECE', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
   { name: '2 TYRE', local_name: '2 टायर', default_unit: 'PIECE', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
@@ -139,6 +139,12 @@ class LocalEngine {
           parsed.business.name = 'Raseed Traders';
           parsed.business.phone = '+91 744 061 9649';
           parsed.business.address = 'Behind Masjid, Bus Stand, Lakhnadon 480886';
+          // Ensure PALIYA is correctly spelled as पलिया
+          parsed.items.forEach((it: ScrapItem) => {
+            if (it.name === 'PALIYA' && it.local_name === 'पालिया') {
+              it.local_name = 'पलिया';
+            }
+          });
           return parsed;
         }
       }
