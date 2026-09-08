@@ -2,6 +2,8 @@
 
 A production-grade, ultra-responsive scrap material management system engineered for Raseed Traders. The system handles daily scrap purchasing, stock inventory tracking with weighted average cost valuation, sales with stock validation, party ledgers, and custom date range calculation.
 
+**Live Production URL**: [https://raseed-traders-management.vercel.app/](https://raseed-traders-management.vercel.app/)
+
 ## Business Profile
 - Business Name: Raseed Traders
 - Address: Behind Masjid, Bus Stand, Lakhnadon 480886
