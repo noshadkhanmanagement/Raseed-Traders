@@ -2,7 +2,7 @@ const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 
-const APP_URL = 'http://localhost:5173';
+const APP_URL = (process.env.APP_URL || 'http://localhost:5173').trim();
 const APP_PASSWORD = process.env.VITE_APP_PASSWORD || 'noshad@00';
 
 async function testRateHistoryAndDashboard() {
