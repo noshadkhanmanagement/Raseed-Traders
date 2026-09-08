@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, SlidersHorizontal } from 'lucide-react';
+import { Search, Plus, SlidersHorizontal, Trash2, Edit3, Tag } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { StockAdjustmentModal } from '../components/transactions/StockAdjustmentModal';
 import { ItemModal } from '../components/transactions/ItemModal';
 import { api } from '../services/api';
 import { ScrapItem } from '../types';
+import { formatCurrency } from '../utils/formatters';
 
 export const Inventory: React.FC = () => {
   const [items, setItems] = useState<ScrapItem[]>([]);
@@ -14,6 +15,7 @@ export const Inventory: React.FC = () => {
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
   const [selectedItemToAdjust, setSelectedItemToAdjust] = useState<ScrapItem | null>(null);
+  const [selectedItemToEdit, setSelectedItemToEdit] = useState<ScrapItem | null>(null);
 
   useEffect(() => {
     loadInventory();
@@ -49,11 +51,35 @@ export const Inventory: React.FC = () => {
     setIsAdjustModalOpen(true);
   };
 
+  const handleEditClick = (item: ScrapItem) => {
+    setSelectedItemToEdit(item);
+    setIsItemModalOpen(true);
+  };
+
+  const handleAddNewClick = () => {
+    setSelectedItemToEdit(null);
+    setIsItemModalOpen(true);
+  };
+
+  const handleDeleteClick = async (item: ScrapItem) => {
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete "${item.name} — ${item.local_name}"?\n\nक्या आप वाकई इस सामग्री को हटाना चाहते हैं?`
+    );
+    if (!confirmDelete) return;
+
+    try {
+      await api.deleteItem(item.id);
+      await loadInventory();
+    } catch (err: any) {
+      alert(err.message || 'सामान हटाने में समस्या आई (Error deleting item).');
+    }
+  };
+
   return (
     <div className="space-y-6 page-enter">
       <PageHeader
         title="Kitna Stock Hai (स्टॉक / माल)"
-        subtitle="Current scrap inventory in godown (सभी 25 सामग्रियों की कुल मात्रा)"
+        subtitle="Current scrap inventory & spot pricing (सामग्रियों का स्टॉक व चालू खरीद दर)"
         actions={
           <div className="flex items-center gap-2">
             <button
@@ -66,7 +92,7 @@ export const Inventory: React.FC = () => {
             </button>
             <button
               type="button"
-              onClick={() => setIsItemModalOpen(true)}
+              onClick={handleAddNewClick}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black dark:bg-white text-white dark:text-black text-xs font-semibold hover:opacity-90 btn-press shadow-xs"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -83,9 +109,9 @@ export const Inventory: React.FC = () => {
             Total Available Stock (कुल उपलब्ध स्टॉक)
           </div>
           <div className="mt-2 text-3xl font-extrabold text-black dark:text-white">
-            {totalStockQuantity} <span className="text-lg font-bold text-zinc-500">KG</span>
+            {totalStockQuantity.toLocaleString('en-IN')} <span className="text-lg font-bold text-zinc-500">KG</span>
           </div>
-          <div className="mt-1 text-xs text-zinc-500">Across all active scrap materials</div>
+          <div className="mt-1 text-xs text-zinc-500">Across all active scrap materials in godown</div>
         </div>
 
         <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 shadow-xs">
@@ -118,23 +144,31 @@ export const Inventory: React.FC = () => {
             <thead>
               <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100/70 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400">
                 <th className="px-5 py-3 font-semibold">#</th>
-                <th className="px-5 py-3 font-semibold">Material Name (सामग्री का नाम)</th>
+                <th className="px-5 py-3 font-semibold">Material (सामग्री का नाम)</th>
+                <th className="px-5 py-3 font-semibold text-right">Spot Purchase Rate (खरीद दर ₹)</th>
                 <th className="px-5 py-3 font-semibold text-right">Available Stock (स्टॉक)</th>
                 <th className="px-5 py-3 font-semibold text-center">Unit (इकाई)</th>
                 <th className="px-5 py-3 font-semibold text-center">Status</th>
-                <th className="px-5 py-3 font-semibold text-right">Action</th>
+                <th className="px-5 py-3 font-semibold text-right">Actions (कार्य)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800 text-black dark:text-white">
-              {filteredItems.length === 0 ? (
+              {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-10 text-center text-zinc-500 dark:text-zinc-400">
+                  <td colSpan={7} className="px-5 py-10 text-center text-zinc-500 dark:text-zinc-400">
+                    Loading inventory materials...
+                  </td>
+                </tr>
+              ) : filteredItems.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-5 py-10 text-center text-zinc-500 dark:text-zinc-400">
                     No matching scrap materials found.
                   </td>
                 </tr>
               ) : (
                 filteredItems.map((it, idx) => {
                   const hasStock = it.current_stock > 0;
+                  const spotRate = it.default_purchase_rate || 0;
                   return (
                     <tr key={it.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition-colors">
                       <td className="px-5 py-3.5 font-mono text-zinc-400">{idx + 1}</td>
@@ -142,8 +176,18 @@ export const Inventory: React.FC = () => {
                         <div className="font-bold text-sm text-black dark:text-white">{it.name}</div>
                         <div className="text-xs text-zinc-500 dark:text-zinc-400">{it.local_name}</div>
                       </td>
+                      <td className="px-5 py-3.5 text-right font-mono">
+                        {spotRate > 0 ? (
+                          <div className="inline-flex items-center gap-1 font-bold text-xs text-black dark:text-white">
+                            <span>{formatCurrency(spotRate)}</span>
+                            <span className="text-[10px] text-zinc-400">/{it.default_unit}</span>
+                          </div>
+                        ) : (
+                          <span className="text-zinc-400 text-[11px] italic">Not set</span>
+                        )}
+                      </td>
                       <td className="px-5 py-3.5 text-right font-extrabold text-base">
-                        {it.current_stock}
+                        {it.current_stock.toLocaleString('en-IN')}
                       </td>
                       <td className="px-5 py-3.5 text-center font-medium text-zinc-500 dark:text-zinc-400">
                         {it.default_unit}
@@ -160,13 +204,32 @@ export const Inventory: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-5 py-3.5 text-right">
-                        <button
-                          type="button"
-                          onClick={() => handleAdjustClick(it)}
-                          className="px-2.5 py-1 text-xs font-semibold rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                        >
-                          Adjust (अपडेट)
-                        </button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleAdjustClick(it)}
+                            className="px-2 py-1 text-xs font-semibold rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                            title="Adjust Stock (स्टॉक बदलें)"
+                          >
+                            Adjust
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleEditClick(it)}
+                            className="p-1.5 text-xs font-semibold rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                            title="Edit Material & Rates (सामग्री व दर बदलें)"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteClick(it)}
+                            className="p-1.5 text-xs font-semibold rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-500 hover:text-red-600 hover:border-red-300 dark:hover:border-red-800 transition-colors"
+                            title="Delete Material (सामग्री हटाएं)"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -188,10 +251,14 @@ export const Inventory: React.FC = () => {
         onSuccess={loadInventory}
       />
 
-      {/* Add Item Modal */}
+      {/* Add / Edit Item Modal */}
       <ItemModal
         isOpen={isItemModalOpen}
-        onClose={() => setIsItemModalOpen(false)}
+        onClose={() => {
+          setIsItemModalOpen(false);
+          setSelectedItemToEdit(null);
+        }}
+        editItem={selectedItemToEdit}
         onSuccess={loadInventory}
       />
     </div>

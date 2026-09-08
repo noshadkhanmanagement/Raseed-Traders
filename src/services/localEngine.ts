@@ -1,6 +1,7 @@
 import {
   Business,
   ScrapItem,
+  ScrapUnit,
   Party,
   PartyType,
   Purchase,
@@ -220,14 +221,23 @@ class LocalEngine {
     return this.data.items.find((item) => item.id === id);
   }
 
-  public createItem(itemData: Omit<ScrapItem, 'id' | 'business_id' | 'created_at' | 'updated_at' | 'current_stock' | 'average_cost'>): ScrapItem {
+  public createItem(itemData: Partial<ScrapItem> & { name: string; local_name: string; default_unit: ScrapUnit }): ScrapItem {
     const now = new Date().toISOString();
+    const purchaseRate = Number(itemData.default_purchase_rate || 0);
+    const saleRate = Number(itemData.default_sale_rate || 0);
+    const initialStock = Number(itemData.current_stock || 0);
     const newItem: ScrapItem = {
-      ...itemData,
       id: `item-${Date.now()}`,
       business_id: this.data.business.id,
-      current_stock: 0,
-      average_cost: 0,
+      name: itemData.name,
+      local_name: itemData.local_name,
+      code: itemData.code,
+      default_unit: itemData.default_unit,
+      default_purchase_rate: purchaseRate,
+      default_sale_rate: saleRate,
+      current_stock: initialStock,
+      average_cost: purchaseRate,
+      is_active: itemData.is_active ?? true,
       created_at: now,
       updated_at: now,
     };
@@ -246,6 +256,13 @@ class LocalEngine {
     };
     this.saveToStorage();
     return this.data.items[idx];
+  }
+
+  public deleteItem(id: string): void {
+    const idx = this.data.items.findIndex((item) => item.id === id);
+    if (idx === -1) throw new Error('Item not found');
+    this.data.items.splice(idx, 1);
+    this.saveToStorage();
   }
 
   public toggleItemActive(id: string): ScrapItem {

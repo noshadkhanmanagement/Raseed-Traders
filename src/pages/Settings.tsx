@@ -211,7 +211,7 @@ export const Settings: React.FC = () => {
           />
           <div>
             <div className="text-xs font-bold text-black dark:text-white">
-              Active Logo: {resolvedTheme === 'dark' ? 'logodarkmode.png' : 'logolightmode.png'}
+              Active Logo: {resolvedTheme === 'dark' ? 'logodarkmode.svg' : 'logolightmode.svg'}
             </div>
             <div className="text-[11px] text-zinc-500">
               Changes dynamically based on light/dark mode

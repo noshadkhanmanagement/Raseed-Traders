@@ -3,6 +3,7 @@ import { localDb } from './localEngine';
 import {
   Business,
   ScrapItem,
+  ScrapUnit,
   Party,
   PartyType,
   Purchase,
@@ -64,12 +65,22 @@ export const api = {
     return localDb.getItems(includeInactive);
   },
 
-  async createItem(item: Omit<ScrapItem, 'id' | 'business_id' | 'created_at' | 'updated_at' | 'current_stock' | 'average_cost'>): Promise<ScrapItem> {
+  async createItem(item: Partial<ScrapItem> & { name: string; local_name: string; default_unit: ScrapUnit }): Promise<ScrapItem> {
     if (isSupabaseConfigured && supabase) {
       const biz = await this.getBusiness();
+      const purchaseRate = Number(item.default_purchase_rate || 0);
+      const initialStock = Number(item.current_stock || 0);
       const { data, error } = await supabase
         .from('items')
-        .insert([{ ...item, business_id: biz.id, current_stock: 0, average_cost: 0 }])
+        .insert([{
+          ...item,
+          business_id: biz.id,
+          default_purchase_rate: purchaseRate,
+          default_sale_rate: Number(item.default_sale_rate || 0),
+          current_stock: initialStock,
+          average_cost: purchaseRate,
+          is_active: item.is_active ?? true,
+        }])
         .select()
         .single();
       if (!error && data) return data;
@@ -88,6 +99,16 @@ export const api = {
       if (!error && data) return data;
     }
     return localDb.updateItem(id, updates);
+  },
+
+  async deleteItem(id: string): Promise<void> {
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('items').delete().eq('id', id);
+      if (error) {
+        console.error('Supabase delete item error:', error);
+      }
+    }
+    localDb.deleteItem(id);
   },
 
   async toggleItemActive(id: string): Promise<ScrapItem> {

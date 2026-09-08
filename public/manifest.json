@@ -4,8 +4,8 @@
   "description": "Raseed Traders daily scrap purchasing, stock inventory, and sales management system",
   "icons": [
     {
-      "src": "/favicon.png",
-      "type": "image/png",
+      "src": "/logolightmode.svg",
+      "type": "image/svg+xml",
       "sizes": "192x192 512x512"
     }
   ],

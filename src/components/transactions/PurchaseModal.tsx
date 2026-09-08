@@ -59,14 +59,15 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
         setSelectedPartyId(allParties[0].id);
       }
 
-      // Initialize with one line with empty rate
+      // Initialize with one line with latest spot rate if available
       if (allItems.length > 0 && lines.length === 0) {
+        const first = allItems[0];
         setLines([
           {
-            item_id: allItems[0].id,
+            item_id: first.id,
             quantity: '',
-            unit: allItems[0].default_unit,
-            rate: '', // User will enter themselves
+            unit: first.default_unit,
+            rate: first.default_purchase_rate > 0 ? String(first.default_purchase_rate) : '',
             amount: 0,
           },
         ]);
@@ -83,11 +84,14 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
     setLines((prev) => {
       const updated = [...prev];
       const qty = parseFloat(updated[index].quantity) || 0;
-      const rate = parseFloat(updated[index].rate) || 0;
+      // Pre-fill latest spot rate if user hasn't typed an explicit rate yet or if switching item
+      const initialRate = item.default_purchase_rate > 0 ? String(item.default_purchase_rate) : updated[index].rate;
+      const rate = parseFloat(initialRate) || 0;
       updated[index] = {
         ...updated[index],
         item_id: item.id,
         unit: item.default_unit,
+        rate: initialRate,
         amount: Number((qty * rate).toFixed(2)),
       };
       return updated;
@@ -131,7 +135,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
         item_id: firstItem.id,
         quantity: '',
         unit: firstItem.default_unit,
-        rate: '', // User will enter
+        rate: firstItem.default_purchase_rate > 0 ? String(firstItem.default_purchase_rate) : '',
         amount: 0,
       },
     ]);
@@ -260,7 +264,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
 
         {/* Lines */}
         <div>
-          <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center justify-between mb-1">
             <label className="text-xs font-semibold text-black dark:text-white">
               Materials Purchased (खरीदा गया सामान)
             </label>
@@ -271,6 +275,9 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
             >
               <Plus className="w-3.5 h-3.5 mr-1" /> Add Another Item (और सामान जोड़ें)
             </button>
+          </div>
+          <div className="text-[10px] text-zinc-500 dark:text-zinc-400 mb-2">
+            💡 स्क्रैप के दाम हर बार अलग हो सकते हैं — इस समय की सटीक खरीद दर (Spot Rate ₹) दर्ज करें।
           </div>
 
           <div className="space-y-2 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 bg-zinc-50 dark:bg-zinc-900/50">

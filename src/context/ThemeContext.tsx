@@ -68,7 +68,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch {}
   };
 
-  const logoSrc = resolvedTheme === 'dark' ? '/logodarkmode.png' : '/logolightmode.png';
+  const logoSrc = resolvedTheme === 'dark' ? '/logodarkmode.svg' : '/logolightmode.svg';
 
   return (
     <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme, logoSrc }}>
