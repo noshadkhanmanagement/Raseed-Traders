@@ -1,9 +1,25 @@
 const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
-
 const APP_URL = (process.env.APP_URL || 'http://localhost:5173').trim();
-const APP_PASSWORD = process.env.VITE_APP_PASSWORD || 'noshad@00';
+let APP_PASSWORD = (process.env.VITE_APP_PASSWORD || '').trim();
+if (!APP_PASSWORD) {
+  const envCandidates = ['.env.local', '.env.production', '.env'];
+  for (const file of envCandidates) {
+    const fullPath = path.resolve(__dirname, '..', file);
+    if (fs.existsSync(fullPath)) {
+      const content = fs.readFileSync(fullPath, 'utf8');
+      for (const line of content.split('\n')) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('VITE_APP_PASSWORD=')) {
+          APP_PASSWORD = trimmed.slice('VITE_APP_PASSWORD='.length).trim();
+          break;
+        }
+      }
+      if (APP_PASSWORD) break;
+    }
+  }
+}
 
 async function testRateHistoryAndDashboard() {
   console.log('--- STARTING RATE HISTORY & DASHBOARD 25 ITEMS TEST ---');
