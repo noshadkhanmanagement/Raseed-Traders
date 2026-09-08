@@ -81,7 +81,7 @@ export const AppShell: React.FC = () => {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col min-w-0 pb-16 md:pb-0">
+      <main className="flex-1 flex flex-col min-w-0 pb-24 md:pb-0">
         {/* Mobile Sticky Top Header */}
         <header className="md:hidden sticky top-0 z-30 bg-white/95 dark:bg-black/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 px-4 py-2.5 flex items-center justify-between shadow-xs">
           <div className="flex items-center space-x-2.5">
