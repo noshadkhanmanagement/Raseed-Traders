@@ -7,7 +7,7 @@ interface AuthContextType {
 }
 
 const AUTH_STORAGE_KEY = 'raseed_traders_auth_session';
-const APP_PASSWORD = import.meta.env.VITE_APP_PASSWORD || 'noshad@raseed';
+const APP_PASSWORD = import.meta.env.VITE_APP_PASSWORD || 'noshad@00';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 

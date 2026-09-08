@@ -84,13 +84,13 @@ async function runFullVerification() {
     }
 
     // 1.4 Correct Password Access (50 pts)
-    await page.locator('#login-password').fill('noshad@raseed');
+    await page.locator('#login-password').fill('noshad@00');
     await page.locator('button[type="submit"]:has-text("Login")').click();
     await page.waitForTimeout(500);
 
     const hasDashboard = (await page.locator('text=Roz Kitna Khareeda').count()) > 0;
     if (hasDashboard) {
-      recordPass('Authorized Login Entry', 50, 'Successfully authenticated with "noshad@raseed" into Dashboard');
+      recordPass('Authorized Login Entry', 50, 'Successfully authenticated with "noshad@00" into Dashboard');
     } else {
       recordFail('Authorized Login Entry', 50, 'Dashboard not visible after entering correct password');
     }
