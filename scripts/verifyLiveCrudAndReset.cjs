@@ -71,7 +71,7 @@ async function runLiveVerification() {
     // STEP 1: Authentication Gate
     // -------------------------------------------------------------
     console.log('\n--- 1. Testing Live Application Authentication ---');
-    await page.goto(APP_URL, { waitUntil: 'networkidle' });
+    await page.goto(APP_URL, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(1500);
 
     const passwordInput = await page.$('#login-password');
@@ -91,7 +91,7 @@ async function runLiveVerification() {
     // STEP 2: Custom Material Addition (Create)
     // -------------------------------------------------------------
     console.log('\n--- 2. Testing Custom Material Addition in Inventory ---');
-    await page.goto(`${APP_URL}/inventory`, { waitUntil: 'networkidle' });
+    await page.goto(`${APP_URL}/inventory`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(1500);
 
     const testItemName = 'TEST BRASS WIRE ' + Date.now().toString().slice(-4);
@@ -156,7 +156,7 @@ async function runLiveVerification() {
     // STEP 5: Purchase Addition (Roz Kitna Khareeda)
     // -------------------------------------------------------------
     console.log('\n--- 5. Testing Purchase Addition (100 KG LOHA @ ₹28/kg) ---');
-    await page.goto(`${APP_URL}/`, { waitUntil: 'networkidle' });
+    await page.goto(`${APP_URL}/`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(1500);
 
     const buyBtn = await page.waitForSelector('button:has-text("Roz Ki Kharidi (Buy)")', { timeout: 5000 });
@@ -174,7 +174,7 @@ async function runLiveVerification() {
     await page.waitForTimeout(3000);
 
     // Verify in Purchases Register
-    await page.goto(`${APP_URL}/purchases`, { waitUntil: 'networkidle' });
+    await page.goto(`${APP_URL}/purchases`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(1500);
     const purchaseRows = await page.$$('tbody tr');
     const hasPurchase = purchaseRows.length > 0;
@@ -182,7 +182,7 @@ async function runLiveVerification() {
     recordTest('Purchase Addition', hasPurchase && purText.includes('100'), `Purchase registered with details: ${purText.replace(/\n/g, ' | ')}`);
 
     // Verify Stock increased to 100 in Inventory
-    await page.goto(`${APP_URL}/inventory`, { waitUntil: 'networkidle' });
+    await page.goto(`${APP_URL}/inventory`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(1500);
     const itemRow = await page.waitForSelector('tr:has-text("2 TYRE")', { timeout: 5000 });
     const itemText = await itemRow.innerText();
@@ -193,7 +193,7 @@ async function runLiveVerification() {
     // STEP 6: Sale Addition (Kitna Becha)
     // -------------------------------------------------------------
     console.log('\n--- 6. Testing Sale Addition (40 PIECE 2 TYRE @ ₹36/piece) ---');
-    await page.goto(`${APP_URL}/`, { waitUntil: 'networkidle' });
+    await page.goto(`${APP_URL}/`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(1500);
 
     const sellBtn = await page.waitForSelector('button:has-text("Roz Ki Bikri (Sell)")', { timeout: 5000 });
@@ -211,7 +211,7 @@ async function runLiveVerification() {
     await page.waitForTimeout(3000);
 
     // Verify in Sales Register
-    await page.goto(`${APP_URL}/sales`, { waitUntil: 'networkidle' });
+    await page.goto(`${APP_URL}/sales`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(1500);
     const saleRows = await page.$$('tbody tr');
     const hasSale = saleRows.length > 0;
@@ -219,7 +219,7 @@ async function runLiveVerification() {
     recordTest('Sale Addition', hasSale && saleText.includes('40'), `Sale registered with details: ${saleText.replace(/\n/g, ' | ')}`);
 
     // Verify Stock deducted: 100 - 40 = 60 PIECE
-    await page.goto(`${APP_URL}/inventory`, { waitUntil: 'networkidle' });
+    await page.goto(`${APP_URL}/inventory`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(1500);
     const itemAfterSale = await page.waitForSelector('tr:has-text("2 TYRE")', { timeout: 5000 });
     const itemAfterSaleText = await itemAfterSale.innerText();
@@ -230,7 +230,7 @@ async function runLiveVerification() {
     // STEP 7: Interactive Rate History Modal on Dashboard
     // -------------------------------------------------------------
     console.log('\n--- 7. Testing Interactive Rate History Modal on Dashboard ---');
-    await page.goto(`${APP_URL}/`, { waitUntil: 'networkidle' });
+    await page.goto(`${APP_URL}/`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(1500);
 
     const itemCard = page.locator('div[title*="Touch to view purchase rates"]').first();
@@ -249,7 +249,7 @@ async function runLiveVerification() {
     // STEP 8: Reset Database Feature (Settings -> Reset Database)
     // -------------------------------------------------------------
     console.log('\n--- 8. Testing Reset Database Feature in Settings ---');
-    await page.goto(`${APP_URL}/settings`, { waitUntil: 'networkidle' });
+    await page.goto(`${APP_URL}/settings`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(1500);
 
     const resetBtn = await page.waitForSelector('button:has-text("Reset Database"), button:has-text("डेटा रीसेट")', { timeout: 5000 });
@@ -275,7 +275,7 @@ async function runLiveVerification() {
     page.off('dialog', dialogListener);
 
     // Check Purchases Register is clean
-    await page.goto(`${APP_URL}/purchases`, { waitUntil: 'networkidle' });
+    await page.goto(`${APP_URL}/purchases`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(1500);
     const postPurNotice = (await page.$('text="No purchase records"')) !== null || (await page.$('text="कोई खरीद दर्ज नहीं"')) !== null;
     const postPurRows = (await page.$$('tbody tr')).length;
@@ -283,7 +283,7 @@ async function runLiveVerification() {
     recordTest('Reset Database: Purchases Wiped', purchasesClean, `Purchases register shows empty state`);
 
     // Check Sales Register is clean
-    await page.goto(`${APP_URL}/sales`, { waitUntil: 'networkidle' });
+    await page.goto(`${APP_URL}/sales`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(1500);
     const postSaleNotice = (await page.$('text="No sale records"')) !== null || (await page.$('text="कोई बिक्री दर्ज नहीं"')) !== null;
     const postSaleRows = (await page.$$('tbody tr')).length;
@@ -291,7 +291,7 @@ async function runLiveVerification() {
     recordTest('Reset Database: Sales Wiped', salesClean, `Sales register shows empty state`);
 
     // Check Inventory: Stock is 0 KG and all 25 master items intact
-    await page.goto(`${APP_URL}/inventory`, { waitUntil: 'networkidle' });
+    await page.goto(`${APP_URL}/inventory`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(1500);
     const totalStockEl = await page.$('text="Total Available Stock (कुल उपलब्ध स्टॉक)"');
     const stockContainer = totalStockEl ? await totalStockEl.evaluate(el => el.parentElement.innerText) : '';
@@ -303,7 +303,7 @@ async function runLiveVerification() {
     recordTest('Reset Database: 25 Master Items Intact', masterItemsIntact, `Master items count in inventory: ${masterItemsRows.length}`);
 
     // Check Dashboard: Clean state with all 25 materials
-    await page.goto(`${APP_URL}/`, { waitUntil: 'networkidle' });
+    await page.goto(`${APP_URL}/`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(1500);
     const dashCards = await page.$$('[title="Touch to view purchase rates & history (भाव इतिहास देखें)"]');
     const dashClean = dashCards.length >= 25;
