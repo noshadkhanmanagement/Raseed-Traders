@@ -1,0 +1,118 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-color: #FFFFFF;
+    --card-color: #FFFFFF;
+    --border-color: #E5E7EB;
+    --text-color: #000000;
+  }
+
+  .dark {
+    --bg-color: #000000;
+    --card-color: #111111;
+    --border-color: #262626;
+    --text-color: #FFFFFF;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Inter, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior-y: none;
+    letter-spacing: -0.011em;
+  }
+
+  /* Safe area insets for iOS devices */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+}
+
+/* Custom compact scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* 0-Lag Minimal Hardware-Accelerated Micro-Animations */
+.icon-press {
+  transform: translateZ(0);
+  transition: transform 120ms cubic-bezier(0.2, 0, 0, 1);
+  will-change: transform;
+}
+.icon-press:active {
+  transform: scale(0.88) translateZ(0);
+}
+
+.btn-press {
+  transform: translateZ(0);
+  transition: transform 120ms cubic-bezier(0.2, 0, 0, 1), opacity 120ms ease;
+  will-change: transform;
+}
+.btn-press:active {
+  transform: scale(0.97) translateZ(0);
+}
+
+.card-press {
+  transform: translateZ(0);
+  transition: transform 140ms cubic-bezier(0.2, 0, 0, 1), border-color 140ms ease;
+  will-change: transform;
+}
+.card-press:active {
+  transform: scale(0.985) translateZ(0);
+}
+
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(3px) translateZ(0);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) translateZ(0);
+  }
+}
+
+.page-enter {
+  animation: pageFadeIn 140ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Print layout optimizations */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .print-page {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}
