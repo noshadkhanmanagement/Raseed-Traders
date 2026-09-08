@@ -773,11 +773,16 @@ ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE inventory_ledger ENABLE ROW LEVEL SECURITY;
 ALTER TABLE stock_cost_history ENABLE ROW LEVEL SECURITY;
 
--- Standard open policy for authenticated users / single business mode
+-- Standard open policy for single business mode
+CREATE POLICY "Full access to businesses" ON businesses FOR ALL USING (true);
 CREATE POLICY "Full access to business items" ON items FOR ALL USING (true);
 CREATE POLICY "Full access to business parties" ON parties FOR ALL USING (true);
 CREATE POLICY "Full access to business purchases" ON purchases FOR ALL USING (true);
+CREATE POLICY "Full access to business purchase_items" ON purchase_items FOR ALL USING (true);
 CREATE POLICY "Full access to business sales" ON sales FOR ALL USING (true);
+CREATE POLICY "Full access to business sale_items" ON sale_items FOR ALL USING (true);
+CREATE POLICY "Full access to business stock_adjustments" ON stock_adjustments FOR ALL USING (true);
 CREATE POLICY "Full access to business payments" ON payments FOR ALL USING (true);
 CREATE POLICY "Full access to business expenses" ON expenses FOR ALL USING (true);
 CREATE POLICY "Full access to business ledger" ON inventory_ledger FOR ALL USING (true);
+CREATE POLICY "Full access to business cost_history" ON stock_cost_history FOR ALL USING (true);
