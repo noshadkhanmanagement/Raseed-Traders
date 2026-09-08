@@ -83,16 +83,35 @@ async function runFullVerification() {
       recordFail('Invalid Password Block', 50, 'Failed to display error on wrong password');
     }
 
-    // 1.4 Correct Password Access (50 pts)
-    await page.locator('#login-password').fill('noshad@00');
+    // 1.4 Correct Password Access (50 pts) - Strictly sourced from ENV
+    let appPassword = process.env.VITE_APP_PASSWORD || '';
+    if (!appPassword) {
+      try {
+        const envLocalPath = path.resolve(__dirname, '..', '.env.local');
+        if (fs.existsSync(envLocalPath)) {
+          const lines = fs.readFileSync(envLocalPath, 'utf8').split('\n');
+          for (const l of lines) {
+            const trimmed = l.trim();
+            if (trimmed.startsWith('VITE_APP_PASSWORD=')) {
+              appPassword = trimmed.slice('VITE_APP_PASSWORD='.length).trim();
+              break;
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error reading env password:', err);
+      }
+    }
+
+    await page.locator('#login-password').fill(appPassword);
     await page.locator('button[type="submit"]:has-text("Login")').click();
     await page.waitForTimeout(500);
 
     const hasDashboard = (await page.locator('text=Roz Kitna Khareeda').count()) > 0;
     if (hasDashboard) {
-      recordPass('Authorized Login Entry', 50, 'Successfully authenticated with "noshad@00" into Dashboard');
+      recordPass('Authorized Login Entry', 50, 'Successfully authenticated using VITE_APP_PASSWORD from environment into Dashboard');
     } else {
-      recordFail('Authorized Login Entry', 50, 'Dashboard not visible after entering correct password');
+      recordFail('Authorized Login Entry', 50, 'Dashboard not visible after entering environment password');
     }
 
     // --- 2. Dashboard UI & Zero Double Plus & Strict Currency (180 pts) ---

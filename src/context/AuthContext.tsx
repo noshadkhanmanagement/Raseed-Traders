@@ -7,7 +7,7 @@ interface AuthContextType {
 }
 
 const AUTH_STORAGE_KEY = 'raseed_traders_auth_session';
-const APP_PASSWORD = import.meta.env.VITE_APP_PASSWORD || 'noshad@00';
+const APP_PASSWORD = (import.meta.env.VITE_APP_PASSWORD || '').trim();
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -23,6 +23,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const login = (password: string, remember: boolean = true): boolean => {
+    if (!APP_PASSWORD) {
+      console.warn('VITE_APP_PASSWORD is not set in environment variables');
+      return false;
+    }
     if (password.trim() === APP_PASSWORD) {
       setIsAuthenticated(true);
       try {
