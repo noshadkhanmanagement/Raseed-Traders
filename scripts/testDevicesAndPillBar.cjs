@@ -144,6 +144,10 @@ async function runDeviceTests(baseUrl, prefix) {
       const hasSidebar = sidebar !== null;
       console.log(`  - Desktop Sidebar present: ${hasSidebar}`);
 
+      // Wait for master items to load
+      await page.waitForSelector('div[title*="Touch to view purchase rates & history"]', { timeout: 8000 }).catch(() => {});
+      await page.waitForTimeout(1000);
+
       // Check 25 materials grid / table
       const masterItems = await page.$$('div[title*="Touch to view purchase rates & history"]');
       console.log(`  - Dashboard materials cards: ${masterItems.length}`);
@@ -170,9 +174,21 @@ async function runDeviceTests(baseUrl, prefix) {
 (async () => {
   try {
     // 1. Run local test
+    console.log('\n================== 1. RUNNING LOCAL DEVICE TESTS ==================');
     const localResults = await runDeviceTests('http://localhost:5173', 'local');
-    console.log('\n--- LOCAL DEVICE TEST SUMMARY ---');
+    
+    // 2. Run live deployment test
+    console.log('\n================== 2. RUNNING LIVE DEPLOYMENT DEVICE TESTS ==================');
+    const liveResults = await runDeviceTests('https://raseed-traders-management.vercel.app', 'live');
+
+    console.log('\n===========================================================');
+    console.log('COMPREHENSIVE DEVICE TESTING SUMMARY (MAC, WINDOWS, IPHONE, ANDROID):');
+    console.log('===========================================================');
+    console.log('\n--- LOCAL RESULTS ---');
     console.log(JSON.stringify(localResults, null, 2));
+    console.log('\n--- LIVE DEPLOYMENT RESULTS ---');
+    console.log(JSON.stringify(liveResults, null, 2));
+    console.log('===========================================================');
   } catch (err) {
     console.error('Test run failed:', err);
     process.exit(1);
