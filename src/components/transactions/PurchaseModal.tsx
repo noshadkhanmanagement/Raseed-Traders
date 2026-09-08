@@ -59,7 +59,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
         setSelectedPartyId(allParties[0].id);
       }
 
-      // Initialize with one line with latest spot rate if available
+      // Initialize with one line with strictly empty rate (user enters rate themselves)
       if (allItems.length > 0 && lines.length === 0) {
         const first = allItems[0];
         setLines([
@@ -67,7 +67,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
             item_id: first.id,
             quantity: '',
             unit: first.default_unit,
-            rate: first.default_purchase_rate > 0 ? String(first.default_purchase_rate) : '',
+            rate: '', // User will enter themselves
             amount: 0,
           },
         ]);
@@ -84,14 +84,11 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
     setLines((prev) => {
       const updated = [...prev];
       const qty = parseFloat(updated[index].quantity) || 0;
-      // Pre-fill latest spot rate if user hasn't typed an explicit rate yet or if switching item
-      const initialRate = item.default_purchase_rate > 0 ? String(item.default_purchase_rate) : updated[index].rate;
-      const rate = parseFloat(initialRate) || 0;
+      const rate = parseFloat(updated[index].rate) || 0;
       updated[index] = {
         ...updated[index],
         item_id: item.id,
         unit: item.default_unit,
-        rate: initialRate,
         amount: Number((qty * rate).toFixed(2)),
       };
       return updated;
@@ -135,7 +132,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
         item_id: firstItem.id,
         quantity: '',
         unit: firstItem.default_unit,
-        rate: firstItem.default_purchase_rate > 0 ? String(firstItem.default_purchase_rate) : '',
+        rate: '', // User will enter themselves
         amount: 0,
       },
     ]);

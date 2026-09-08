@@ -165,7 +165,11 @@ async function runMultiScreenSuite() {
 
     try {
       await page.goto('http://localhost:5173/', { waitUntil: 'networkidle' });
-      await page.waitForTimeout(300);
+      await page.evaluate(() => {
+        localStorage.setItem('raseed_traders_auth_session', 'authenticated');
+      });
+      await page.reload({ waitUntil: 'networkidle' });
+      await page.waitForTimeout(400);
 
       // Check 1: No horizontal overflow on page
       const hasHorizontalScroll = await page.evaluate(() => {

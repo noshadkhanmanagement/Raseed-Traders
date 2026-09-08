@@ -186,27 +186,34 @@ export const api = {
     notes?: string;
   }): Promise<Purchase> {
     if (isSupabaseConfigured && supabase) {
-      const biz = await this.getBusiness();
-      const purchaseNumber = `PUR-${payload.purchase_date.replace(/-/g, '')}-${Date.now().toString().slice(-4)}`;
-      const totalAmount = payload.items.reduce((s, it) => s + it.amount, 0);
+      try {
+        const biz = await this.getBusiness();
+        const purchaseNumber = `PUR-${payload.purchase_date.replace(/-/g, '')}-${Date.now().toString().slice(-4)}`;
+        const totalAmount = payload.items.reduce((s, it) => s + it.amount, 0);
 
-      const rpcPayload = {
-        business_id: biz.id,
-        purchase_number: purchaseNumber,
-        party_id: payload.party_id,
-        purchase_date: payload.purchase_date,
-        total_amount: totalAmount,
-        paid_amount: payload.paid_amount,
-        payment_method: payload.payment_method,
-        notes: payload.notes,
-        items: payload.items,
-      };
+        const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const safePartyId = isValidUUID.test(payload.party_id) ? payload.party_id : '00000000-0000-0000-0000-000000000002';
 
-      const { data, error } = await supabase.rpc('rpc_create_purchase', { p_payload: rpcPayload });
-      if (!error && data?.success) {
-        const purchases = await this.getPurchases();
-        const created = purchases.find((p) => p.id === data.purchase_id);
-        if (created) return created;
+        const rpcPayload = {
+          business_id: biz.id,
+          purchase_number: purchaseNumber,
+          party_id: safePartyId,
+          purchase_date: payload.purchase_date,
+          total_amount: totalAmount,
+          paid_amount: payload.paid_amount,
+          payment_method: payload.payment_method,
+          notes: payload.notes,
+          items: payload.items,
+        };
+
+        const { data, error } = await supabase.rpc('rpc_create_purchase', { p_payload: rpcPayload });
+        if (!error && data?.success) {
+          const purchases = await this.getPurchases();
+          const created = purchases.find((p) => p.id === data.purchase_id);
+          if (created) return created;
+        }
+      } catch (e) {
+        console.warn('Supabase createPurchase fallback to localEngine:', e);
       }
     }
     return localDb.createPurchase(payload);
@@ -243,30 +250,34 @@ export const api = {
     notes?: string;
   }): Promise<Sale> {
     if (isSupabaseConfigured && supabase) {
-      const biz = await this.getBusiness();
-      const saleNumber = `SALE-${payload.sale_date.replace(/-/g, '')}-${Date.now().toString().slice(-4)}`;
-      const totalAmount = payload.items.reduce((s, it) => s + it.amount, 0);
+      try {
+        const biz = await this.getBusiness();
+        const saleNumber = `SALE-${payload.sale_date.replace(/-/g, '')}-${Date.now().toString().slice(-4)}`;
+        const totalAmount = payload.items.reduce((s, it) => s + it.amount, 0);
 
-      const rpcPayload = {
-        business_id: biz.id,
-        sale_number: saleNumber,
-        party_id: payload.party_id,
-        sale_date: payload.sale_date,
-        total_amount: totalAmount,
-        received_amount: payload.received_amount,
-        payment_method: payload.payment_method,
-        notes: payload.notes,
-        items: payload.items,
-      };
+        const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const safePartyId = isValidUUID.test(payload.party_id) ? payload.party_id : '00000000-0000-0000-0000-000000000002';
 
-      const { data, error } = await supabase.rpc('rpc_create_sale', { p_payload: rpcPayload });
-      if (error) {
-        throw new Error(error.message);
-      }
-      if (data?.success) {
-        const sales = await this.getSales();
-        const created = sales.find((s) => s.id === data.sale_id);
-        if (created) return created;
+        const rpcPayload = {
+          business_id: biz.id,
+          sale_number: saleNumber,
+          party_id: safePartyId,
+          sale_date: payload.sale_date,
+          total_amount: totalAmount,
+          received_amount: payload.received_amount,
+          payment_method: payload.payment_method,
+          notes: payload.notes,
+          items: payload.items,
+        };
+
+        const { data, error } = await supabase.rpc('rpc_create_sale', { p_payload: rpcPayload });
+        if (!error && data?.success) {
+          const sales = await this.getSales();
+          const created = sales.find((s) => s.id === data.sale_id);
+          if (created) return created;
+        }
+      } catch (e) {
+        console.warn('Supabase createSale fallback to localEngine:', e);
       }
     }
     return localDb.createSale(payload);

@@ -12,8 +12,10 @@ import {
   Sun,
   Moon,
   Laptop,
+  Lock,
 } from 'lucide-react';
 import { useTheme, ThemeMode } from '../../context/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
 
 interface SidebarProps {
   onOpenQuickAction: () => void;
@@ -25,6 +27,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenSearch,
 }) => {
   const { theme, setTheme, logoSrc } = useTheme();
+  const { logout } = useAuth();
 
   const navItems = [
     { to: '/', label: 'Dashboard (डैशबोर्ड)', icon: LayoutDashboard },
@@ -131,6 +134,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
             );
           })}
         </div>
+
+        {/* Lock / Logout App */}
+        <button
+          type="button"
+          onClick={logout}
+          className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 mt-2 rounded-lg border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors btn-press"
+          title="Lock / Logout Application"
+        >
+          <Lock className="w-3.5 h-3.5" />
+          <span>Lock App (लॉग आउट)</span>
+        </button>
       </div>
 
       {/* Proper Business Footer */}

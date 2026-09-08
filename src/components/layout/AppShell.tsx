@@ -14,14 +14,17 @@ import {
   Sun,
   Moon,
   Laptop,
+  Lock,
 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTheme } from '../../context/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
 
 export const AppShell: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { theme, resolvedTheme, setTheme, logoSrc } = useTheme();
+  const { logout } = useAuth();
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isQuickActionOpen, setIsQuickActionOpen] = useState(false);
@@ -107,6 +110,14 @@ export const AppShell: React.FC = () => {
               ) : (
                 <Sun className="w-4 h-4" />
               )}
+            </button>
+            <button
+              type="button"
+              onClick={logout}
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 icon-press"
+              title="Lock / Logout App (लॉग आउट)"
+            >
+              <Lock className="w-4 h-4" />
             </button>
 
             <button

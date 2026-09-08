@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Download, Upload, RotateCcw, Laptop, Sun, Moon } from 'lucide-react';
+import { Save, Download, Upload, RotateCcw, Laptop, Sun, Moon, Lock, ShieldCheck } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { api } from '../services/api';
 import { ScrapUnit, PaymentMethod } from '../types';
 import { useTheme, ThemeMode } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 
 export const Settings: React.FC = () => {
   const { theme, resolvedTheme, setTheme, logoSrc } = useTheme();
+  const { logout } = useAuth();
 
   const [name, setName] = useState('Raseed Traders');
   const [phone, setPhone] = useState('+91 744 061 9649');
@@ -314,7 +316,31 @@ export const Settings: React.FC = () => {
         </div>
       </form>
 
-      {/* 3. Backup & Reset Section */}
+      {/* 3. Security & App Lock Section */}
+      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 shadow-xs space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-bold text-black dark:text-white flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
+              <span>Application Security (सुरक्षा व सत्र)</span>
+            </h2>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+              Password-protected application session (env password configured)
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={logout}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-red-200 dark:border-red-900/60 bg-red-500/10 text-red-600 dark:text-red-400 text-xs font-bold hover:bg-red-500/20 transition-colors btn-press shadow-xs"
+            title="Lock application and require password"
+          >
+            <Lock className="w-3.5 h-3.5" />
+            <span>Lock Application (लॉग आउट करें)</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 4. Backup & Reset Section */}
       <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 shadow-xs space-y-4">
         <div>
           <h2 className="text-sm font-bold text-black dark:text-white">
