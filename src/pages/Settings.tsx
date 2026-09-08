@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Download, Upload, RotateCcw, Laptop, Sun, Moon, Lock, ShieldCheck } from 'lucide-react';
+import { Save, Download, Upload, RotateCcw, Lock, ShieldCheck } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { api } from '../services/api';
 import { ScrapUnit, PaymentMethod } from '../types';
-import { useTheme, ThemeMode } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 
 export const Settings: React.FC = () => {
-  const { theme, resolvedTheme, setTheme, logoSrc } = useTheme();
   const { logout } = useAuth();
 
   const [name, setName] = useState('Raseed Traders');
@@ -115,8 +113,8 @@ export const Settings: React.FC = () => {
   return (
     <div className="space-y-6 max-w-3xl page-enter">
       <PageHeader
-        title="Settings & Themes (सेटिंग्स व थीम)"
-        subtitle="Theme switcher (System, Light, Dark), shop contact, and offline backup"
+        title="Shop Settings (दुकान सेटिंग्स)"
+        subtitle="Shop details, business rules, and database management"
       />
 
       {saveMessage && (
@@ -130,109 +128,6 @@ export const Settings: React.FC = () => {
           {saveMessage}
         </div>
       )}
-
-      {/* 1. Appearance & Theme Modes */}
-      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 shadow-xs space-y-4">
-        <div>
-          <h2 className="text-sm font-bold text-black dark:text-white">
-            Color Theme Mode (थीम रंग मोड)
-          </h2>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            Switch instantly between System default, Light, and Dark modes (no page reload)
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {/* System Mode */}
-          <button
-            type="button"
-            onClick={() => setTheme('system')}
-            className={`p-4 rounded-xl border text-left flex flex-col justify-between btn-press ${
-              theme === 'system'
-                ? 'border-black dark:border-white bg-zinc-100 dark:bg-zinc-900 shadow-xs'
-                : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-400'
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <Laptop className="w-5 h-5 text-black dark:text-white" />
-              {theme === 'system' && (
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-black dark:bg-white text-white dark:text-black">
-                  ACTIVE
-                </span>
-              )}
-            </div>
-            <div className="mt-4">
-              <div className="text-xs font-bold text-black dark:text-white">System (डिफ़ॉल्ट)</div>
-              <div className="text-[11px] text-zinc-500">Auto match OS</div>
-            </div>
-          </button>
-
-          {/* Light Mode */}
-          <button
-            type="button"
-            onClick={() => setTheme('light')}
-            className={`p-4 rounded-xl border text-left flex flex-col justify-between transition-all ${
-              theme === 'light'
-                ? 'border-black dark:border-white bg-zinc-100 dark:bg-zinc-900 shadow-xs'
-                : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-400'
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <Sun className="w-5 h-5 text-black dark:text-white" />
-              {theme === 'light' && (
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-black dark:bg-white text-white dark:text-black">
-                  ACTIVE
-                </span>
-              )}
-            </div>
-            <div className="mt-4">
-              <div className="text-xs font-bold text-black dark:text-white">Light (लाइट मोड)</div>
-              <div className="text-[11px] text-zinc-500">White background</div>
-            </div>
-          </button>
-
-          {/* Dark Mode */}
-          <button
-            type="button"
-            onClick={() => setTheme('dark')}
-            className={`p-4 rounded-xl border text-left flex flex-col justify-between transition-all ${
-              theme === 'dark'
-                ? 'border-black dark:border-white bg-zinc-100 dark:bg-zinc-900 shadow-xs'
-                : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-400'
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <Moon className="w-5 h-5 text-black dark:text-white" />
-              {theme === 'dark' && (
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-black dark:bg-white text-white dark:text-black">
-                  ACTIVE
-                </span>
-              )}
-            </div>
-            <div className="mt-4">
-              <div className="text-xs font-bold text-black dark:text-white">Dark (डार्क मोड)</div>
-              <div className="text-[11px] text-zinc-500">Pure Black theme</div>
-            </div>
-          </button>
-        </div>
-
-        {/* Active Logo Preview */}
-        <div className="flex items-center gap-3 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800">
-          <img
-            src={logoSrc}
-            alt="Mode Logo Preview"
-            className="w-10 h-10 object-contain rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black"
-          />
-          <div>
-            <div className="text-xs font-bold text-black dark:text-white">
-              Active Logo: {resolvedTheme === 'dark' ? 'logodarkmode.svg' : 'logolightmode.svg'}
-            </div>
-            <div className="text-[11px] text-zinc-500">
-              Changes dynamically based on light/dark mode
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* 2. Business Profile Settings */}
       <form onSubmit={handleSave} className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 shadow-xs space-y-4">

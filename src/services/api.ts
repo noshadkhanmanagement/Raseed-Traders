@@ -65,6 +65,87 @@ export const api = {
     return localDb.getItems(includeInactive);
   },
 
+  async getItemRateHistory(itemId: string) {
+    const [items, purchases] = await Promise.all([
+      this.getItems(true),
+      this.getPurchases(),
+    ]);
+
+    const item = items.find((it) => it.id === itemId);
+
+    type PurchaseBatch = {
+      purchase_id: string;
+      purchase_number: string;
+      purchase_date: string;
+      created_at: string;
+      rate: number;
+      quantity: number;
+      amount: number;
+      unit: string;
+      party_name: string;
+      payment_method: string;
+    };
+
+    const batches: PurchaseBatch[] = [];
+
+    purchases.forEach((p) => {
+      p.items?.forEach((it) => {
+        if (it.item_id === itemId) {
+          batches.push({
+            purchase_id: p.id,
+            purchase_number: p.purchase_number,
+            purchase_date: p.purchase_date,
+            created_at: p.created_at || p.purchase_date,
+            rate: Number(it.rate || 0),
+            quantity: Number(it.quantity || 0),
+            amount: Number(it.amount || 0),
+            unit: it.unit || item?.default_unit || 'KG',
+            party_name: p.party_name || 'Walk-in Cash Party (नकदी पार्टी)',
+            payment_method: p.payment_method || 'CASH',
+          });
+        }
+      });
+    });
+
+    // Sort batches by purchase_date desc, created_at desc
+    batches.sort((a, b) => b.purchase_date.localeCompare(a.purchase_date) || b.created_at.localeCompare(a.created_at));
+
+    const rates = batches.map((b) => b.rate).filter((r) => r > 0);
+    const latestPurchaseRate = batches.length > 0 ? batches[0].rate : null;
+    const highestPurchaseRate = rates.length > 0 ? Math.max(...rates) : null;
+    const lowestPurchaseRate = rates.length > 0 ? Math.min(...rates) : null;
+    const totalQuantityPurchased = batches.reduce((sum, b) => sum + b.quantity, 0);
+    const totalAmountPurchased = batches.reduce((sum, b) => sum + b.amount, 0);
+    const averageCost = totalQuantityPurchased > 0 ? totalAmountPurchased / totalQuantityPurchased : Number(item?.average_cost || 0);
+
+    // Group by rate to show price comparison (e.g. ₹25/kg: 200kg, ₹26/kg: 50kg)
+    const rateGroupMap: Record<number, { rate: number; totalQty: number; totalAmount: number; count: number }> = {};
+    batches.forEach((b) => {
+      if (!rateGroupMap[b.rate]) {
+        rateGroupMap[b.rate] = { rate: b.rate, totalQty: 0, totalAmount: 0, count: 0 };
+      }
+      rateGroupMap[b.rate].totalQty += b.quantity;
+      rateGroupMap[b.rate].totalAmount += b.amount;
+      rateGroupMap[b.rate].count += 1;
+    });
+
+    const distinctRates = Object.values(rateGroupMap).sort((a, b) => b.rate - a.rate);
+
+    return {
+      item,
+      batches,
+      stats: {
+        latestPurchaseRate,
+        highestPurchaseRate,
+        lowestPurchaseRate,
+        averageCost: Number(averageCost.toFixed(2)),
+        totalQuantityPurchased: Number(totalQuantityPurchased.toFixed(3)),
+        totalAmountPurchased: Number(totalAmountPurchased.toFixed(2)),
+        distinctRates,
+      },
+    };
+  },
+
   async createItem(item: Partial<ScrapItem> & { name: string; local_name: string; default_unit: ScrapUnit }): Promise<ScrapItem> {
     if (isSupabaseConfigured && supabase) {
       const biz = await this.getBusiness();

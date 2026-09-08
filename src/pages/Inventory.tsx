@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, SlidersHorizontal, Trash2, Edit3, Tag } from 'lucide-react';
+import { Search, Plus, SlidersHorizontal, Trash2, Edit3, Tag, History } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { StockAdjustmentModal } from '../components/transactions/StockAdjustmentModal';
 import { ItemModal } from '../components/transactions/ItemModal';
+import { ItemRateHistoryModal } from '../components/inventory/ItemRateHistoryModal';
 import { api } from '../services/api';
 import { ScrapItem } from '../types';
 import { formatCurrency } from '../utils/formatters';
@@ -14,8 +15,15 @@ export const Inventory: React.FC = () => {
 
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [selectedItemToAdjust, setSelectedItemToAdjust] = useState<ScrapItem | null>(null);
   const [selectedItemToEdit, setSelectedItemToEdit] = useState<ScrapItem | null>(null);
+  const [selectedHistoryItemId, setSelectedHistoryItemId] = useState<string | null>(null);
+
+  const handleOpenHistory = (item: ScrapItem) => {
+    setSelectedHistoryItemId(item.id);
+    setIsHistoryModalOpen(true);
+  };
 
   useEffect(() => {
     loadInventory();
@@ -172,8 +180,15 @@ export const Inventory: React.FC = () => {
                   return (
                     <tr key={it.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition-colors">
                       <td className="px-5 py-3.5 font-mono text-zinc-400">{idx + 1}</td>
-                      <td className="px-5 py-3.5">
-                        <div className="font-bold text-sm text-black dark:text-white">{it.name}</div>
+                      <td
+                        className="px-5 py-3.5 cursor-pointer group"
+                        onClick={() => handleOpenHistory(it)}
+                        title="Touch to view past purchase rates (भाव इतिहास देखें)"
+                      >
+                        <div className="font-bold text-sm text-black dark:text-white group-hover:underline flex items-center gap-1.5">
+                          <span>{it.name}</span>
+                          <History className="w-3 h-3 text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
                         <div className="text-xs text-zinc-500 dark:text-zinc-400">{it.local_name}</div>
                       </td>
                       <td className="px-5 py-3.5 text-right font-mono">
@@ -205,6 +220,15 @@ export const Inventory: React.FC = () => {
                       </td>
                       <td className="px-5 py-3.5 text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenHistory(it)}
+                            className="flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                            title="Rate Fluctuation Log (कब किस रेट में खरीदा गया)"
+                          >
+                            <History className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Rates</span>
+                          </button>
                           <button
                             type="button"
                             onClick={() => handleAdjustClick(it)}
@@ -260,6 +284,16 @@ export const Inventory: React.FC = () => {
         }}
         editItem={selectedItemToEdit}
         onSuccess={loadInventory}
+      />
+
+      {/* Item Rate History Modal */}
+      <ItemRateHistoryModal
+        isOpen={isHistoryModalOpen}
+        onClose={() => {
+          setIsHistoryModalOpen(false);
+          setSelectedHistoryItemId(null);
+        }}
+        itemId={selectedHistoryItemId}
       />
     </div>
   );
