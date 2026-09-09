@@ -465,41 +465,42 @@ export const MobileTabBar: React.FC = () => {
 
       <nav
         aria-label="Mobile Navigation Bar"
-        className="md:hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-50 pointer-events-auto select-none"
+        className="md:hidden fixed bottom-[max(1.25rem,env(safe-area-inset-bottom,20px))] left-1/2 -translate-x-1/2 z-50 pointer-events-auto select-none"
       >
+        {/* Apple iOS 26 GlassEffectContainer (Primary Capsule: 52pt Height, 26pt Radius) */}
         <div
           ref={containerRef}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
-          className="relative pointer-events-auto flex items-center p-1 rounded-full bg-white/75 dark:bg-zinc-900/80 backdrop-blur-3xl border border-black/[0.08] dark:border-white/[0.12] shadow-[0_12px_36px_-6px_rgba(0,0,0,0.16),0_2px_8px_rgba(0,0,0,0.06)] dark:shadow-[0_16px_48px_-6px_rgba(0,0,0,0.75),0_2px_10px_rgba(0,0,0,0.4)] ring-1 ring-black/[0.03] dark:ring-white/[0.05] w-[294px] h-[52px] touch-none select-none"
+          className="relative pointer-events-auto flex items-center p-1 rounded-full bg-white/65 dark:bg-zinc-900/65 backdrop-blur-3xl backdrop-saturate-150 border border-black/[0.04] dark:border-white/[0.08] shadow-[0_12px_36px_-6px_rgba(0,0,0,0.14),0_2px_8px_rgba(0,0,0,0.04),inset_0_1px_1.5px_rgba(255,255,255,0.7),inset_0_-1px_1.5px_rgba(0,0,0,0.06)] dark:shadow-[0_16px_48px_-6px_rgba(0,0,0,0.75),0_2px_10px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.18),inset_0_-1px_1px_rgba(0,0,0,0.3)] w-[294px] h-[52px] touch-none select-none"
           style={{ willChange: 'transform' }}
         >
-          {/* LIQUID FROSTED GLASS ACTIVE PILL (Concentric Inner Pill: 44px Height, 22px Radius) */}
+          {/* Integrated Second Liquid Glass Shape (Concentric Active Capsule: 44pt Height, 22pt Radius) */}
           <div
             ref={pillRef}
-            className="absolute top-1 bottom-1 rounded-full pointer-events-none z-0 backdrop-blur-2xl bg-zinc-900/[0.08] dark:bg-white/[0.10] border border-black/[0.10] dark:border-white/[0.16] shadow-[0_4px_16px_rgba(0,0,0,0.08),inset_0_1.5px_2px_rgba(255,255,255,0.9)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.22)] overflow-hidden will-change-transform"
+            className="absolute top-1 bottom-1 rounded-full pointer-events-none z-0 backdrop-blur-xl bg-black/[0.05] dark:bg-white/[0.08] border border-black/[0.06] dark:border-white/[0.12] shadow-[0_4px_16px_rgba(0,0,0,0.06),inset_0_1px_1.5px_rgba(255,255,255,0.85),inset_0_-1px_1px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.22),inset_0_-1px_1px_rgba(0,0,0,0.25)] overflow-hidden will-change-transform"
             style={{
               transformOrigin: '50% 50%',
               willChange: 'transform, width',
             }}
           >
-            {/* 1. Meniscus Top Dome Flare Reflection */}
+            {/* 1. Meniscus Top Dome Flare Lensing Reflection */}
             <div
               className="absolute inset-x-1 top-0 h-[48%] rounded-t-full pointer-events-none opacity-90 dark:opacity-20"
               style={{
                 background:
-                  'radial-gradient(ellipse 75% 85% at 50% 0%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.25) 50%, transparent 80%)',
+                  'radial-gradient(ellipse 75% 85% at 50% 0%, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.2) 50%, transparent 80%)',
               }}
             />
 
             {/* 2. Angled Diagonal Light Sheen */}
             <div
-              className="absolute inset-0 pointer-events-none opacity-80 dark:opacity-10"
+              className="absolute inset-0 pointer-events-none opacity-75 dark:opacity-10"
               style={{
                 background:
-                  'linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.12) 35%, transparent 65%)',
+                  'linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 35%, transparent 65%)',
               }}
             />
 
@@ -514,15 +515,15 @@ export const MobileTabBar: React.FC = () => {
 
             {/* 4. Bottom Refractive Caustic Rim */}
             <div
-              className="absolute inset-x-2.5 bottom-0 h-[1px] pointer-events-none opacity-75 dark:opacity-15"
+              className="absolute inset-x-2.5 bottom-0 h-[1px] pointer-events-none opacity-70 dark:opacity-15"
               style={{
                 background:
-                  'linear-gradient(to right, transparent, rgba(255,255,255,0.7), transparent)',
+                  'linear-gradient(to right, transparent, rgba(255,255,255,0.65), transparent)',
               }}
             />
           </div>
 
-          {/* Tab Options */}
+          {/* Tab Options (Apple Minimum Hit Target: ≥44 × 44 pt, Visual Symbol: 20 pt) */}
           {TABS.map((tab, idx) => {
             const Icon = tab.icon;
             const isSelected = hoverOrDragIndex === idx;
@@ -537,15 +538,15 @@ export const MobileTabBar: React.FC = () => {
                 onClick={() => handleTabClick(tab.to, idx)}
                 aria-label={tab.label}
                 aria-current={isSelected ? 'page' : undefined}
-                className={`relative z-10 flex-1 h-full flex flex-col items-center justify-center gap-0.5 rounded-full outline-none transition-colors duration-200 cursor-pointer select-none ${
+                className={`relative z-10 flex-1 h-full min-h-[44px] min-w-[44px] flex flex-col items-center justify-center gap-0.5 rounded-full outline-none transition-colors duration-200 cursor-pointer select-none ${
                   isSelected
                     ? 'text-black dark:text-white font-extrabold'
                     : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white font-medium'
                 }`}
               >
                 <Icon
-                  size={18}
-                  strokeWidth={isSelected ? 2.3 : 1.8}
+                  size={20}
+                  strokeWidth={isSelected ? 2.2 : 1.7}
                   className={`transition-all duration-200 ${
                     isSelected
                       ? 'scale-105 -translate-y-0.5'
@@ -553,9 +554,13 @@ export const MobileTabBar: React.FC = () => {
                   }`}
                 />
                 <span
-                  className={`text-[10px] tracking-tight leading-none font-sans transition-all duration-200 ${
+                  className={`text-[10px] tracking-tight leading-none transition-all duration-200 ${
                     isSelected ? 'font-black' : 'font-semibold'
                   }`}
+                  style={{
+                    fontFamily:
+                      '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif',
+                  }}
                 >
                   {tab.label}
                 </span>
