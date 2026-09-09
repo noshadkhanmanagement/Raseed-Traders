@@ -10,6 +10,7 @@ interface SaleModalProps {
   onClose: () => void;
   onSuccess: () => void;
   initialPartyId?: string;
+  initialItem?: ScrapItem | null;
 }
 
 interface SaleLine {
@@ -25,6 +26,7 @@ export const SaleModal: React.FC<SaleModalProps> = ({
   onClose,
   onSuccess,
   initialPartyId,
+  initialItem,
 }) => {
   const [parties, setParties] = useState<Party[]>([]);
   const [items, setItems] = useState<ScrapItem[]>([]);
@@ -43,7 +45,7 @@ export const SaleModal: React.FC<SaleModalProps> = ({
     if (isOpen) {
       loadDependencies();
     }
-  }, [isOpen]);
+  }, [isOpen, initialItem]);
 
   const loadDependencies = async () => {
     try {
@@ -62,12 +64,15 @@ export const SaleModal: React.FC<SaleModalProps> = ({
         setSelectedPartyId(allParties[0].id);
       }
 
-      if (allItems.length > 0 && lines.length === 0) {
+      if (allItems.length > 0) {
+        const targetItem = initialItem
+          ? allItems.find((it) => it.id === initialItem.id) || initialItem
+          : allItems[0];
         setLines([
           {
-            item_id: allItems[0].id,
+            item_id: targetItem.id,
             quantity: '',
-            unit: allItems[0].default_unit,
+            unit: targetItem.default_unit,
             rate: '', // User will enter themselves
             amount: 0,
           },

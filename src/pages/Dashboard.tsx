@@ -20,8 +20,8 @@ import { ItemRateHistoryModal } from '../components/inventory/ItemRateHistoryMod
 import { ItemModal } from '../components/transactions/ItemModal';
 
 interface ContextType {
-  openPurchase: () => void;
-  openSale: () => void;
+  openPurchase: (item?: ScrapItem) => void;
+  openSale: (item?: ScrapItem) => void;
 }
 
 export const Dashboard: React.FC = () => {
@@ -119,7 +119,7 @@ export const Dashboard: React.FC = () => {
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
             type="button"
-            onClick={openPurchase}
+            onClick={() => openPurchase()}
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-black dark:bg-white text-white dark:text-black text-xs font-semibold hover:opacity-90 btn-press shadow-xs"
           >
             <Plus className="w-4 h-4" />
@@ -127,7 +127,7 @@ export const Dashboard: React.FC = () => {
           </button>
           <button
             type="button"
-            onClick={openSale}
+            onClick={() => openSale()}
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-black dark:border-white bg-white dark:bg-black text-black dark:text-white text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-900 btn-press shadow-xs"
           >
             <Plus className="w-4 h-4" />
@@ -319,6 +319,8 @@ export const Dashboard: React.FC = () => {
               return (
                 <div
                   key={it.id}
+                  data-item-name={it.name}
+                  data-testid={`material-card-${it.id}`}
                   onClick={() => handleOpenHistory(it)}
                   className="group relative p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 hover:border-black dark:hover:border-white shadow-xs cursor-pointer transition-all card-press flex flex-col justify-between"
                   title="Touch to view purchase rates & history (भाव इतिहास देखें)"
@@ -469,7 +471,7 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Item Rate History Modal */}
+      {/* Item Rate History & Complete Ledger Modal */}
       <ItemRateHistoryModal
         isOpen={isHistoryModalOpen}
         onClose={() => {
@@ -477,7 +479,8 @@ export const Dashboard: React.FC = () => {
           setSelectedHistoryItemId(null);
         }}
         itemId={selectedHistoryItemId}
-        onRecordPurchase={() => openPurchase()}
+        onRecordPurchase={(it) => openPurchase(it)}
+        onRecordSale={(it) => openSale(it)}
       />
 
       {/* Add Custom Item Modal */}

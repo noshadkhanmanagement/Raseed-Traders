@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { Search, Plus, SlidersHorizontal, Trash2, Edit3, Tag, History } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { StockAdjustmentModal } from '../components/transactions/StockAdjustmentModal';
@@ -8,7 +9,13 @@ import { api } from '../services/api';
 import { ScrapItem } from '../types';
 import { formatCurrency } from '../utils/formatters';
 
+interface ContextType {
+  openPurchase?: (item?: ScrapItem) => void;
+  openSale?: (item?: ScrapItem) => void;
+}
+
 export const Inventory: React.FC = () => {
+  const { openPurchase, openSale } = useOutletContext<ContextType>() || {};
   const [items, setItems] = useState<ScrapItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -181,6 +188,7 @@ export const Inventory: React.FC = () => {
                     <tr key={it.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition-colors">
                       <td className="px-5 py-3.5 font-mono text-zinc-400">{idx + 1}</td>
                       <td
+                        data-item-name={it.name}
                         className="px-5 py-3.5 cursor-pointer group"
                         onClick={() => handleOpenHistory(it)}
                         title="Touch to view past purchase rates (भाव इतिहास देखें)"
@@ -286,7 +294,7 @@ export const Inventory: React.FC = () => {
         onSuccess={loadInventory}
       />
 
-      {/* Item Rate History Modal */}
+      {/* Item Rate History & Ledger Modal */}
       <ItemRateHistoryModal
         isOpen={isHistoryModalOpen}
         onClose={() => {
@@ -294,6 +302,8 @@ export const Inventory: React.FC = () => {
           setSelectedHistoryItemId(null);
         }}
         itemId={selectedHistoryItemId}
+        onRecordPurchase={(it) => openPurchase?.(it)}
+        onRecordSale={(it) => openSale?.(it)}
       />
     </div>
   );

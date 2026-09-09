@@ -10,6 +10,7 @@ interface PurchaseModalProps {
   onClose: () => void;
   onSuccess: () => void;
   initialPartyId?: string;
+  initialItem?: ScrapItem | null;
 }
 
 interface PurchaseLine {
@@ -25,6 +26,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
   onClose,
   onSuccess,
   initialPartyId,
+  initialItem,
 }) => {
   const [parties, setParties] = useState<Party[]>([]);
   const [items, setItems] = useState<ScrapItem[]>([]);
@@ -42,7 +44,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
     if (isOpen) {
       loadDependencies();
     }
-  }, [isOpen]);
+  }, [isOpen, initialItem]);
 
   const loadDependencies = async () => {
     try {
@@ -60,13 +62,15 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
       }
 
       // Initialize with one line with strictly empty rate (user enters rate themselves)
-      if (allItems.length > 0 && lines.length === 0) {
-        const first = allItems[0];
+      if (allItems.length > 0) {
+        const targetItem = initialItem
+          ? allItems.find((it) => it.id === initialItem.id) || initialItem
+          : allItems[0];
         setLines([
           {
-            item_id: first.id,
+            item_id: targetItem.id,
             quantity: '',
-            unit: first.default_unit,
+            unit: targetItem.default_unit,
             rate: '', // User will enter themselves
             amount: 0,
           },

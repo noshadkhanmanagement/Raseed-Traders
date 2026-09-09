@@ -19,6 +19,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
+import { ScrapItem } from '../../types';
 
 export const AppShell: React.FC = () => {
   const navigate = useNavigate();
@@ -34,6 +35,8 @@ export const AppShell: React.FC = () => {
   const [isSaleOpen, setIsSaleOpen] = useState(false);
   const [isAdjustmentOpen, setIsAdjustmentOpen] = useState(false);
   const [isItemOpen, setIsItemOpen] = useState(false);
+  const [activeItemForPurchase, setActiveItemForPurchase] = useState<ScrapItem | null>(null);
+  const [activeItemForSale, setActiveItemForSale] = useState<ScrapItem | null>(null);
 
   // Global keyboard shortcut for Cmd/Ctrl + K
   useEffect(() => {
@@ -155,8 +158,14 @@ export const AppShell: React.FC = () => {
         <div className="flex-1 p-4 md:p-6 max-w-7xl w-full mx-auto">
           <Outlet
             context={{
-              openPurchase: () => setIsPurchaseOpen(true),
-              openSale: () => setIsSaleOpen(true),
+              openPurchase: (item?: ScrapItem) => {
+                setActiveItemForPurchase(item || null);
+                setIsPurchaseOpen(true);
+              },
+              openSale: (item?: ScrapItem) => {
+                setActiveItemForSale(item || null);
+                setIsSaleOpen(true);
+              },
               openAdjustment: () => setIsAdjustmentOpen(true),
               openItem: () => setIsItemOpen(true),
             }}
@@ -240,13 +249,21 @@ export const AppShell: React.FC = () => {
       {/* Transaction Modals */}
       <PurchaseModal
         isOpen={isPurchaseOpen}
-        onClose={() => setIsPurchaseOpen(false)}
+        onClose={() => {
+          setIsPurchaseOpen(false);
+          setActiveItemForPurchase(null);
+        }}
+        initialItem={activeItemForPurchase}
         onSuccess={handleRefreshData}
       />
 
       <SaleModal
         isOpen={isSaleOpen}
-        onClose={() => setIsSaleOpen(false)}
+        onClose={() => {
+          setIsSaleOpen(false);
+          setActiveItemForSale(null);
+        }}
+        initialItem={activeItemForSale}
         onSuccess={handleRefreshData}
       />
 

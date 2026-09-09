@@ -66,9 +66,10 @@ export const api = {
   },
 
   async getItemRateHistory(itemId: string) {
-    const [items, purchases] = await Promise.all([
+    const [items, purchases, sales] = await Promise.all([
       this.getItems(true),
       this.getPurchases(),
+      this.getSales(),
     ]);
 
     const item = items.find((it) => it.id === itemId);
@@ -86,12 +87,40 @@ export const api = {
       payment_method: string;
     };
 
-    const batches: PurchaseBatch[] = [];
+    type SaleBatch = {
+      sale_id: string;
+      sale_number: string;
+      sale_date: string;
+      created_at: string;
+      rate: number;
+      quantity: number;
+      amount: number;
+      unit: string;
+      party_name: string;
+      payment_method: string;
+      remaining_stock: number;
+    };
 
+    type LedgerMovement = {
+      id: string;
+      type: 'PURCHASE' | 'SALE';
+      date: string;
+      created_at: string;
+      reference_number: string;
+      party_name: string;
+      payment_method: string;
+      rate: number;
+      quantity: number;
+      amount: number;
+      unit: string;
+      remaining_stock: number;
+    };
+
+    const purchaseBatches: PurchaseBatch[] = [];
     purchases.forEach((p) => {
       p.items?.forEach((it) => {
         if (it.item_id === itemId) {
-          batches.push({
+          purchaseBatches.push({
             purchase_id: p.id,
             purchase_number: p.purchase_number,
             purchase_date: p.purchase_date,
@@ -107,41 +136,174 @@ export const api = {
       });
     });
 
-    // Sort batches by purchase_date desc, created_at desc
-    batches.sort((a, b) => b.purchase_date.localeCompare(a.purchase_date) || b.created_at.localeCompare(a.created_at));
-
-    const rates = batches.map((b) => b.rate).filter((r) => r > 0);
-    const latestPurchaseRate = batches.length > 0 ? batches[0].rate : null;
-    const highestPurchaseRate = rates.length > 0 ? Math.max(...rates) : null;
-    const lowestPurchaseRate = rates.length > 0 ? Math.min(...rates) : null;
-    const totalQuantityPurchased = batches.reduce((sum, b) => sum + b.quantity, 0);
-    const totalAmountPurchased = batches.reduce((sum, b) => sum + b.amount, 0);
-    const averageCost = totalQuantityPurchased > 0 ? totalAmountPurchased / totalQuantityPurchased : Number(item?.average_cost || 0);
-
-    // Group by rate to show price comparison (e.g. ₹25/kg: 200kg, ₹26/kg: 50kg)
-    const rateGroupMap: Record<number, { rate: number; totalQty: number; totalAmount: number; count: number }> = {};
-    batches.forEach((b) => {
-      if (!rateGroupMap[b.rate]) {
-        rateGroupMap[b.rate] = { rate: b.rate, totalQty: 0, totalAmount: 0, count: 0 };
-      }
-      rateGroupMap[b.rate].totalQty += b.quantity;
-      rateGroupMap[b.rate].totalAmount += b.amount;
-      rateGroupMap[b.rate].count += 1;
+    const rawSaleBatches: Array<Omit<SaleBatch, 'remaining_stock'>> = [];
+    sales.forEach((s) => {
+      s.items?.forEach((it) => {
+        if (it.item_id === itemId) {
+          rawSaleBatches.push({
+            sale_id: s.id,
+            sale_number: s.sale_number,
+            sale_date: s.sale_date,
+            created_at: s.created_at || s.sale_date,
+            rate: Number(it.rate || 0),
+            quantity: Number(it.quantity || 0),
+            amount: Number(it.amount || 0),
+            unit: it.unit || item?.default_unit || 'KG',
+            party_name: s.party_name || 'Buyer (क्रेता)',
+            payment_method: s.payment_method || 'CASH',
+          });
+        }
+      });
     });
 
-    const distinctRates = Object.values(rateGroupMap).sort((a, b) => b.rate - a.rate);
+    // Create combined chronological stream (oldest to newest) to compute running remaining stock
+    type RawMovement = {
+      id: string;
+      type: 'PURCHASE' | 'SALE';
+      date: string;
+      created_at: string;
+      reference_number: string;
+      party_name: string;
+      payment_method: string;
+      rate: number;
+      quantity: number;
+      amount: number;
+      unit: string;
+    };
+
+    const rawMovements: RawMovement[] = [
+      ...purchaseBatches.map((p) => ({
+        id: p.purchase_id + '-' + p.purchase_number,
+        type: 'PURCHASE' as const,
+        date: p.purchase_date,
+        created_at: p.created_at,
+        reference_number: p.purchase_number,
+        party_name: p.party_name,
+        payment_method: p.payment_method,
+        rate: p.rate,
+        quantity: p.quantity,
+        amount: p.amount,
+        unit: p.unit,
+      })),
+      ...rawSaleBatches.map((s) => ({
+        id: s.sale_id + '-' + s.sale_number,
+        type: 'SALE' as const,
+        date: s.sale_date,
+        created_at: s.created_at,
+        reference_number: s.sale_number,
+        party_name: s.party_name,
+        payment_method: s.payment_method,
+        rate: s.rate,
+        quantity: s.quantity,
+        amount: s.amount,
+        unit: s.unit,
+      })),
+    ];
+
+    // Sort ascending for running balance calculation
+    rawMovements.sort(
+      (a, b) => a.date.localeCompare(b.date) || a.created_at.localeCompare(b.created_at)
+    );
+
+    let runningStock = 0;
+    const saleRemainingMap = new Map<string, number>();
+
+    const chronologicalMovements: LedgerMovement[] = rawMovements.map((m) => {
+      if (m.type === 'PURCHASE') {
+        runningStock += m.quantity;
+      } else {
+        runningStock -= m.quantity;
+        saleRemainingMap.set(m.id, Number(runningStock.toFixed(3)));
+      }
+      return {
+        ...m,
+        remaining_stock: Number(runningStock.toFixed(3)),
+      };
+    });
+
+    const saleBatches: SaleBatch[] = rawSaleBatches.map((s) => ({
+      ...s,
+      remaining_stock: saleRemainingMap.get(s.sale_id + '-' + s.sale_number) ?? 0,
+    }));
+
+    // Sort purchases & sales descending (newest first) for user-friendly display
+    purchaseBatches.sort(
+      (a, b) => b.purchase_date.localeCompare(a.purchase_date) || b.created_at.localeCompare(a.created_at)
+    );
+    saleBatches.sort(
+      (a, b) => b.sale_date.localeCompare(a.sale_date) || b.created_at.localeCompare(a.created_at)
+    );
+    const movements = [...chronologicalMovements].reverse(); // Newest first
+
+    // Purchases stats
+    const purchaseRates = purchaseBatches.map((b) => b.rate).filter((r) => r > 0);
+    const latestPurchaseRate = purchaseBatches.length > 0 ? purchaseBatches[0].rate : null;
+    const highestPurchaseRate = purchaseRates.length > 0 ? Math.max(...purchaseRates) : null;
+    const lowestPurchaseRate = purchaseRates.length > 0 ? Math.min(...purchaseRates) : null;
+    const totalQuantityPurchased = purchaseBatches.reduce((sum, b) => sum + b.quantity, 0);
+    const totalAmountPurchased = purchaseBatches.reduce((sum, b) => sum + b.amount, 0);
+    const averagePurchaseRate =
+      totalQuantityPurchased > 0
+        ? totalAmountPurchased / totalQuantityPurchased
+        : Number(item?.average_cost || 0);
+
+    // Group purchases by distinct rate
+    const purchaseRateGroupMap: Record<number, { rate: number; totalQty: number; totalAmount: number; count: number }> = {};
+    purchaseBatches.forEach((b) => {
+      if (!purchaseRateGroupMap[b.rate]) {
+        purchaseRateGroupMap[b.rate] = { rate: b.rate, totalQty: 0, totalAmount: 0, count: 0 };
+      }
+      purchaseRateGroupMap[b.rate].totalQty += b.quantity;
+      purchaseRateGroupMap[b.rate].totalAmount += b.amount;
+      purchaseRateGroupMap[b.rate].count += 1;
+    });
+    const distinctPurchaseRates = Object.values(purchaseRateGroupMap).sort((a, b) => b.rate - a.rate);
+
+    // Sales stats
+    const saleRates = saleBatches.map((s) => s.rate).filter((r) => r > 0);
+    const latestSaleRate = saleBatches.length > 0 ? saleBatches[0].rate : null;
+    const highestSaleRate = saleRates.length > 0 ? Math.max(...saleRates) : null;
+    const lowestSaleRate = saleRates.length > 0 ? Math.min(...saleRates) : null;
+    const totalQuantitySold = saleBatches.reduce((sum, s) => sum + s.quantity, 0);
+    const totalAmountSold = saleBatches.reduce((sum, s) => sum + s.amount, 0);
+    const averageSaleRate = totalQuantitySold > 0 ? totalAmountSold / totalQuantitySold : 0;
+
+    // Group sales by distinct rate
+    const saleRateGroupMap: Record<number, { rate: number; totalQty: number; totalAmount: number; count: number }> = {};
+    saleBatches.forEach((s) => {
+      if (!saleRateGroupMap[s.rate]) {
+        saleRateGroupMap[s.rate] = { rate: s.rate, totalQty: 0, totalAmount: 0, count: 0 };
+      }
+      saleRateGroupMap[s.rate].totalQty += s.quantity;
+      saleRateGroupMap[s.rate].totalAmount += s.amount;
+      saleRateGroupMap[s.rate].count += 1;
+    });
+    const distinctSaleRates = Object.values(saleRateGroupMap).sort((a, b) => b.rate - a.rate);
 
     return {
       item,
-      batches,
+      batches: purchaseBatches, // backward compatibility
+      purchases: purchaseBatches,
+      sales: saleBatches,
+      movements,
       stats: {
+        currentStock: Number(item?.current_stock || 0),
         latestPurchaseRate,
         highestPurchaseRate,
         lowestPurchaseRate,
-        averageCost: Number(averageCost.toFixed(2)),
+        averageCost: Number(averagePurchaseRate.toFixed(2)),
+        averagePurchaseRate: Number(averagePurchaseRate.toFixed(2)),
         totalQuantityPurchased: Number(totalQuantityPurchased.toFixed(3)),
         totalAmountPurchased: Number(totalAmountPurchased.toFixed(2)),
-        distinctRates,
+        distinctRates: distinctPurchaseRates,
+        distinctPurchaseRates,
+        latestSaleRate,
+        highestSaleRate,
+        lowestSaleRate,
+        averageSaleRate: Number(averageSaleRate.toFixed(2)),
+        totalQuantitySold: Number(totalQuantitySold.toFixed(3)),
+        totalAmountSold: Number(totalAmountSold.toFixed(2)),
+        distinctSaleRates,
       },
     };
   },
