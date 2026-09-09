@@ -282,11 +282,59 @@ class LocalEngine {
   }
 
   public deleteItem(id: string): void {
+    // 1. Clean up ledger and cost history
+    this.data.inventory_ledger = this.data.inventory_ledger.filter((l) => l.item_id !== id);
+    this.data.stock_cost_history = this.data.stock_cost_history.filter((h) => h.item_id !== id);
+    this.data.stock_adjustments = this.data.stock_adjustments.filter((a) => a.item_id !== id);
+
+    // 2. Clean up from purchases
+    const purchasesToRemove: string[] = [];
+    this.data.purchases.forEach((p) => {
+      if (p.items) {
+        p.items = p.items.filter((it) => it.item_id !== id);
+        if (p.items.length === 0) {
+          purchasesToRemove.push(p.id);
+        } else {
+          p.total_amount = p.items.reduce((sum, it) => sum + it.amount, 0);
+          p.subtotal = p.total_amount;
+          p.total_weight = p.items.reduce((sum, it) => sum + it.quantity, 0);
+          p.due_amount = Math.max(0, p.total_amount - p.paid_amount);
+        }
+      }
+    });
+    if (purchasesToRemove.length > 0) {
+      this.data.purchases = this.data.purchases.filter((p) => !purchasesToRemove.includes(p.id));
+      this.data.payments = this.data.payments.filter((pay) => !pay.purchase_id || !purchasesToRemove.includes(pay.purchase_id));
+    }
+
+    // 3. Clean up from sales
+    const salesToRemove: string[] = [];
+    this.data.sales.forEach((s) => {
+      if (s.items) {
+        s.items = s.items.filter((it) => it.item_id !== id);
+        if (s.items.length === 0) {
+          salesToRemove.push(s.id);
+        } else {
+          s.total_amount = s.items.reduce((sum, it) => sum + it.amount, 0);
+          s.subtotal = s.total_amount;
+          s.total_weight = s.items.reduce((sum, it) => sum + it.quantity, 0);
+          s.total_cost = s.items.reduce((sum, it) => sum + (it.cost_amount || 0), 0);
+          s.total_profit = s.total_amount - s.total_cost;
+          s.due_amount = Math.max(0, s.total_amount - s.received_amount);
+        }
+      }
+    });
+    if (salesToRemove.length > 0) {
+      this.data.sales = this.data.sales.filter((s) => !salesToRemove.includes(s.id));
+      this.data.payments = this.data.payments.filter((pay) => !pay.sale_id || !salesToRemove.includes(pay.sale_id));
+    }
+
+    // 4. Remove the item itself
     const idx = this.data.items.findIndex((item) => item.id === id);
     if (idx !== -1) {
       this.data.items.splice(idx, 1);
-      this.saveToStorage();
     }
+    this.saveToStorage();
   }
 
   public toggleItemActive(id: string): ScrapItem {
@@ -432,7 +480,6 @@ class LocalEngine {
         running_quantity: newStock,
         party_id: safeParty.id,
         party_name: safeParty.name,
-        notes: `Purchase from ${safeParty.name}`,
         created_at: now,
       });
 
@@ -582,7 +629,6 @@ class LocalEngine {
         running_quantity: newStock,
         party_id: safeParty.id,
         party_name: safeParty.name,
-        notes: `Sale to ${safeParty.name}`,
         created_at: now,
       });
 
@@ -646,6 +692,168 @@ class LocalEngine {
       };
       this.data.payments.unshift(payment);
     }
+
+    this.saveToStorage();
+    return sale;
+  }
+
+  public deletePurchase(purchaseId: string): void {
+    const pIdx = this.data.purchases.findIndex((p) => p.id === purchaseId);
+    if (pIdx === -1) return;
+    const purchase = this.data.purchases[pIdx];
+
+    // 1. Rollback stock for all items purchased
+    if (purchase.items) {
+      for (const it of purchase.items) {
+        const item = this.getItemById(it.item_id);
+        if (item) {
+          item.current_stock = Math.max(0, Number(item.current_stock || 0) - Number(it.quantity || 0));
+          item.updated_at = new Date().toISOString();
+        }
+      }
+    }
+
+    // 2. Rollback party balance if due amount was added
+    if (purchase.party_id && purchase.due_amount > 0) {
+      const party = this.getPartyById(purchase.party_id);
+      if (party) {
+        party.current_balance += purchase.due_amount;
+        party.updated_at = new Date().toISOString();
+      }
+    }
+
+    // 3. Remove inventory ledger entries for this purchase
+    this.data.inventory_ledger = this.data.inventory_ledger.filter(
+      (l) => l.reference_id !== purchaseId && l.reference_number !== purchase.purchase_number
+    );
+
+    // 4. Remove payments linked to this purchase
+    this.data.payments = this.data.payments.filter((pay) => pay.purchase_id !== purchaseId);
+
+    // 5. Remove the purchase record
+    this.data.purchases.splice(pIdx, 1);
+    this.saveToStorage();
+  }
+
+  public deleteSale(saleId: string): void {
+    const sIdx = this.data.sales.findIndex((s) => s.id === saleId);
+    if (sIdx === -1) return;
+    const sale = this.data.sales[sIdx];
+
+    // 1. Return stock for all items sold
+    if (sale.items) {
+      for (const it of sale.items) {
+        const item = this.getItemById(it.item_id);
+        if (item) {
+          item.current_stock = Number(item.current_stock || 0) + Number(it.quantity || 0);
+          item.updated_at = new Date().toISOString();
+        }
+      }
+    }
+
+    // 2. Rollback party balance if due amount was added
+    if (sale.party_id && sale.due_amount > 0) {
+      const party = this.getPartyById(sale.party_id);
+      if (party) {
+        party.current_balance -= sale.due_amount;
+        party.updated_at = new Date().toISOString();
+      }
+    }
+
+    // 3. Remove inventory ledger entries for this sale
+    this.data.inventory_ledger = this.data.inventory_ledger.filter(
+      (l) => l.reference_id !== saleId && l.reference_number !== sale.sale_number
+    );
+
+    // 4. Remove payments linked to this sale
+    this.data.payments = this.data.payments.filter((pay) => pay.sale_id !== saleId);
+
+    // 5. Remove the sale record
+    this.data.sales.splice(sIdx, 1);
+    this.saveToStorage();
+  }
+
+  public updatePurchaseTransaction(
+    purchaseId: string,
+    updates: {
+      items: { item_id: string; quantity: number; rate: number; amount: number }[];
+      paid_amount?: number;
+    }
+  ): Purchase {
+    const purchase = this.data.purchases.find((p) => p.id === purchaseId);
+    if (!purchase) throw new Error('Purchase not found');
+
+    const now = new Date().toISOString();
+    for (const newItem of updates.items) {
+      const oldItem = purchase.items?.find((it) => it.item_id === newItem.item_id);
+      const oldQty = oldItem ? Number(oldItem.quantity) : 0;
+      const newQty = Number(newItem.quantity);
+      const diff = newQty - oldQty;
+
+      const item = this.getItemById(newItem.item_id);
+      if (item) {
+        item.current_stock = Math.max(0, Number(item.current_stock || 0) + diff);
+        item.default_purchase_rate = newItem.rate;
+        item.updated_at = now;
+      }
+      if (oldItem) {
+        oldItem.quantity = newQty;
+        oldItem.rate = newItem.rate;
+        oldItem.amount = newItem.amount;
+      }
+    }
+
+    purchase.total_amount = updates.items.reduce((s, it) => s + it.amount, 0);
+    purchase.subtotal = purchase.total_amount;
+    purchase.total_weight = updates.items.reduce((s, it) => s + it.quantity, 0);
+    if (updates.paid_amount !== undefined) {
+      purchase.paid_amount = updates.paid_amount;
+    }
+    purchase.due_amount = Math.max(0, purchase.total_amount - purchase.paid_amount);
+    purchase.updated_at = now;
+
+    this.saveToStorage();
+    return purchase;
+  }
+
+  public updateSaleTransaction(
+    saleId: string,
+    updates: {
+      items: { item_id: string; quantity: number; rate: number; amount: number }[];
+      received_amount?: number;
+    }
+  ): Sale {
+    const sale = this.data.sales.find((s) => s.id === saleId);
+    if (!sale) throw new Error('Sale not found');
+
+    const now = new Date().toISOString();
+    for (const newItem of updates.items) {
+      const oldItem = sale.items?.find((it) => it.item_id === newItem.item_id);
+      const oldQty = oldItem ? Number(oldItem.quantity) : 0;
+      const newQty = Number(newItem.quantity);
+      const diff = newQty - oldQty;
+
+      const item = this.getItemById(newItem.item_id);
+      if (item) {
+        item.current_stock = Math.max(0, Number(item.current_stock || 0) - diff);
+        item.default_sale_rate = newItem.rate;
+        item.updated_at = now;
+      }
+      if (oldItem) {
+        oldItem.quantity = newQty;
+        oldItem.rate = newItem.rate;
+        oldItem.amount = newItem.amount;
+      }
+    }
+
+    sale.total_amount = updates.items.reduce((s, it) => s + it.amount, 0);
+    sale.subtotal = sale.total_amount;
+    sale.total_weight = updates.items.reduce((s, it) => s + it.quantity, 0);
+    if (updates.received_amount !== undefined) {
+      sale.received_amount = updates.received_amount;
+    }
+    sale.due_amount = Math.max(0, sale.total_amount - sale.received_amount);
+    sale.updated_at = now;
 
     this.saveToStorage();
     return sale;
@@ -898,7 +1106,7 @@ class LocalEngine {
         raw.push({
           date: pay.payment_date,
           docNumber: pay.payment_number,
-          description: `Payment made via ${pay.payment_method}`,
+          description: `Payment made to supplier`,
           debit: pay.amount,
           credit: 0,
           timestamp: new Date(pay.created_at).getTime(),
@@ -908,7 +1116,7 @@ class LocalEngine {
         raw.push({
           date: pay.payment_date,
           docNumber: pay.payment_number,
-          description: `Payment received via ${pay.payment_method}`,
+          description: `Payment received from customer`,
           debit: 0,
           credit: pay.amount,
           timestamp: new Date(pay.created_at).getTime(),

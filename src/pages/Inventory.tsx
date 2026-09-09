@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { Search, Plus, SlidersHorizontal, Trash2, Edit3, History } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
-import { StockAdjustmentModal } from '../components/transactions/StockAdjustmentModal';
+import { ItemAdjustmentModal } from '../components/inventory/ItemAdjustmentModal';
 import { ItemModal } from '../components/transactions/ItemModal';
 import { ItemRateHistoryModal } from '../components/inventory/ItemRateHistoryModal';
 import { api } from '../services/api';
@@ -232,32 +232,25 @@ export const Inventory: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => handleOpenHistory(it)}
-                            className="flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                             title="Rate Fluctuation Log (कब किस रेट में खरीदा गया)"
                           >
-                            <History className="w-3.5 h-3.5" />
+                            <History className="w-3.5 h-3.5 text-zinc-400" />
                             <span className="hidden sm:inline">Rates</span>
                           </button>
                           <button
                             type="button"
                             onClick={() => handleAdjustClick(it)}
-                            className="px-2 py-1 text-xs font-semibold rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                            title="Adjust Stock (स्टॉक बदलें)"
+                            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold rounded-lg border border-black dark:border-white bg-black dark:bg-white text-white dark:text-black hover:opacity-90 transition-opacity btn-press shadow-xs"
+                            title="Adjust Weight, Price & Delete (वजन, भाव व विलोपन)"
                           >
-                            Adjust
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleEditClick(it)}
-                            className="p-1.5 text-xs font-semibold rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                            title="Edit Material & Rates (सामग्री व दर बदलें)"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
+                            <SlidersHorizontal className="w-3.5 h-3.5" />
+                            <span>Adjust (सुधार)</span>
                           </button>
                           <button
                             type="button"
                             onClick={() => handleDeleteClick(it)}
-                            className="p-1.5 text-xs font-semibold rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-500 hover:text-red-600 hover:border-red-300 dark:hover:border-red-800 transition-colors"
+                            className="p-1.5 text-xs font-semibold rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-400 hover:text-red-600 hover:border-red-300 dark:hover:border-red-800 transition-colors"
                             title="Delete Material (सामग्री हटाएं)"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -273,8 +266,8 @@ export const Inventory: React.FC = () => {
         </div>
       </div>
 
-      {/* Stock Adjustment Modal */}
-      <StockAdjustmentModal
+      {/* Unified Item Adjustment & Deletion Modal */}
+      <ItemAdjustmentModal
         isOpen={isAdjustModalOpen}
         onClose={() => {
           setIsAdjustModalOpen(false);

@@ -13,8 +13,10 @@ import {
   ArrowDownLeft,
   TrendingUp,
   Package,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { BottomSheet } from '../common/BottomSheet';
+import { ItemAdjustmentModal } from './ItemAdjustmentModal';
 import { api } from '../../services/api';
 import { ScrapItem } from '../../types';
 import { formatCurrency, formatDate } from '../../utils/formatters';
@@ -38,6 +40,7 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('ALL');
+  const [isItemAdjustOpen, setIsItemAdjustOpen] = useState(false);
   const [historyData, setHistoryData] = useState<{
     item?: ScrapItem;
     purchases: Array<{
@@ -140,10 +143,11 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
   const movements = historyData?.movements || [];
 
   return (
-    <BottomSheet
-      isOpen={isOpen}
-      onClose={onClose}
-      title={item ? `${item.name} — ${item.local_name}` : 'Material Ledger & Rate History'}
+    <>
+      <BottomSheet
+        isOpen={isOpen}
+        onClose={onClose}
+        title={item ? `${item.name} — ${item.local_name}` : 'Material Ledger & Rate History'}
       subtitle={
         item
           ? `Complete purchase, sale & stock ledger (मापने की इकाई: ${item.default_unit})`
@@ -184,7 +188,7 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-2 self-end sm:self-center">
+              <div className="flex flex-wrap items-center gap-2 self-end sm:self-center">
                 {onRecordPurchase && (
                   <button
                     type="button"
@@ -195,7 +199,7 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black dark:bg-white text-white dark:text-black text-xs font-semibold hover:opacity-90 btn-press shadow-xs"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>Buy Samaan (खरीदें)</span>
+                    <span>Buy (खरीदें)</span>
                   </button>
                 )}
 
@@ -206,12 +210,22 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                       onClose();
                       onRecordSale(item);
                     }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-black dark:border-white bg-white dark:bg-black text-black dark:text-white text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-900 btn-press shadow-xs"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-black dark:text-white text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 btn-press shadow-xs"
                   >
                     <Minus className="w-3.5 h-3.5" />
-                    <span>Sell Samaan (बेचें)</span>
+                    <span>Sell (बेचें)</span>
                   </button>
                 )}
+
+                <button
+                  type="button"
+                  onClick={() => setIsItemAdjustOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-black dark:border-white bg-black dark:bg-white text-white dark:text-black text-xs font-bold hover:opacity-90 btn-press shadow-xs"
+                  title="Adjust Weight, Price & Delete Material"
+                >
+                  <SlidersHorizontal className="w-3.5 h-3.5" />
+                  <span>Adjust (सुधार)</span>
+                </button>
               </div>
             </div>
 
@@ -595,5 +609,18 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
         )}
       </div>
     </BottomSheet>
+
+    <ItemAdjustmentModal
+      isOpen={isItemAdjustOpen}
+      onClose={() => setIsItemAdjustOpen(false)}
+      onSuccess={() => {
+        setIsItemAdjustOpen(false);
+        if (itemId) {
+          loadHistory(itemId);
+        }
+      }}
+      preselectedItemId={item?.id}
+    />
+  </>
   );
 };

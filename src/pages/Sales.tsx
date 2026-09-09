@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { Plus, Download, Search, Printer } from 'lucide-react';
+import { Plus, Download, Search, Printer, SlidersHorizontal } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { BottomSheet } from '../components/common/BottomSheet';
+import { TransactionAdjustmentModal } from '../components/transactions/TransactionAdjustmentModal';
 import { api } from '../services/api';
 import { Sale } from '../types';
 import { formatCurrency, formatDate, downloadCSV } from '../utils/formatters';
@@ -17,6 +18,7 @@ export const Sales: React.FC = () => {
   const [sales, setSales] = useState<Sale[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
+  const [saleToAdjust, setSaleToAdjust] = useState<Sale | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -172,13 +174,24 @@ export const Sales: React.FC = () => {
                       {formatCurrency(s.total_amount)}
                     </td>
                     <td className="px-5 py-3.5 text-right">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedSale(s)}
-                        className="px-2.5 py-1 text-xs font-semibold rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                      >
-                        Receipt (रसीद)
-                      </button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedSale(s)}
+                          className="px-2.5 py-1 text-xs font-semibold rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                        >
+                          Receipt (रसीद)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSaleToAdjust(s)}
+                          className="flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-md border border-black dark:border-white bg-black dark:bg-white text-white dark:text-black hover:opacity-90 transition-opacity btn-press shadow-xs"
+                          title="Adjust Weight, Price or Delete Bill"
+                        >
+                          <SlidersHorizontal className="w-3 h-3" />
+                          <span>Adjust (सुधार)</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -267,8 +280,20 @@ export const Sales: React.FC = () => {
               )}
             </div>
 
-            {/* Print button */}
-            <div className="pt-2 flex justify-end gap-2">
+            {/* Footer Buttons */}
+            <div className="pt-2 flex flex-wrap items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const s = selectedSale;
+                  setSelectedSale(null);
+                  setSaleToAdjust(s);
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-black dark:text-white text-xs font-bold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5" />
+                <span>Adjust / Delete Bill (सुधार या हटाएं)</span>
+              </button>
               <button
                 type="button"
                 onClick={handlePrint}
@@ -281,6 +306,15 @@ export const Sales: React.FC = () => {
           </div>
         </BottomSheet>
       )}
+
+      {/* Transaction Adjustment & Deletion Modal */}
+      <TransactionAdjustmentModal
+        isOpen={!!saleToAdjust}
+        onClose={() => setSaleToAdjust(null)}
+        onSuccess={loadSales}
+        type="SALE"
+        transaction={saleToAdjust}
+      />
     </div>
   );
 };

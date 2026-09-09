@@ -84,7 +84,6 @@ export const api = {
       amount: number;
       unit: string;
       party_name: string;
-      payment_method: string;
     };
 
     type SaleBatch = {
@@ -97,7 +96,6 @@ export const api = {
       amount: number;
       unit: string;
       party_name: string;
-      payment_method: string;
       remaining_stock: number;
     };
 
@@ -108,7 +106,6 @@ export const api = {
       created_at: string;
       reference_number: string;
       party_name: string;
-      payment_method: string;
       rate: number;
       quantity: number;
       amount: number;
@@ -130,7 +127,6 @@ export const api = {
             amount: Number(it.amount || 0),
             unit: it.unit || item?.default_unit || 'KG',
             party_name: p.party_name || 'Walk-in Cash Party (नकदी पार्टी)',
-            payment_method: p.payment_method || 'CASH',
           });
         }
       });
@@ -150,7 +146,6 @@ export const api = {
             amount: Number(it.amount || 0),
             unit: it.unit || item?.default_unit || 'KG',
             party_name: s.party_name || 'Buyer (क्रेता)',
-            payment_method: s.payment_method || 'CASH',
           });
         }
       });
@@ -164,7 +159,6 @@ export const api = {
       created_at: string;
       reference_number: string;
       party_name: string;
-      payment_method: string;
       rate: number;
       quantity: number;
       amount: number;
@@ -179,7 +173,6 @@ export const api = {
         created_at: p.created_at,
         reference_number: p.purchase_number,
         party_name: p.party_name,
-        payment_method: p.payment_method,
         rate: p.rate,
         quantity: p.quantity,
         amount: p.amount,
@@ -192,7 +185,6 @@ export const api = {
         created_at: s.created_at,
         reference_number: s.sale_number,
         party_name: s.party_name,
-        payment_method: s.payment_method,
         rate: s.rate,
         quantity: s.quantity,
         amount: s.amount,
@@ -355,18 +347,31 @@ export const api = {
 
   async deleteItem(id: string): Promise<void> {
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('items').delete().eq('id', id);
-      if (error) {
-        console.error('Supabase delete item error:', error);
-        if (error.code === '23503') {
-          throw new Error('This material has recorded transactions (purchases or sales). You can edit or deactivate it instead of deleting (सामग्री का पुराना रिकॉर्ड मौजूद है, हटाने के बजाय निष्क्रिय करें)।');
+      try {
+        // Step 1: Cascade delete child records
+        await Promise.allSettled([
+          supabase.from('stock_cost_history').delete().eq('item_id', id),
+          supabase.from('inventory_ledger').delete().eq('item_id', id),
+          supabase.from('stock_adjustments').delete().eq('item_id', id),
+          supabase.from('purchase_items').delete().eq('item_id', id),
+          supabase.from('sale_items').delete().eq('item_id', id),
+        ]);
+
+        // Step 2: Delete item itself
+        const { error } = await supabase.from('items').delete().eq('id', id);
+        if (error) {
+          console.error('Supabase delete item error:', error);
+          throw new Error(error.message || 'Failed to delete item from database');
         }
-        throw new Error(error.message || 'Failed to delete item from database');
+      } catch (err: any) {
+        console.warn('Supabase cascade deleteItem warning, continuing with localDb:', err);
       }
     }
     try {
       localDb.deleteItem(id);
-    } catch {}
+    } catch (localErr) {
+      console.error('Local deleteItem error:', localErr);
+    }
   },
 
   async toggleItemActive(id: string): Promise<ScrapItem> {
@@ -446,8 +451,6 @@ export const api = {
     purchase_date: string;
     items: { item_id: string; quantity: number; unit: any; rate: number; amount: number }[];
     paid_amount: number;
-    payment_method: any;
-    notes?: string;
   }): Promise<Purchase> {
     if (isSupabaseConfigured && supabase) {
       try {
@@ -479,6 +482,65 @@ export const api = {
       }
     }
     return localDb.createPurchase(payload);
+  },
+
+  async deletePurchase(purchaseId: string): Promise<void> {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data: pItems } = await supabase.from('purchase_items').select('*').eq('purchase_id', purchaseId);
+        if (pItems && pItems.length > 0) {
+          for (const it of pItems) {
+            const { data: item } = await supabase.from('items').select('current_stock').eq('id', it.item_id).single();
+            if (item) {
+              const newStock = Math.max(0, Number(item.current_stock || 0) - Number(it.quantity || 0));
+              await supabase.from('items').update({ current_stock: newStock }).eq('id', it.item_id);
+            }
+          }
+        }
+        await Promise.allSettled([
+          supabase.from('inventory_ledger').delete().eq('reference_id', purchaseId),
+          supabase.from('payments').delete().eq('purchase_id', purchaseId),
+          supabase.from('purchase_items').delete().eq('purchase_id', purchaseId),
+        ]);
+        await supabase.from('purchases').delete().eq('id', purchaseId);
+      } catch (e) {
+        console.warn('Supabase deletePurchase warning, continuing with localDb:', e);
+      }
+    }
+    localDb.deletePurchase(purchaseId);
+  },
+
+  async updatePurchaseTransaction(
+    purchaseId: string,
+    updates: {
+      items: { item_id: string; quantity: number; rate: number; amount: number }[];
+      paid_amount?: number;
+    }
+  ): Promise<Purchase> {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        for (const it of updates.items) {
+          const { data: existingIt } = await supabase.from('purchase_items').select('quantity').eq('purchase_id', purchaseId).eq('item_id', it.item_id).single();
+          const oldQty = existingIt ? Number(existingIt.quantity) : 0;
+          const diff = Number(it.quantity) - oldQty;
+          const { data: curItem } = await supabase.from('items').select('current_stock').eq('id', it.item_id).single();
+          if (curItem) {
+            await supabase.from('items').update({ current_stock: Math.max(0, Number(curItem.current_stock || 0) + diff), default_purchase_rate: it.rate }).eq('id', it.item_id);
+          }
+          await supabase.from('purchase_items').update({ quantity: it.quantity, rate: it.rate, amount: it.amount }).eq('purchase_id', purchaseId).eq('item_id', it.item_id);
+        }
+        const totalAmount = updates.items.reduce((s, it) => s + it.amount, 0);
+        await supabase.from('purchases').update({
+          total_amount: totalAmount,
+          subtotal: totalAmount,
+          paid_amount: updates.paid_amount ?? 0,
+          due_amount: Math.max(0, totalAmount - (updates.paid_amount ?? 0)),
+        }).eq('id', purchaseId);
+      } catch (e) {
+        console.warn('Supabase updatePurchaseTransaction fallback:', e);
+      }
+    }
+    return localDb.updatePurchaseTransaction(purchaseId, updates);
   },
 
   // Sales
@@ -539,6 +601,65 @@ export const api = {
       }
     }
     return localDb.createSale(payload);
+  },
+
+  async deleteSale(saleId: string): Promise<void> {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data: sItems } = await supabase.from('sale_items').select('*').eq('sale_id', saleId);
+        if (sItems && sItems.length > 0) {
+          for (const it of sItems) {
+            const { data: item } = await supabase.from('items').select('current_stock').eq('id', it.item_id).single();
+            if (item) {
+              const newStock = Number(item.current_stock || 0) + Number(it.quantity || 0);
+              await supabase.from('items').update({ current_stock: newStock }).eq('id', it.item_id);
+            }
+          }
+        }
+        await Promise.allSettled([
+          supabase.from('inventory_ledger').delete().eq('reference_id', saleId),
+          supabase.from('payments').delete().eq('sale_id', saleId),
+          supabase.from('sale_items').delete().eq('sale_id', saleId),
+        ]);
+        await supabase.from('sales').delete().eq('id', saleId);
+      } catch (e) {
+        console.warn('Supabase deleteSale warning, continuing with localDb:', e);
+      }
+    }
+    localDb.deleteSale(saleId);
+  },
+
+  async updateSaleTransaction(
+    saleId: string,
+    updates: {
+      items: { item_id: string; quantity: number; rate: number; amount: number }[];
+      received_amount?: number;
+    }
+  ): Promise<Sale> {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        for (const it of updates.items) {
+          const { data: existingIt } = await supabase.from('sale_items').select('quantity').eq('sale_id', saleId).eq('item_id', it.item_id).single();
+          const oldQty = existingIt ? Number(existingIt.quantity) : 0;
+          const diff = Number(it.quantity) - oldQty;
+          const { data: curItem } = await supabase.from('items').select('current_stock').eq('id', it.item_id).single();
+          if (curItem) {
+            await supabase.from('items').update({ current_stock: Math.max(0, Number(curItem.current_stock || 0) - diff), default_sale_rate: it.rate }).eq('id', it.item_id);
+          }
+          await supabase.from('sale_items').update({ quantity: it.quantity, rate: it.rate, amount: it.amount }).eq('sale_id', saleId).eq('item_id', it.item_id);
+        }
+        const totalAmount = updates.items.reduce((s, it) => s + it.amount, 0);
+        await supabase.from('sales').update({
+          total_amount: totalAmount,
+          subtotal: totalAmount,
+          received_amount: updates.received_amount ?? 0,
+          due_amount: Math.max(0, totalAmount - (updates.received_amount ?? 0)),
+        }).eq('id', saleId);
+      } catch (e) {
+        console.warn('Supabase updateSaleTransaction fallback:', e);
+      }
+    }
+    return localDb.updateSaleTransaction(saleId, updates);
   },
 
   // Stock Adjustments
