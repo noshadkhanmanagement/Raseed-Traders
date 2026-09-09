@@ -42,6 +42,14 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
+      // Full form reset on every open to prevent stale data bleed-through
+      setPaidAmount('');
+      setNotes('');
+      setPaymentMethod('CASH');
+      setCustomPartyName('');
+      setPurchaseDate(new Date().toISOString().split('T')[0]);
+      setErrorMessage('');
+      setIsSubmitting(false);
       loadDependencies();
     }
   }, [isOpen, initialItem]);
@@ -57,7 +65,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
 
       if (initialPartyId) {
         setSelectedPartyId(initialPartyId);
-      } else if (allParties.length > 0 && !selectedPartyId) {
+      } else if (allParties.length > 0) {
         setSelectedPartyId(allParties[0].id);
       }
 
@@ -80,6 +88,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
       console.error(err);
     }
   };
+
 
   const handleItemChange = (index: number, itemId: string) => {
     const item = items.find((it) => it.id === itemId);

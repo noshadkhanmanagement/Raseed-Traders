@@ -43,6 +43,14 @@ export const SaleModal: React.FC<SaleModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
+      // Full form reset on every open to prevent stale data bleed-through
+      setReceivedAmount('');
+      setNotes('');
+      setPaymentMethod('CASH');
+      setCustomPartyName('');
+      setSaleDate(new Date().toISOString().split('T')[0]);
+      setErrorMessage('');
+      setIsSubmitting(false);
       loadDependencies();
     }
   }, [isOpen, initialItem]);
@@ -60,7 +68,7 @@ export const SaleModal: React.FC<SaleModalProps> = ({
 
       if (initialPartyId) {
         setSelectedPartyId(initialPartyId);
-      } else if (allParties.length > 0 && !selectedPartyId) {
+      } else if (allParties.length > 0) {
         setSelectedPartyId(allParties[0].id);
       }
 

@@ -11,7 +11,6 @@ import {
   Search,
   History,
   Tag,
-  SlidersHorizontal,
 } from 'lucide-react';
 import { api } from '../services/api';
 import { ScrapItem, Purchase, Sale } from '../types';
@@ -22,15 +21,17 @@ import { ItemModal } from '../components/transactions/ItemModal';
 interface ContextType {
   openPurchase: (item?: ScrapItem) => void;
   openSale: (item?: ScrapItem) => void;
+  refreshCounter?: number;
 }
 
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { openPurchase, openSale } = useOutletContext<ContextType>();
+  const { openPurchase, openSale, refreshCounter } = useOutletContext<ContextType>();
 
   const [items, setItems] = useState<ScrapItem[]>([]);
   const [todayPurchases, setTodayPurchases] = useState<Purchase[]>([]);
   const [todaySales, setTodaySales] = useState<Sale[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Item Rate History & Custom Item States
   const [selectedHistoryItemId, setSelectedHistoryItemId] = useState<string | null>(null);
@@ -42,6 +43,7 @@ export const Dashboard: React.FC = () => {
   const todayStr = new Date().toISOString().split('T')[0];
 
   const loadData = async () => {
+    setIsLoading(true);
     try {
       const [allItems, purchasesData, salesData] = await Promise.all([
         api.getItems(),
@@ -54,12 +56,14 @@ export const Dashboard: React.FC = () => {
       setTodaySales(salesData.filter((s) => s.sale_date === todayStr && s.status === 'FINAL'));
     } catch (err) {
       console.error('Failed to load dashboard data', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [refreshCounter]);
 
   // 1. Roz Kitna Khareeda
   const todayPurchasedAmount = todayPurchases.reduce((sum, p) => sum + p.total_amount, 0);

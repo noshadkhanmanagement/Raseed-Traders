@@ -581,8 +581,12 @@ export const api = {
         reason: payload.reason,
         notes: payload.notes,
       };
-      const { error } = await supabase.rpc('rpc_create_stock_adjustment', { p_payload: rpcPayload });
+      const { data, error } = await supabase.rpc('rpc_create_stock_adjustment', { p_payload: rpcPayload });
       if (error) throw new Error(error.message);
+      // Supabase succeeded — sync local and return
+      try { localDb.createStockAdjustment(payload); } catch {}
+      const adjustments = await this.getStockAdjustments();
+      return adjustments[0] || localDb.createStockAdjustment(payload);
     }
     return localDb.createStockAdjustment(payload);
   },
@@ -631,6 +635,10 @@ export const api = {
       };
       const { error } = await supabase.rpc('rpc_create_payment', { p_payload: rpcPayload });
       if (error) throw new Error(error.message);
+      // Supabase succeeded — sync local and return
+      try { localDb.createPayment(payload); } catch {}
+      const payments = await this.getPayments();
+      return payments[0] || localDb.createPayment(payload);
     }
     return localDb.createPayment(payload);
   },

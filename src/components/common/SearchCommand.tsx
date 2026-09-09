@@ -32,6 +32,14 @@ export const SearchCommand: React.FC<SearchCommandProps> = ({
     setResults(res);
   }, [query]);
 
+  // Reset search state on every open
+  useEffect(() => {
+    if (isOpen) {
+      setQuery('');
+      setResults({ items: [], parties: [], purchases: [], sales: [] });
+    }
+  }, [isOpen]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();

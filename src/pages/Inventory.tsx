@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { Search, Plus, SlidersHorizontal, Trash2, Edit3, Tag, History } from 'lucide-react';
+import { Search, Plus, SlidersHorizontal, Trash2, Edit3, History } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { StockAdjustmentModal } from '../components/transactions/StockAdjustmentModal';
 import { ItemModal } from '../components/transactions/ItemModal';
@@ -12,10 +12,11 @@ import { formatCurrency } from '../utils/formatters';
 interface ContextType {
   openPurchase?: (item?: ScrapItem) => void;
   openSale?: (item?: ScrapItem) => void;
+  refreshCounter?: number;
 }
 
 export const Inventory: React.FC = () => {
-  const { openPurchase, openSale } = useOutletContext<ContextType>() || {};
+  const { openPurchase, openSale, refreshCounter } = useOutletContext<ContextType>() || {};
   const [items, setItems] = useState<ScrapItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -34,7 +35,7 @@ export const Inventory: React.FC = () => {
 
   useEffect(() => {
     loadInventory();
-  }, []);
+  }, [refreshCounter]);
 
   const loadInventory = async () => {
     setIsLoading(true);

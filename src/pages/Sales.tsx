@@ -9,10 +9,11 @@ import { formatCurrency, formatDate, downloadCSV } from '../utils/formatters';
 
 interface ContextType {
   openSale: () => void;
+  refreshCounter?: number;
 }
 
 export const Sales: React.FC = () => {
-  const { openSale } = useOutletContext<ContextType>();
+  const { openSale, refreshCounter } = useOutletContext<ContextType>();
   const [sales, setSales] = useState<Sale[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
@@ -20,7 +21,7 @@ export const Sales: React.FC = () => {
 
   useEffect(() => {
     loadSales();
-  }, []);
+  }, [refreshCounter]);
 
   const loadSales = async () => {
     setIsLoading(true);

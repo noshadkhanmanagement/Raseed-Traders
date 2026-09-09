@@ -38,6 +38,9 @@ export const AppShell: React.FC = () => {
   const [activeItemForPurchase, setActiveItemForPurchase] = useState<ScrapItem | null>(null);
   const [activeItemForSale, setActiveItemForSale] = useState<ScrapItem | null>(null);
 
+  // Data refresh counter — increments on every successful transaction so child pages re-fetch
+  const [refreshCounter, setRefreshCounter] = useState(0);
+
   // Global keyboard shortcut for Cmd/Ctrl + K
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -52,6 +55,7 @@ export const AppShell: React.FC = () => {
 
   const handleRefreshData = () => {
     queryClient.invalidateQueries();
+    setRefreshCounter((c) => c + 1);
   };
 
   const handleActionSelect = (
@@ -168,6 +172,7 @@ export const AppShell: React.FC = () => {
               },
               openAdjustment: () => setIsAdjustmentOpen(true),
               openItem: () => setIsItemOpen(true),
+              refreshCounter,
             }}
           />
         </div>

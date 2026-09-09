@@ -9,10 +9,11 @@ import { formatCurrency, formatDate, downloadCSV } from '../utils/formatters';
 
 interface ContextType {
   openPurchase: () => void;
+  refreshCounter?: number;
 }
 
 export const Purchases: React.FC = () => {
-  const { openPurchase } = useOutletContext<ContextType>();
+  const { openPurchase, refreshCounter } = useOutletContext<ContextType>();
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
@@ -20,7 +21,7 @@ export const Purchases: React.FC = () => {
 
   useEffect(() => {
     loadPurchases();
-  }, []);
+  }, [refreshCounter]);
 
   const loadPurchases = async () => {
     setIsLoading(true);
