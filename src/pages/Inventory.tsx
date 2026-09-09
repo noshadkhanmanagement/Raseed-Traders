@@ -65,22 +65,35 @@ export const Inventory: React.FC = () => {
     }
   };
 
-  const filteredItems = items.filter((it) => {
-    const q = searchQuery.toLowerCase().trim();
-    if (q) {
-      const match =
-        it.name.toLowerCase().includes(q) ||
-        it.local_name.toLowerCase().includes(q) ||
-        (it.code && it.code.toLowerCase().includes(q));
-      if (!match) return false;
-    }
-    if (stockFilter === 'IN_STOCK') return it.current_stock > 0;
-    if (stockFilter === 'ZERO_STOCK') return it.current_stock <= 0;
-    return true;
-  });
+  const [unitFilter, setUnitFilter] = useState<'ALL' | 'KG' | 'PIECE'>('ALL');
+  const [sortBy, setSortBy] = useState<'name_asc' | 'name_desc' | 'stock_desc' | 'rate_desc'>('name_asc');
+
+  const filteredItems = items
+    .filter((it) => {
+      const q = searchQuery.toLowerCase().trim();
+      if (q) {
+        const match =
+          it.name.toLowerCase().includes(q) ||
+          it.local_name.toLowerCase().includes(q) ||
+          (it.code && it.code.toLowerCase().includes(q));
+        if (!match) return false;
+      }
+      if (stockFilter === 'IN_STOCK' && it.current_stock <= 0) return false;
+      if (stockFilter === 'ZERO_STOCK' && it.current_stock > 0) return false;
+      if (unitFilter !== 'ALL' && it.default_unit !== unitFilter) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'name_asc') return a.name.localeCompare(b.name);
+      if (sortBy === 'name_desc') return b.name.localeCompare(a.name);
+      if (sortBy === 'stock_desc') return b.current_stock - a.current_stock;
+      if (sortBy === 'rate_desc') return (b.default_purchase_rate || 0) - (a.default_purchase_rate || 0);
+      return 0;
+    });
 
   const totalStockQuantity = items.reduce((sum, it) => sum + Math.max(0, it.current_stock), 0);
   const inStockCount = items.filter((it) => it.current_stock > 0).length;
+  const zeroStockCount = items.filter((it) => it.current_stock <= 0).length;
 
   const handleAdjustClick = (item?: ScrapItem) => {
     setSelectedItemToAdjust(item || null);
@@ -146,7 +159,7 @@ export const Inventory: React.FC = () => {
   };
 
   return (
-    <div className="space-y-5 page-enter">
+    <div className="space-y-4 page-enter">
       <PageHeader
         title="Kitna Stock Hai (स्टॉक / माल)"
         subtitle="Current scrap inventory & spot pricing (सामग्रियों का स्टॉक व चालू खरीद दर)"
@@ -160,12 +173,12 @@ export const Inventory: React.FC = () => {
               title="Restore any missing default items (डिफ़ॉल्ट 25 सामग्री रीस्टोर करें)"
             >
               <IconReset size={14} className={isRestoringDefaults ? 'animate-spin' : ''} />
-              <span className="hidden sm:inline">{isRestoringDefaults ? 'Restoring...' : 'Restore 25 Items'}</span>
+              <span className="hidden sm:inline">Reset Defaults (25)</span>
             </button>
             <button
               type="button"
               onClick={() => handleAdjustClick()}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-black dark:text-white text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 btn-press shadow-xs"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-black dark:text-white text-xs font-bold hover:bg-zinc-100 dark:hover:bg-zinc-800 btn-press shadow-xs"
             >
               <IconAdjust size={14} />
               <span>Adjust Stock</span>
@@ -182,77 +195,174 @@ export const Inventory: React.FC = () => {
         }
       />
 
-      {/* iOS KPI Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-        <div className="rounded-[26px] border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.5)]">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            Total Available Stock (कुल उपलब्ध स्टॉक)
-          </div>
-          <div className="mt-2 text-3xl font-black text-black dark:text-white font-sans">
-            {totalStockQuantity.toLocaleString('en-IN')} <span className="text-sm font-bold text-zinc-400">KG</span>
-          </div>
-          <div className="mt-1 text-[11px] text-zinc-500 font-medium">Across all active scrap materials in godown</div>
+      {/* iOS Status Pill Bar (Compact Header Info instead of KPI Widgets) */}
+      <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-xs">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800/80 text-zinc-600 dark:text-zinc-300 font-medium">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-500/20" />
+          <span>
+            {items.length} Materials · <strong className="text-black dark:text-white font-bold">{totalStockQuantity.toLocaleString('en-IN')} KG</strong> Stock · <strong className="text-black dark:text-white font-bold">{inStockCount}</strong> In Stock
+          </span>
         </div>
-
-        <div className="rounded-[26px] border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.5)]">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            Items In Stock (उपलब्ध सामग्री)
-          </div>
-          <div className="mt-2 text-3xl font-black text-black dark:text-white font-sans">
-            {inStockCount} <span className="text-sm font-bold text-zinc-400">/ {items.length} materials</span>
-          </div>
-          <div className="mt-1 text-[11px] text-zinc-500 font-medium">Materials currently having positive stock</div>
-        </div>
+        <span className="text-[11px] text-zinc-400 font-medium">
+          Showing {filteredItems.length} of {items.length}
+        </span>
       </div>
 
-      {/* iOS Search Bar & Segmented Filter */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-        <div className="relative flex-1">
-          <IconSearch size={16} className="text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search materials (सामग्री का नाम खोजें, उदा: LOHA, लोहा, 2 TYRE...)"
-            className="w-full pl-10 pr-4 py-2.5 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 text-black dark:text-white text-xs placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-colors"
-          />
+      {/* iOS Segmented Controls Bar for Items Listing (All Exact Options) */}
+      <div className="space-y-2.5">
+        {/* Row 1: Search and Stock Filter Segmented Control */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          {/* iOS Search Input */}
+          <div className="relative flex-1">
+            <IconSearch size={16} className="text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search materials (सामग्री का नाम खोजें, उदा: LOHA, लोहा, 2 TYRE...)"
+              className="w-full pl-10 pr-9 py-2 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 text-black dark:text-white text-xs placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-colors"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 text-[10px] flex items-center justify-center hover:bg-zinc-300"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* iOS Stock Segmented Control */}
+          <div className="inline-flex p-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800 shrink-0 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => setStockFilter('ALL')}
+              className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                stockFilter === 'ALL'
+                  ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                  : 'text-zinc-500 hover:text-black dark:hover:text-white'
+              }`}
+            >
+              All ({items.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setStockFilter('IN_STOCK')}
+              className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                stockFilter === 'IN_STOCK'
+                  ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                  : 'text-zinc-500 hover:text-black dark:hover:text-white'
+              }`}
+            >
+              In Stock ({inStockCount})
+            </button>
+            <button
+              type="button"
+              onClick={() => setStockFilter('ZERO_STOCK')}
+              className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                stockFilter === 'ZERO_STOCK'
+                  ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                  : 'text-zinc-500 hover:text-black dark:hover:text-white'
+              }`}
+            >
+              0 Stock ({zeroStockCount})
+            </button>
+          </div>
         </div>
 
-        {/* iOS Segmented Filter Pill */}
-        <div className="inline-flex p-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800 shrink-0">
-          <button
-            type="button"
-            onClick={() => setStockFilter('ALL')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
-              stockFilter === 'ALL'
-                ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
-                : 'text-zinc-500 hover:text-black dark:hover:text-white'
-            }`}
-          >
-            All ({items.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setStockFilter('IN_STOCK')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
-              stockFilter === 'IN_STOCK'
-                ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
-                : 'text-zinc-500 hover:text-black dark:hover:text-white'
-            }`}
-          >
-            In Stock ({items.filter((i) => i.current_stock > 0).length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setStockFilter('ZERO_STOCK')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
-              stockFilter === 'ZERO_STOCK'
-                ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
-                : 'text-zinc-500 hover:text-black dark:hover:text-white'
-            }`}
-          >
-            0 Stock ({items.filter((i) => i.current_stock <= 0).length})
-          </button>
+        {/* Row 2: Secondary Exact Options (Unit Segments + Sort Segments) */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-zinc-100 dark:border-zinc-800/80">
+          {/* Unit Segments */}
+          <div className="inline-flex items-center gap-1 text-xs">
+            <span className="text-[11px] font-bold text-zinc-400 mr-1">Unit:</span>
+            <div className="inline-flex p-0.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800">
+              <button
+                type="button"
+                onClick={() => setUnitFilter('ALL')}
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all ${
+                  unitFilter === 'ALL'
+                    ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                    : 'text-zinc-500 hover:text-black dark:hover:text-white'
+                }`}
+              >
+                All
+              </button>
+              <button
+                type="button"
+                onClick={() => setUnitFilter('KG')}
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all ${
+                  unitFilter === 'KG'
+                    ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                    : 'text-zinc-500 hover:text-black dark:hover:text-white'
+                }`}
+              >
+                KG
+              </button>
+              <button
+                type="button"
+                onClick={() => setUnitFilter('PIECE')}
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all ${
+                  unitFilter === 'PIECE'
+                    ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                    : 'text-zinc-500 hover:text-black dark:hover:text-white'
+                }`}
+              >
+                PIECE
+              </button>
+            </div>
+          </div>
+
+          {/* Sort Segments */}
+          <div className="inline-flex items-center gap-1 text-xs">
+            <span className="text-[11px] font-bold text-zinc-400 mr-1">Sort:</span>
+            <div className="inline-flex p-0.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800">
+              <button
+                type="button"
+                onClick={() => setSortBy('name_asc')}
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all ${
+                  sortBy === 'name_asc'
+                    ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                    : 'text-zinc-500 hover:text-black dark:hover:text-white'
+                }`}
+              >
+                A to Z
+              </button>
+              <button
+                type="button"
+                onClick={() => setSortBy('name_desc')}
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all ${
+                  sortBy === 'name_desc'
+                    ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                    : 'text-zinc-500 hover:text-black dark:hover:text-white'
+                }`}
+              >
+                Z to A
+              </button>
+              <button
+                type="button"
+                onClick={() => setSortBy('stock_desc')}
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all ${
+                  sortBy === 'stock_desc'
+                    ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                    : 'text-zinc-500 hover:text-black dark:hover:text-white'
+                }`}
+              >
+                Stock ↓
+              </button>
+              <button
+                type="button"
+                onClick={() => setSortBy('rate_desc')}
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all ${
+                  sortBy === 'rate_desc'
+                    ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                    : 'text-zinc-500 hover:text-black dark:hover:text-white'
+                }`}
+              >
+                Rate ↓
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

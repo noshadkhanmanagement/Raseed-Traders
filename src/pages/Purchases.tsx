@@ -37,15 +37,42 @@ export const Purchases: React.FC = () => {
     }
   };
 
-  const filteredPurchases = purchases.filter((p) => {
-    const q = searchQuery.toLowerCase().trim();
-    if (!q) return true;
-    return (
-      p.purchase_number.toLowerCase().includes(q) ||
-      (p.party_name && p.party_name.toLowerCase().includes(q)) ||
-      p.items?.some((it) => it.item_name?.toLowerCase().includes(q))
-    );
-  });
+  const [periodFilter, setPeriodFilter] = useState<'ALL' | 'TODAY' | 'THIS_MONTH'>('ALL');
+  const [paymentFilter, setPaymentFilter] = useState<'ALL' | 'CASH' | 'CREDIT'>('ALL');
+  const [sortBy, setSortBy] = useState<'newest' | 'amount_desc' | 'weight_desc'>('newest');
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const currentMonthStr = todayStr.substring(0, 7);
+
+  const todayCount = purchases.filter((p) => p.purchase_date && p.purchase_date.startsWith(todayStr)).length;
+  const thisMonthCount = purchases.filter((p) => p.purchase_date && p.purchase_date.startsWith(currentMonthStr)).length;
+
+  const filteredPurchases = purchases
+    .filter((p) => {
+      const q = searchQuery.toLowerCase().trim();
+      if (q) {
+        const match =
+          p.purchase_number.toLowerCase().includes(q) ||
+          (p.party_name && p.party_name.toLowerCase().includes(q)) ||
+          p.items?.some((it) => it.item_name?.toLowerCase().includes(q));
+        if (!match) return false;
+      }
+      if (periodFilter === 'TODAY' && (!p.purchase_date || !p.purchase_date.startsWith(todayStr))) return false;
+      if (periodFilter === 'THIS_MONTH' && (!p.purchase_date || !p.purchase_date.startsWith(currentMonthStr))) return false;
+      if (paymentFilter === 'CASH' && (p.due_amount || 0) > 0) return false;
+      if (paymentFilter === 'CREDIT' && (p.due_amount || 0) <= 0) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'newest') return b.purchase_date.localeCompare(a.purchase_date);
+      if (sortBy === 'amount_desc') return b.total_amount - a.total_amount;
+      if (sortBy === 'weight_desc') {
+        const wA = a.total_weight ?? (a.items?.reduce((s, it) => s + it.quantity, 0) || 0);
+        const wB = b.total_weight ?? (b.items?.reduce((s, it) => s + it.quantity, 0) || 0);
+        return wB - wA;
+      }
+      return 0;
+    });
 
   const totalPurchasesAmount = purchases.reduce((sum, p) => sum + p.total_amount, 0);
   const totalPurchasesWeight = purchases.reduce((sum, p) => sum + (p.total_weight ?? (p.items?.reduce((s, it) => s + it.quantity, 0) || 0)), 0);
@@ -69,7 +96,7 @@ export const Purchases: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 page-enter">
+    <div className="space-y-4 page-enter">
       <PageHeader
         title="Roz Kitna Khareeda (खरीदी रजिस्टर)"
         subtitle="Complete log of scrap materials bought, weight, and amounts paid"
@@ -78,7 +105,7 @@ export const Purchases: React.FC = () => {
             <button
               type="button"
               onClick={handleExportCSV}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-black dark:text-white text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 btn-press shadow-xs"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-black dark:text-white text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 btn-press shadow-xs"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Export CSV</span>
@@ -86,7 +113,7 @@ export const Purchases: React.FC = () => {
             <button
               type="button"
               onClick={openPurchase}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black dark:bg-white text-white dark:text-black text-xs font-semibold hover:opacity-90 btn-press shadow-xs"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-bold hover:opacity-90 btn-press shadow-xs"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Nayi Kharidi (Buy)</span>
@@ -95,39 +122,164 @@ export const Purchases: React.FC = () => {
         }
       />
 
-      {/* iOS KPI Summary Widgets */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-        <div className="rounded-[26px] border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.5)]">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            Total Purchased Amount (कुल खरीदी राशि)
-          </div>
-          <div className="mt-2 text-3xl font-black text-black dark:text-white font-sans">
-            {formatCurrency(totalPurchasesAmount)}
-          </div>
-          <div className="mt-1 text-[11px] text-zinc-500 font-medium">{purchases.length} total purchase transactions</div>
+      {/* iOS Status Pill Bar (Compact Header Info instead of KPI Widgets) */}
+      <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-xs">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800/80 text-zinc-600 dark:text-zinc-300 font-medium">
+          <span className="w-2 h-2 rounded-full bg-blue-500 ring-2 ring-blue-500/20" />
+          <span>
+            {purchases.length} Purchase Bills · Total: <strong className="text-black dark:text-white font-bold">{formatCurrency(totalPurchasesAmount)}</strong> ({totalPurchasesWeight} KG)
+          </span>
         </div>
-
-        <div className="rounded-[26px] border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.5)]">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            Total Purchased Weight (कुल खरीदा गया वज़न)
-          </div>
-          <div className="mt-2 text-3xl font-black text-black dark:text-white font-sans">
-            {totalPurchasesWeight} <span className="text-sm font-bold text-zinc-400">KG</span>
-          </div>
-          <div className="mt-1 text-[11px] text-zinc-500 font-medium">Total weight received in godown</div>
-        </div>
+        <span className="text-[11px] text-zinc-400 font-medium">
+          Showing {filteredPurchases.length} of {purchases.length}
+        </span>
       </div>
 
-      {/* Search Input */}
-      <div className="relative">
-        <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search by invoice number, supplier name, or material..."
-          className="w-full pl-10 pr-4 py-2.5 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 text-black dark:text-white text-xs placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-colors"
-        />
+      {/* iOS Segmented Controls Bar for Purchases Listing (All Exact Options) */}
+      <div className="space-y-2.5">
+        {/* Row 1: Search & Period Segmented Control */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          {/* Search Input */}
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by invoice number, supplier name, or material..."
+              className="w-full pl-10 pr-9 py-2 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 text-black dark:text-white text-xs placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-colors"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 text-[10px] flex items-center justify-center hover:bg-zinc-300"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* Period Segmented Control */}
+          <div className="inline-flex p-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800 shrink-0 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => setPeriodFilter('ALL')}
+              className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                periodFilter === 'ALL'
+                  ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                  : 'text-zinc-500 hover:text-black dark:hover:text-white'
+              }`}
+            >
+              All ({purchases.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setPeriodFilter('TODAY')}
+              className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                periodFilter === 'TODAY'
+                  ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                  : 'text-zinc-500 hover:text-black dark:hover:text-white'
+              }`}
+            >
+              Today ({todayCount})
+            </button>
+            <button
+              type="button"
+              onClick={() => setPeriodFilter('THIS_MONTH')}
+              className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                periodFilter === 'THIS_MONTH'
+                  ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                  : 'text-zinc-500 hover:text-black dark:hover:text-white'
+              }`}
+            >
+              Month ({thisMonthCount})
+            </button>
+          </div>
+        </div>
+
+        {/* Row 2: Secondary Exact Options (Payment Mode Segments + Sort Segments) */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-zinc-100 dark:border-zinc-800/80">
+          {/* Payment Mode Segments */}
+          <div className="inline-flex items-center gap-1 text-xs">
+            <span className="text-[11px] font-bold text-zinc-400 mr-1">Payment:</span>
+            <div className="inline-flex p-0.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800">
+              <button
+                type="button"
+                onClick={() => setPaymentFilter('ALL')}
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all ${
+                  paymentFilter === 'ALL'
+                    ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                    : 'text-zinc-500 hover:text-black dark:hover:text-white'
+                }`}
+              >
+                All Modes
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaymentFilter('CASH')}
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all ${
+                  paymentFilter === 'CASH'
+                    ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                    : 'text-zinc-500 hover:text-black dark:hover:text-white'
+                }`}
+              >
+                Cash (नकद)
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaymentFilter('CREDIT')}
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all ${
+                  paymentFilter === 'CREDIT'
+                    ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                    : 'text-zinc-500 hover:text-black dark:hover:text-white'
+                }`}
+              >
+                Udhaar (उधार)
+              </button>
+            </div>
+          </div>
+
+          {/* Sort Segments */}
+          <div className="inline-flex items-center gap-1 text-xs">
+            <span className="text-[11px] font-bold text-zinc-400 mr-1">Sort:</span>
+            <div className="inline-flex p-0.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800">
+              <button
+                type="button"
+                onClick={() => setSortBy('newest')}
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all ${
+                  sortBy === 'newest'
+                    ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                    : 'text-zinc-500 hover:text-black dark:hover:text-white'
+                }`}
+              >
+                Newest (नया)
+              </button>
+              <button
+                type="button"
+                onClick={() => setSortBy('amount_desc')}
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all ${
+                  sortBy === 'amount_desc'
+                    ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                    : 'text-zinc-500 hover:text-black dark:hover:text-white'
+                }`}
+              >
+                Amount ↓
+              </button>
+              <button
+                type="button"
+                onClick={() => setSortBy('weight_desc')}
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all ${
+                  sortBy === 'weight_desc'
+                    ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                    : 'text-zinc-500 hover:text-black dark:hover:text-white'
+                }`}
+              >
+                Weight ↓
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* MOBILE: iOS Inset Grouped Purchase Cards */}
