@@ -7,6 +7,7 @@ import {
   IconDelete,
   IconReset,
   IconHistory,
+  IconClose,
 } from '../components/common/Icons';
 import { PageHeader } from '../components/layout/PageHeader';
 import { BottomSheet } from '../components/common/BottomSheet';
@@ -221,9 +222,10 @@ export const Inventory: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 text-[10px] flex items-center justify-center hover:bg-zinc-300"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 flex items-center justify-center hover:bg-zinc-300 dark:hover:bg-zinc-600 transition-colors"
+                title="Clear search"
               >
-                ✕
+                <IconClose size={10} strokeWidth={2.5} />
               </button>
             )}
           </div>
@@ -378,7 +380,7 @@ export const Inventory: React.FC = () => {
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white font-mono text-[11px] font-extrabold flex items-center justify-center shrink-0 border border-zinc-200/60 dark:border-zinc-700/60">
+                    <span className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white tabular-nums font-sans text-[11px] font-extrabold flex items-center justify-center shrink-0 border border-zinc-200/60 dark:border-zinc-700/60">
                       {it.default_unit}
                     </span>
                     <div className="min-w-0" onClick={() => handleOpenHistory(it)}>
@@ -393,7 +395,7 @@ export const Inventory: React.FC = () => {
                   </div>
 
                   <div className="text-right shrink-0">
-                    <div className="text-base font-black text-black dark:text-white font-mono">
+                    <div className="text-base font-black text-black dark:text-white tabular-nums font-sans">
                       {it.current_stock.toLocaleString('en-IN')}{' '}
                       <span className="text-[10px] text-zinc-400 font-sans">{it.default_unit}</span>
                     </div>
@@ -410,7 +412,7 @@ export const Inventory: React.FC = () => {
                 <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800/70 flex items-center justify-between text-xs">
                   <div className="text-zinc-500 text-[11px]">
                     Kharidi:{' '}
-                    <span className="font-bold text-black dark:text-white font-mono">
+                    <span className="font-bold text-black dark:text-white tabular-nums font-sans">
                       {spotRate > 0 ? `₹${spotRate}/${it.default_unit}` : '₹0'}
                     </span>
                   </div>
@@ -473,7 +475,7 @@ export const Inventory: React.FC = () => {
                   const spotRate = it.default_purchase_rate || 0;
                   return (
                     <tr key={it.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition-colors">
-                      <td className="px-5 py-3.5 font-mono text-zinc-400">{idx + 1}</td>
+                      <td className="px-5 py-3.5 tabular-nums font-sans font-bold text-zinc-400">{idx + 1}</td>
                       <td
                         data-item-name={it.name}
                         className="px-5 py-3.5 cursor-pointer group"
@@ -486,7 +488,7 @@ export const Inventory: React.FC = () => {
                         </div>
                         <div className="text-xs text-zinc-500 dark:text-zinc-400">{it.local_name}</div>
                       </td>
-                      <td className="px-5 py-3.5 text-right font-mono">
+                      <td className="px-5 py-3.5 text-right tabular-nums font-sans">
                         {spotRate > 0 ? (
                           <div className="inline-flex items-center gap-1 font-bold text-xs text-black dark:text-white">
                             <span>{formatCurrency(spotRate)}</span>
@@ -604,7 +606,7 @@ export const Inventory: React.FC = () => {
               <div className="font-extrabold text-black dark:text-white">
                 {itemForDeletion.name} <span className="text-zinc-500 font-normal">({itemForDeletion.local_name})</span>
               </div>
-              <div className="font-mono font-bold text-zinc-700 dark:text-zinc-300">
+              <div className="tabular-nums font-sans font-bold text-zinc-700 dark:text-zinc-300">
                 Stock: {itemForDeletion.current_stock.toLocaleString('en-IN')} {itemForDeletion.default_unit}
               </div>
             </div>

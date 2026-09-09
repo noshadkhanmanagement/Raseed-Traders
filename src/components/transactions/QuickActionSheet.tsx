@@ -1,10 +1,9 @@
-import React from 'react';
 import {
-  ShoppingBag,
-  TrendingUp,
-  SlidersHorizontal,
-  PlusCircle,
-} from 'lucide-react';
+  IconShoppingBag,
+  IconTrendingUp,
+  IconSliders,
+  IconPlus,
+} from '../common/Icons';
 import { BottomSheet } from '../common/BottomSheet';
 
 interface QuickActionSheetProps {
@@ -23,25 +22,25 @@ export const QuickActionSheet: React.FC<QuickActionSheetProps> = ({
       id: 'purchase' as const,
       label: 'Roz Ki Kharidi (Record Purchase)',
       desc: 'Record scrap purchased from supplier (खरीदी दर्ज करें)',
-      icon: ShoppingBag,
+      icon: IconShoppingBag,
     },
     {
       id: 'sale' as const,
       label: 'Roz Ki Bikri (Record Sale)',
       desc: 'Sell scrap material to buyer (बिक्री दर्ज करें)',
-      icon: TrendingUp,
+      icon: IconTrendingUp,
     },
     {
       id: 'adjustment' as const,
       label: 'Stock Adjustment (स्टॉक सुधार)',
       desc: 'Update or correct available godown inventory',
-      icon: SlidersHorizontal,
+      icon: IconSliders,
     },
     {
       id: 'item' as const,
       label: 'Add Custom Material (नया सामान)',
       desc: 'Add custom scrap item with English & Hindi names',
-      icon: PlusCircle,
+      icon: IconPlus,
     },
   ];
 

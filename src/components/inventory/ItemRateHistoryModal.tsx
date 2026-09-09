@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Tag,
-  History,
-  Plus,
-  Minus,
-  Clock,
-  User,
-  Layers,
-  ArrowDownLeft,
-  TrendingUp,
-  Package,
-  SlidersHorizontal,
-} from 'lucide-react';
+  IconTag,
+  IconHistory,
+  IconPlus,
+  IconMinus,
+  IconClock,
+  IconUser,
+  IconLayers,
+  IconArrowDownLeft,
+  IconTrendingUp,
+  IconPackage,
+  IconSliders,
+} from '../common/Icons';
 import { BottomSheet } from '../common/BottomSheet';
 import { ItemAdjustmentModal } from './ItemAdjustmentModal';
 import { api } from '../../services/api';
@@ -167,7 +167,7 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
             {/* Quick Header Bar with Stock & Instant Buy/Sell Actions */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
               <div className="flex items-center gap-3">
-                <span className="p-2.5 rounded-xl bg-black dark:bg-white text-white dark:text-black font-mono font-extrabold text-xs">
+                <span className="p-2.5 rounded-xl bg-black dark:bg-white text-white dark:text-black tabular-nums font-sans font-extrabold text-xs">
                   {item.default_unit}
                 </span>
                 <div>
@@ -177,7 +177,7 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                   </div>
                   <div className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-2 mt-0.5">
                     <span>Current Stock (वर्तमान स्टॉक):</span>
-                    <span className="font-bold text-black dark:text-white font-mono">
+                    <span className="font-bold text-black dark:text-white tabular-nums font-sans">
                       {item.current_stock.toLocaleString('en-IN')} {item.default_unit}
                     </span>
                   </div>
@@ -195,7 +195,7 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                     }}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black dark:bg-white text-white dark:text-black text-xs font-semibold hover:opacity-90 btn-press shadow-xs"
                   >
-                    <Plus className="w-3.5 h-3.5" />
+                    <IconPlus size={14} />
                     <span>Buy (खरीदें)</span>
                   </button>
                 )}
@@ -209,7 +209,7 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                     }}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-black dark:text-white text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 btn-press shadow-xs"
                   >
-                    <Minus className="w-3.5 h-3.5" />
+                    <IconMinus size={14} />
                     <span>Sell (बेचें)</span>
                   </button>
                 )}
@@ -220,7 +220,7 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-black dark:border-white bg-black dark:bg-white text-white dark:text-black text-xs font-bold hover:opacity-90 btn-press shadow-xs"
                   title="Adjust Weight, Price & Delete Material"
                 >
-                  <SlidersHorizontal className="w-3.5 h-3.5" />
+                  <IconSliders size={14} />
                   <span>Adjust (सुधार)</span>
                 </button>
               </div>
@@ -231,10 +231,10 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
               {/* 1. Live Current Stock */}
               <div className="p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-xs">
                 <div className="text-[10px] uppercase font-bold text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
-                  <Package className="w-3 h-3 text-zinc-400" />
+                  <IconPackage size={12} className="text-zinc-400" />
                   <span>Current Stock</span>
                 </div>
-                <div className="mt-1 font-extrabold text-sm sm:text-base text-black dark:text-white font-mono">
+                <div className="mt-1 font-extrabold text-sm sm:text-base text-black dark:text-white tabular-nums font-sans">
                   {item.current_stock.toLocaleString('en-IN')}{' '}
                   <span className="text-[10px] font-normal text-zinc-400">{item.default_unit}</span>
                 </div>
@@ -244,14 +244,14 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
               {/* 2. Total Bought (Qty & ₹) */}
               <div className="p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-xs">
                 <div className="text-[10px] uppercase font-bold text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
-                  <ArrowDownLeft className="w-3 h-3 text-zinc-400" />
+                  <IconArrowDownLeft size={12} className="text-zinc-400" />
                   <span>Total Bought</span>
                 </div>
-                <div className="mt-1 font-extrabold text-sm sm:text-base text-black dark:text-white font-mono">
+                <div className="mt-1 font-extrabold text-sm sm:text-base text-black dark:text-white tabular-nums font-sans">
                   {stats?.totalQuantityPurchased.toLocaleString('en-IN') || 0}{' '}
                   <span className="text-[10px] font-normal text-zinc-400">{item.default_unit}</span>
                 </div>
-                <div className="text-[10px] text-zinc-400 mt-0.5 font-mono font-medium">
+                <div className="text-[10px] text-zinc-400 mt-0.5 tabular-nums font-sans font-medium">
                   {formatCurrency(stats?.totalAmountPurchased || 0)}
                 </div>
               </div>
@@ -261,7 +261,7 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                 <div className="text-[10px] uppercase font-bold text-zinc-500 dark:text-zinc-400">
                   Avg Buy Rate
                 </div>
-                <div className="mt-1 font-extrabold text-sm sm:text-base text-black dark:text-white font-mono">
+                <div className="mt-1 font-extrabold text-sm sm:text-base text-black dark:text-white tabular-nums font-sans">
                   {stats?.averagePurchaseRate ? formatCurrency(stats.averagePurchaseRate) : '₹0.00'}
                   <span className="text-[10px] font-normal text-zinc-400">/{item.default_unit}</span>
                 </div>
@@ -271,14 +271,14 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
               {/* 4. Total Sold (Qty & ₹) */}
               <div className="p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-xs">
                 <div className="text-[10px] uppercase font-bold text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
-                  <TrendingUp className="w-3 h-3 text-zinc-400" />
+                  <IconTrendingUp size={12} className="text-zinc-400" />
                   <span>Total Sold</span>
                 </div>
-                <div className="mt-1 font-extrabold text-sm sm:text-base text-black dark:text-white font-mono">
+                <div className="mt-1 font-extrabold text-sm sm:text-base text-black dark:text-white tabular-nums font-sans">
                   {stats?.totalQuantitySold.toLocaleString('en-IN') || 0}{' '}
                   <span className="text-[10px] font-normal text-zinc-400">{item.default_unit}</span>
                 </div>
-                <div className="text-[10px] text-zinc-400 mt-0.5 font-mono font-medium">
+                <div className="text-[10px] text-zinc-400 mt-0.5 tabular-nums font-sans font-medium">
                   {formatCurrency(stats?.totalAmountSold || 0)}
                 </div>
               </div>
@@ -288,7 +288,7 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                 <div className="text-[10px] uppercase font-bold text-zinc-500 dark:text-zinc-400">
                   Avg Sell Rate
                 </div>
-                <div className="mt-1 font-extrabold text-sm sm:text-base text-black dark:text-white font-mono">
+                <div className="mt-1 font-extrabold text-sm sm:text-base text-black dark:text-white tabular-nums font-sans">
                   {stats?.averageSaleRate ? formatCurrency(stats.averageSaleRate) : '₹0.00'}
                   <span className="text-[10px] font-normal text-zinc-400">/{item.default_unit}</span>
                 </div>
@@ -300,7 +300,7 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
             {stats && stats.distinctPurchaseRates.length > 0 && (
               <div className="p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/30 space-y-2">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-black dark:text-white">
-                  <Tag className="w-3.5 h-3.5" />
+                  <IconTag size={14} />
                   <span>Purchases by Rate (विभिन्न दरों पर खरीद का विवरण):</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -309,7 +309,7 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                       key={rg.rate}
                       className="px-2.5 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs shadow-xs"
                     >
-                      <span className="font-extrabold text-black dark:text-white font-mono">
+                      <span className="font-extrabold text-black dark:text-white tabular-nums font-sans">
                         {formatCurrency(rg.rate)}/{item.default_unit}
                       </span>
                       <span className="ml-1.5 text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">
@@ -332,9 +332,9 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                     : 'border-transparent text-zinc-500 hover:text-black dark:hover:text-white'
                 }`}
               >
-                <Layers className="w-3.5 h-3.5" />
+                <IconLayers size={14} />
                 <span>All Movements (सम्पूर्ण खाता लेज़र)</span>
-                <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] bg-zinc-100 dark:bg-zinc-800 font-mono">
+                <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] bg-zinc-100 dark:bg-zinc-800 tabular-nums font-sans">
                   {movements.length}
                 </span>
               </button>
@@ -348,9 +348,9 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                     : 'border-transparent text-zinc-500 hover:text-black dark:hover:text-white'
                 }`}
               >
-                <ArrowDownLeft className="w-3.5 h-3.5" />
+                <IconArrowDownLeft size={14} />
                 <span>Purchases (खरीद)</span>
-                <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] bg-zinc-100 dark:bg-zinc-800 font-mono">
+                <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] bg-zinc-100 dark:bg-zinc-800 tabular-nums font-sans">
                   {purchases.length}
                 </span>
               </button>
@@ -364,9 +364,9 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                     : 'border-transparent text-zinc-500 hover:text-black dark:hover:text-white'
                 }`}
               >
-                <TrendingUp className="w-3.5 h-3.5" />
+                <IconTrendingUp size={14} />
                 <span>Sales (बिक्री)</span>
-                <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] bg-zinc-100 dark:bg-zinc-800 font-mono">
+                <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] bg-zinc-100 dark:bg-zinc-800 tabular-nums font-sans">
                   {sales.length}
                 </span>
               </button>
@@ -377,7 +377,7 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
               <div className="space-y-2">
                 {movements.length === 0 ? (
                   <div className="p-8 rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/20 text-center space-y-2">
-                    <History className="w-7 h-7 mx-auto text-zinc-400" />
+                    <IconHistory size={28} className="mx-auto text-zinc-400" />
                     <div className="font-semibold text-xs text-black dark:text-white">
                       इस सामग्री का कोई खरीद या बिक्री लेज़र दर्ज नहीं है।
                     </div>
@@ -398,7 +398,7 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                             <div className="flex flex-wrap items-center gap-2">
                               {/* Type Badge */}
                               <span
-                                className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase font-mono tracking-wider ${
+                                className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tabular-nums font-sans tracking-wider ${
                                   isPurchase
                                     ? 'bg-zinc-900 text-white dark:bg-white dark:text-black'
                                     : 'border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100'
@@ -407,19 +407,19 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                                 {isPurchase ? '↓ Buy (खरीद)' : '↑ Sale (बिक्री)'}
                               </span>
 
-                              <span className="font-bold text-xs text-black dark:text-white font-mono">
+                              <span className="font-bold text-xs text-black dark:text-white tabular-nums font-sans">
                                 {m.reference_number}
                               </span>
 
                               <span className="text-[11px] text-zinc-500 flex items-center gap-1">
-                                <Clock className="w-3 h-3 inline" />
+                                <IconClock size={12} className="inline" />
                                 {formatDate(m.date)}
                               </span>
                             </div>
 
                             <div className="flex flex-wrap items-center gap-3 text-[11px] text-zinc-500">
                               <span className="flex items-center gap-1">
-                                <User className="w-3 h-3 text-zinc-400" />
+                                <IconUser size={12} className="text-zinc-400" />
                                 {m.party_name}
                               </span>
                             </div>
@@ -429,7 +429,7 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                           <div className="flex flex-wrap sm:flex-col sm:items-end justify-between items-center border-t sm:border-t-0 pt-2 sm:pt-0 border-zinc-100 dark:border-zinc-900 gap-1.5">
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] text-zinc-400 uppercase font-semibold">Rate:</span>
-                              <span className="font-extrabold text-xs sm:text-sm text-black dark:text-white font-mono">
+                              <span className="font-extrabold text-xs sm:text-sm text-black dark:text-white tabular-nums font-sans">
                                 {formatCurrency(m.rate)}/{m.unit}
                               </span>
                             </div>
@@ -437,20 +437,20 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                             <div className="text-xs text-zinc-500">
                               Qty:{' '}
                               <b
-                                className={`font-mono ${
+                                className={`tabular-nums font-sans ${
                                   isPurchase ? 'text-black dark:text-white' : 'text-black dark:text-white'
                                 }`}
                               >
                                 {isPurchase ? '+' : '-'}
                                 {m.quantity.toLocaleString('en-IN')} {m.unit}
                               </b>{' '}
-                              · Total: <b className="text-black dark:text-white font-mono">{formatCurrency(m.amount)}</b>
+                              · Total: <b className="text-black dark:text-white tabular-nums font-sans">{formatCurrency(m.amount)}</b>
                             </div>
 
                             {/* Remaining Stock Badge */}
                             <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px]">
                               <span className="text-zinc-500 text-[10px]">Remaining Stock (शेष):</span>
-                              <span className="font-extrabold text-black dark:text-white font-mono">
+                              <span className="font-extrabold text-black dark:text-white tabular-nums font-sans">
                                 {m.remaining_stock.toLocaleString('en-IN')} {m.unit}
                               </span>
                             </div>
@@ -468,7 +468,7 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
               <div className="space-y-2">
                 {purchases.length === 0 ? (
                   <div className="p-8 rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/20 text-center space-y-2">
-                    <Tag className="w-7 h-7 mx-auto text-zinc-400" />
+                    <IconTag size={28} className="mx-auto text-zinc-400" />
                     <div className="font-semibold text-xs text-black dark:text-white">
                       अभी तक इस सामग्री की कोई खरीद दर्ज नहीं हुई है।
                     </div>
@@ -481,7 +481,7 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                         }}
                         className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black dark:bg-white text-white dark:text-black text-xs font-semibold hover:opacity-90 btn-press"
                       >
-                        <Plus className="w-3.5 h-3.5" />
+                        <IconPlus size={14} />
                         <span>Record Purchase (खरीद दर्ज करें)</span>
                       </button>
                     )}
@@ -495,17 +495,17 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                       >
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-xs text-black dark:text-white font-mono">
+                            <span className="font-bold text-xs text-black dark:text-white tabular-nums font-sans">
                               {b.purchase_number}
                             </span>
                             <span className="text-[11px] text-zinc-500 flex items-center gap-1">
-                              <Clock className="w-3 h-3 inline" />
+                              <IconClock size={12} className="inline" />
                               {formatDate(b.purchase_date)}
                             </span>
                           </div>
                           <div className="flex items-center gap-3 text-[11px] text-zinc-500">
                             <span className="flex items-center gap-1">
-                              <User className="w-3 h-3 text-zinc-400" />
+                              <IconUser size={12} className="text-zinc-400" />
                               {b.party_name}
                             </span>
                           </div>
@@ -514,13 +514,13 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                         <div className="flex sm:flex-col sm:items-end justify-between border-t sm:border-t-0 pt-1.5 sm:pt-0 border-zinc-100 dark:border-zinc-900">
                           <div className="inline-flex items-baseline gap-1">
                             <span className="text-[10px] text-zinc-400 font-semibold uppercase">Rate:</span>
-                            <span className="font-extrabold text-sm sm:text-base text-black dark:text-white font-mono">
+                            <span className="font-extrabold text-sm sm:text-base text-black dark:text-white tabular-nums font-sans">
                               {formatCurrency(b.rate)}
                             </span>
                             <span className="text-[10px] text-zinc-400">/{b.unit}</span>
                           </div>
                           <div className="text-[11px] text-zinc-500">
-                            Qty: <b className="text-black dark:text-white font-mono">{b.quantity.toLocaleString('en-IN')} {b.unit}</b> · Total: <b className="text-black dark:text-white font-mono">{formatCurrency(b.amount)}</b>
+                            Qty: <b className="text-black dark:text-white tabular-nums font-sans">{b.quantity.toLocaleString('en-IN')} {b.unit}</b> · Total: <b className="text-black dark:text-white tabular-nums font-sans">{formatCurrency(b.amount)}</b>
                           </div>
                         </div>
                       </div>
@@ -535,7 +535,7 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
               <div className="space-y-2">
                 {sales.length === 0 ? (
                   <div className="p-8 rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/20 text-center space-y-2">
-                    <TrendingUp className="w-7 h-7 mx-auto text-zinc-400" />
+                    <IconTrendingUp size={28} className="mx-auto text-zinc-400" />
                     <div className="font-semibold text-xs text-black dark:text-white">
                       अभी तक इस सामग्री की कोई बिक्री दर्ज नहीं हुई है।
                     </div>
@@ -548,7 +548,7 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                         }}
                         className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-black dark:border-white bg-white dark:bg-black text-black dark:text-white text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-900 btn-press"
                       >
-                        <Minus className="w-3.5 h-3.5" />
+                        <IconMinus size={14} />
                         <span>Record Sale (बिक्री दर्ज करें)</span>
                       </button>
                     )}
@@ -562,17 +562,17 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                       >
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-xs text-black dark:text-white font-mono">
+                            <span className="font-bold text-xs text-black dark:text-white tabular-nums font-sans">
                               {s.sale_number}
                             </span>
                             <span className="text-[11px] text-zinc-500 flex items-center gap-1">
-                              <Clock className="w-3 h-3 inline" />
+                              <IconClock size={12} className="inline" />
                               {formatDate(s.sale_date)}
                             </span>
                           </div>
                           <div className="flex items-center gap-3 text-[11px] text-zinc-500">
                             <span className="flex items-center gap-1">
-                              <User className="w-3 h-3 text-zinc-400" />
+                              <IconUser size={12} className="text-zinc-400" />
                               {s.party_name}
                             </span>
                           </div>
@@ -581,17 +581,17 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                         <div className="flex flex-col sm:items-end justify-between border-t sm:border-t-0 pt-1.5 sm:pt-0 border-zinc-100 dark:border-zinc-900 gap-1">
                           <div className="inline-flex items-baseline gap-1">
                             <span className="text-[10px] text-zinc-400 font-semibold uppercase">Sale Rate:</span>
-                            <span className="font-extrabold text-sm sm:text-base text-black dark:text-white font-mono">
+                            <span className="font-extrabold text-sm sm:text-base text-black dark:text-white tabular-nums font-sans">
                               {formatCurrency(s.rate)}
                             </span>
                             <span className="text-[10px] text-zinc-400">/{s.unit}</span>
                           </div>
                           <div className="text-[11px] text-zinc-500">
-                            Sold Qty: <b className="text-black dark:text-white font-mono">{s.quantity.toLocaleString('en-IN')} {s.unit}</b> · Amount: <b className="text-black dark:text-white font-mono">{formatCurrency(s.amount)}</b>
+                            Sold Qty: <b className="text-black dark:text-white tabular-nums font-sans">{s.quantity.toLocaleString('en-IN')} {s.unit}</b> · Amount: <b className="text-black dark:text-white tabular-nums font-sans">{formatCurrency(s.amount)}</b>
                           </div>
                           <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[10px]">
                             <span className="text-zinc-500">Remaining Stock (शेष):</span>
-                            <span className="font-bold text-black dark:text-white font-mono">
+                            <span className="font-bold text-black dark:text-white tabular-nums font-sans">
                               {s.remaining_stock.toLocaleString('en-IN')} {s.unit}
                             </span>
                           </div>

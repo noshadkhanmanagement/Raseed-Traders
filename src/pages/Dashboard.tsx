@@ -272,7 +272,7 @@ export const Dashboard: React.FC = () => {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs text-zinc-500">Total Amount:</span>
-                <span className="text-base font-extrabold text-black dark:text-white font-mono">
+                <span className="text-base font-extrabold text-black dark:text-white tabular-nums font-sans">
                   {formatCurrency(selectedTx.data.total_amount)}
                 </span>
               </div>
@@ -292,7 +292,7 @@ export const Dashboard: React.FC = () => {
                         {it.quantity} {it.unit} @ ₹{it.rate}/{it.unit}
                       </span>
                     </div>
-                    <span className="font-mono font-bold text-black dark:text-white">
+                    <span className="tabular-nums font-sans font-bold text-black dark:text-white">
                       {formatCurrency(it.amount)}
                     </span>
                   </div>

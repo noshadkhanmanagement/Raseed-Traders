@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "test:screens": "node scripts/testAllScreens.cjs",
     "test:e2e": "node scripts/testEverything.cjs",
-    "test:scenario": "node scripts/verifyScenario.cjs"
+    "test:scenario": "node scripts/verifyScenario.cjs",
+    "test:audit": "node scripts/auditUIUX.cjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
@@ -22,7 +23,6 @@
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
     "gsap": "^3.15.0",
-    "lucide-react": "^1.42.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-hook-form": "^7.87.0",

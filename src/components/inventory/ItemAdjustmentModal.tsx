@@ -249,7 +249,7 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
           {selectedItem && (
             <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-xs">
               <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded-md bg-black dark:bg-white text-white dark:text-black font-mono font-extrabold text-[10px]">
+                <span className="px-2 py-0.5 rounded-md bg-black dark:bg-white text-white dark:text-black tabular-nums font-sans font-extrabold text-[10px]">
                   {selectedItem.default_unit}
                 </span>
                 <span className="font-extrabold text-black dark:text-white">
@@ -257,7 +257,7 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
                   <span className="text-zinc-500 font-normal">({selectedItem.local_name})</span>
                 </span>
               </div>
-              <div className="flex items-center gap-1 font-mono">
+              <div className="flex items-center gap-1 tabular-nums font-sans">
                 <span className="text-zinc-500 text-[11px]">Current Available:</span>
                 <span className="font-extrabold text-sm text-black dark:text-white">
                   {currentStock.toLocaleString('en-IN')} {unit}
@@ -314,9 +314,9 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
                     value={directStockInput}
                     onChange={(e) => setDirectStockInput(e.target.value)}
                     placeholder="0.00"
-                    className="w-full h-10 px-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm font-extrabold font-mono text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-all"
+                    className="w-full h-10 px-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm font-extrabold tabular-nums font-sans text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-all"
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-xs font-bold text-zinc-400">
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 tabular-nums font-sans text-xs font-bold text-zinc-400">
                     {unit}
                   </span>
                 </div>
@@ -324,7 +324,7 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
                   <div className="text-[11px] font-medium text-zinc-500 flex items-center justify-between px-1">
                     <span>अंतर (Stock Adjustment Difference):</span>
                     <span
-                      className={`font-mono font-bold ${
+                      className={`tabular-nums font-sans font-bold ${
                         calculatedStockChange > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
                       }`}
                     >
@@ -367,16 +367,16 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
                     value={deltaQuantityInput}
                     onChange={(e) => setDeltaQuantityInput(e.target.value)}
                     placeholder={`Quantity to ${deltaDirection === 'ADD' ? 'add' : 'deduct'}...`}
-                    className="w-full h-10 px-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm font-extrabold font-mono text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-all"
+                    className="w-full h-10 px-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm font-extrabold tabular-nums font-sans text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-all"
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-xs font-bold text-zinc-400">
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 tabular-nums font-sans text-xs font-bold text-zinc-400">
                     {unit}
                   </span>
                 </div>
                 {deltaQuantityInput && (
                   <div className="text-[11px] font-medium text-zinc-500 flex items-center justify-between px-1">
                     <span>अंतिम स्टॉक (Resulting New Stock):</span>
-                    <span className="font-mono font-bold text-black dark:text-white">
+                    <span className="tabular-nums font-sans font-bold text-black dark:text-white">
                       {computedNewStock.toLocaleString('en-IN')} {unit}
                     </span>
                   </div>
@@ -412,7 +412,7 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
                   Spot Purchase Rate (चालू खरीद भाव ₹/{unit})
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-mono text-xs font-bold text-zinc-400">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 tabular-nums font-sans text-xs font-bold text-zinc-400">
                     ₹
                   </span>
                   <input
@@ -422,7 +422,7 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
                     value={purchaseRateInput}
                     onChange={(e) => setPurchaseRateInput(e.target.value)}
                     placeholder="0.00"
-                    className="w-full h-10 pl-7 pr-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm font-extrabold font-mono text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-all"
+                    className="w-full h-10 pl-7 pr-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm font-extrabold tabular-nums font-sans text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-all"
                   />
                 </div>
               </div>
@@ -432,7 +432,7 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
                   Spot Sale Rate (चालू बिक्री भाव ₹/{unit})
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-mono text-xs font-bold text-zinc-400">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 tabular-nums font-sans text-xs font-bold text-zinc-400">
                     ₹
                   </span>
                   <input
@@ -442,7 +442,7 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
                     value={saleRateInput}
                     onChange={(e) => setSaleRateInput(e.target.value)}
                     placeholder="0.00"
-                    className="w-full h-10 pl-7 pr-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm font-extrabold font-mono text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-all"
+                    className="w-full h-10 pl-7 pr-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm font-extrabold tabular-nums font-sans text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-all"
                   />
                 </div>
               </div>
@@ -484,7 +484,7 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
                   <span>1. Delete Counts (स्टॉक 0 करें)</span>
                 </div>
                 <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-1.5 leading-snug">
-                  सामग्री लिस्ट में सुरक्षित रहेगी, केवल इसका गोदाम स्टॉक शून्य (<span className="font-bold font-mono">0 {unit}</span>) हो जाएगा।
+                  सामग्री लिस्ट में सुरक्षित रहेगी, केवल इसका गोदाम स्टॉक शून्य (<span className="font-bold tabular-nums font-sans">0 {unit}</span>) हो जाएगा।
                 </p>
               </div>
 

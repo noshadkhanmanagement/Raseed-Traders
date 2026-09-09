@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, Calendar } from 'lucide-react';
+import { IconPlus, IconTrash, IconCalendar } from '../common/Icons';
 import { BottomSheet } from '../common/BottomSheet';
 import { api } from '../../services/api';
 import { ScrapItem, Party, ScrapUnit } from '../../types';
@@ -253,7 +253,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
 
           <div>
             <label className="block text-xs font-medium text-black dark:text-white mb-1 flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5 text-zinc-400" />
+              <IconCalendar size={14} className="text-zinc-400" />
               <span>Purchase Date (खरीदी की तारीख़)</span>
             </label>
             <input
@@ -277,7 +277,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
               onClick={addLine}
               className="inline-flex items-center text-xs font-semibold text-black dark:text-white hover:underline btn-press"
             >
-              <Plus className="w-3.5 h-3.5 mr-1" /> Add Another Item (और सामान जोड़ें)
+              <IconPlus size={14} className="mr-1" /> Add Another Item (और सामान जोड़ें)
             </button>
           </div>
           <div className="text-[10px] text-zinc-500 dark:text-zinc-400 mb-2">
@@ -350,7 +350,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
                         className="p-1.5 text-zinc-400 hover:text-red-600 transition-colors"
                         title="Remove item"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <IconTrash size={16} />
                       </button>
                     )}
                   </div>

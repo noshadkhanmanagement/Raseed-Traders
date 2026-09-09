@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
-import { Lock, Eye, EyeOff, ArrowRight, ShieldCheck, Sun, Moon } from 'lucide-react';
-import { IconAlert } from '../components/common/Icons';
+import {
+  IconLock,
+  IconEye,
+  IconEyeOff,
+  IconArrowRight,
+  IconShieldCheck,
+  IconSun,
+  IconMoon,
+  IconAlert,
+} from '../components/common/Icons';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
@@ -39,9 +47,9 @@ export const Login: React.FC = () => {
           title="Toggle Dark / Light Theme"
         >
           {resolvedTheme === 'dark' ? (
-            <Sun className="w-4 h-4 text-zinc-300" />
+            <IconSun size={16} className="text-zinc-300" />
           ) : (
-            <Moon className="w-4 h-4 text-zinc-700" />
+            <IconMoon size={16} className="text-zinc-700" />
           )}
         </button>
       </div>
@@ -83,7 +91,7 @@ export const Login: React.FC = () => {
                 Security Password (प्रवेश पासवर्ड)
               </label>
               <div className="relative">
-                <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+                <IconLock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
                 <input
                   id="login-password"
                   type={showPassword ? 'text' : 'password'}
@@ -103,7 +111,7 @@ export const Login: React.FC = () => {
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-black dark:hover:text-white p-1"
                   title={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? <IconEyeOff size={16} /> : <IconEye size={16} />}
                 </button>
               </div>
             </div>
@@ -128,13 +136,13 @@ export const Login: React.FC = () => {
               className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-sm font-bold hover:opacity-90 active:scale-[0.99] disabled:opacity-50 transition-all shadow-md btn-press"
             >
               <span>{isSubmitting ? 'Verifying...' : 'Login (प्रवेश करें)'}</span>
-              <ArrowRight className="w-4 h-4" />
+              <IconArrowRight size={16} />
             </button>
           </form>
 
           {/* Secure Footer Notice */}
           <div className="pt-2 border-t border-zinc-100 dark:border-zinc-900 text-center flex items-center justify-center gap-1.5 text-[11px] text-zinc-400">
-            <ShieldCheck className="w-3.5 h-3.5 text-zinc-500" />
+            <IconShieldCheck size={14} className="text-zinc-500" />
             <span>Encrypted System — Lakhnadon, Madhya Pradesh</span>
           </div>
         </div>

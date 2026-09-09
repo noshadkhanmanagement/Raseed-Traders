@@ -178,7 +178,7 @@ export const LiveBhaavTicker: React.FC<LiveBhaavTickerProps> = ({
 
               <div className="mt-2 pt-1.5 border-t border-zinc-200/50 dark:border-zinc-700/50 flex items-center justify-between">
                 <span className="text-[10px] text-zinc-400">Kharidi:</span>
-                <span className="text-xs font-black text-black dark:text-white font-mono">
+                <span className="text-xs font-black text-black dark:text-white tabular-nums font-sans">
                   ₹{item.default_purchase_rate || 0}
                 </span>
               </div>
@@ -272,7 +272,7 @@ export const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
                       <span className="text-xs font-bold text-black dark:text-white truncate">
                         {act.partyName}
                       </span>
-                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-mono">
+                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 tabular-nums font-sans">
                         {act.billNumber}
                       </span>
                     </div>
@@ -283,7 +283,7 @@ export const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
                 </div>
 
                 <div className="text-right shrink-0">
-                  <div className="text-xs font-extrabold text-black dark:text-white font-mono">
+                  <div className="text-xs font-extrabold text-black dark:text-white tabular-nums font-sans">
                     {formatCurrency(act.amount)}
                   </div>
                   <div className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium">

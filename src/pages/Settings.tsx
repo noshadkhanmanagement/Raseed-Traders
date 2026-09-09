@@ -1,5 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Save, Download, Upload, RotateCcw, Lock, Building2, Database, AlertTriangle } from 'lucide-react';
+import {
+  IconBuilding,
+  IconSave,
+  IconDatabase,
+  IconDownload,
+  IconUpload,
+  IconLock,
+  IconAlert,
+  IconReset,
+} from '../components/common/Icons';
 import { PageHeader } from '../components/layout/PageHeader';
 import { api } from '../services/api';
 import { ScrapUnit } from '../types';
@@ -131,7 +140,7 @@ export const Settings: React.FC = () => {
       <form onSubmit={handleSave} className="rounded-[26px] border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.5)] space-y-4">
         <div className="flex items-center gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
           <div className="w-8 h-8 rounded-xl bg-blue-500 text-white flex items-center justify-center shrink-0 shadow-xs">
-            <Building2 className="w-4 h-4" />
+            <IconBuilding size={16} />
           </div>
           <div>
             <h2 className="text-sm font-extrabold text-black dark:text-white tracking-tight">
@@ -219,7 +228,7 @@ export const Settings: React.FC = () => {
             type="submit"
             className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-bold hover:opacity-90 btn-press shadow-xs"
           >
-            <Save className="w-3.5 h-3.5" />
+            <IconSave size={14} />
             <span>Save Settings (सहेजें)</span>
           </button>
         </div>
@@ -229,7 +238,7 @@ export const Settings: React.FC = () => {
       <div className="rounded-[26px] border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.5)] space-y-3.5">
         <div className="flex items-center gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
           <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-xs">
-            <Database className="w-4 h-4" />
+            <IconDatabase size={16} />
           </div>
           <div>
             <h2 className="text-sm font-extrabold text-black dark:text-white tracking-tight">
@@ -247,12 +256,12 @@ export const Settings: React.FC = () => {
             onClick={handleExportBackup}
             className="flex items-center justify-center gap-2 p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50/70 dark:bg-zinc-900/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-black dark:text-white text-xs font-bold btn-press shadow-2xs"
           >
-            <Download className="w-4 h-4" />
+            <IconDownload size={16} />
             <span>Export Backup (डाउनलोड बैकअप)</span>
           </button>
 
           <label className="flex items-center justify-center gap-2 p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50/70 dark:bg-zinc-900/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-black dark:text-white text-xs font-bold btn-press shadow-2xs cursor-pointer">
-            <Upload className="w-4 h-4" />
+            <IconUpload size={16} />
             <span>Restore Backup (बैकअप लोड करें)</span>
             <input
               type="file"
@@ -268,7 +277,7 @@ export const Settings: React.FC = () => {
       <div className="rounded-[26px] border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.5)] space-y-3.5">
         <div className="flex items-center gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
           <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
-            <Lock className="w-4 h-4" />
+            <IconLock size={16} />
           </div>
           <div>
             <h2 className="text-sm font-extrabold text-black dark:text-white tracking-tight">
@@ -298,7 +307,7 @@ export const Settings: React.FC = () => {
       <div className="rounded-[26px] border border-red-200/80 dark:border-red-900/40 bg-red-50/40 dark:bg-red-950/20 backdrop-blur-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.04)] space-y-3.5">
         <div className="flex items-center gap-3 pb-3 border-b border-red-200/60 dark:border-red-900/40">
           <div className="w-8 h-8 rounded-xl bg-red-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-            <AlertTriangle className="w-4 h-4" />
+            <IconAlert size={16} />
           </div>
           <div>
             <h2 className="text-sm font-extrabold text-red-600 dark:text-red-400 tracking-tight">
@@ -320,7 +329,7 @@ export const Settings: React.FC = () => {
             disabled={isResetting}
             className="px-4 py-2 rounded-full bg-red-600 text-white text-xs font-bold hover:bg-red-700 disabled:opacity-50 btn-press shadow-xs shrink-0 flex items-center justify-center gap-1.5"
           >
-            <RotateCcw className={`w-3.5 h-3.5 ${isResetting ? 'animate-spin' : ''}`} />
+            <IconReset size={14} className={isResetting ? 'animate-spin' : ''} />
             <span>{isResetting ? 'Resetting...' : 'Reset All to 0 (रीसेट करें)'}</span>
           </button>
         </div>

@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Download, Printer, ArrowDownLeft, ArrowUpRight, Calculator, RefreshCw } from 'lucide-react';
+import {
+  IconDownload,
+  IconPrinter,
+  IconArrowDownLeft,
+  IconArrowUpRight,
+  IconCalculator,
+  IconRefresh,
+} from '../components/common/Icons';
 import { PageHeader } from '../components/layout/PageHeader';
 import { api } from '../services/api';
 import { formatCurrency, formatQuantity, formatDate, downloadCSV, getLocalDateString, getDateRangePreset } from '../utils/formatters';
@@ -118,7 +125,7 @@ export const Analytics: React.FC = () => {
               onClick={handlePrint}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 btn-press"
             >
-              <Printer className="w-3.5 h-3.5" />
+              <IconPrinter size={14} />
               <span>Print (प्रिंट)</span>
             </button>
             <button
@@ -126,7 +133,7 @@ export const Analytics: React.FC = () => {
               onClick={handleExportCSV}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-black dark:border-white bg-black dark:bg-white text-white dark:text-black hover:opacity-90 btn-press"
             >
-              <Download className="w-3.5 h-3.5" />
+              <IconDownload size={14} />
               <span>Export CSV (डाउनलोड)</span>
             </button>
           </div>
@@ -138,7 +145,7 @@ export const Analytics: React.FC = () => {
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <div className="p-2.5 rounded-2xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/50 dark:border-zinc-700/50 text-black dark:text-white">
-              <Calculator className="w-4 h-4" />
+              <IconCalculator size={16} />
             </div>
             <div>
               <h2 className="text-sm font-extrabold text-black dark:text-white tracking-tight font-sans">
@@ -253,7 +260,7 @@ export const Analytics: React.FC = () => {
             onClick={loadAnalytics}
             className="flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-bold rounded-2xl bg-black dark:bg-white text-white dark:text-black hover:opacity-90 active:scale-[0.97] transition-all shadow-xs shrink-0"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+            <IconRefresh size={14} className={isLoading ? 'animate-spin' : ''} />
             <span>Calculate (हिसाब निकालें)</span>
           </button>
         </div>
@@ -268,7 +275,7 @@ export const Analytics: React.FC = () => {
               Total Khareeda (कुल खरीदी)
             </span>
             <span className="p-2 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white">
-              <ArrowDownLeft className="w-4 h-4" />
+              <IconArrowDownLeft size={16} />
             </span>
           </div>
           <div className="mt-2">
@@ -289,7 +296,7 @@ export const Analytics: React.FC = () => {
               Total Becha (कुल बिक्री)
             </span>
             <span className="p-2 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white">
-              <ArrowUpRight className="w-4 h-4" />
+              <IconArrowUpRight size={16} />
             </span>
           </div>
           <div className="mt-2">
@@ -310,7 +317,7 @@ export const Analytics: React.FC = () => {
               Net Balance (शुद्ध अंतर / मुनाफा)
             </span>
             <span className="p-2 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white">
-              <Calculator className="w-4 h-4" />
+              <IconCalculator size={16} />
             </span>
           </div>
           <div className="mt-2">
@@ -407,7 +414,7 @@ export const Analytics: React.FC = () => {
               Har mahine kitne rupaye ka total khareeda aur becha
             </p>
           </div>
-          <span className="text-xs font-mono text-zinc-500 dark:text-zinc-400">
+          <span className="text-xs tabular-nums font-sans font-bold text-zinc-500 dark:text-zinc-400">
             Year {new Date().getFullYear()}
           </span>
         </div>

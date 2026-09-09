@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
-  FileText,
-  Trash2,
-  AlertTriangle,
-  CheckCircle2,
-  Calendar,
-  User,
-  Package,
-} from 'lucide-react';
+  IconTrash,
+  IconAlert,
+  IconCheck,
+  IconCalendar,
+  IconUser,
+  IconPackage,
+  IconSliders,
+} from '../common/Icons';
 import { BottomSheet } from '../common/BottomSheet';
 import { api } from '../../services/api';
 import { Purchase, Sale } from '../../types';
@@ -174,31 +174,31 @@ export const TransactionAdjustmentModal: React.FC<TransactionAdjustmentModalProp
         {/* Alerts */}
         {errorMessage && (
           <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs font-semibold flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <IconAlert size={16} className="shrink-0" />
             <span>{errorMessage}</span>
           </div>
         )}
 
         {successMessage && (
           <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <IconCheck size={16} className="shrink-0" />
             <span>{successMessage}</span>
           </div>
         )}
 
         {/* Bill Metadata Header */}
         <div className="p-3.5 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2 font-mono font-extrabold text-black dark:text-white">
-            <FileText className="w-4 h-4 text-zinc-500" />
+          <div className="flex items-center gap-2 tabular-nums font-sans font-extrabold text-black dark:text-white">
+            <IconSliders size={16} className="text-zinc-500" />
             <span>{docNumber}</span>
           </div>
           <div className="flex items-center gap-3 text-zinc-500 text-[11px]">
             <span className="flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5" />
+              <IconCalendar size={14} />
               {formatDate(docDate)}
             </span>
             <span className="flex items-center gap-1">
-              <User className="w-3.5 h-3.5" />
+              <IconUser size={14} />
               {partyName}
             </span>
           </div>
@@ -209,11 +209,11 @@ export const TransactionAdjustmentModal: React.FC<TransactionAdjustmentModalProp
           <div className="p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 space-y-3 shadow-xs">
             <div className="flex items-center justify-between text-xs font-extrabold text-black dark:text-white">
               <div className="flex items-center gap-1.5">
-                <Package className="w-4 h-4 text-zinc-500" />
+                <IconPackage size={16} className="text-zinc-500" />
                 <span>Adjust Weight & Price (वजन व भाव सुधारें)</span>
               </div>
               <span className="text-[11px] font-normal text-zinc-400">
-                Total Weight: <b className="font-mono text-black dark:text-white">{calculatedTotalWeight} KG</b>
+                Total Weight: <b className="tabular-nums font-sans font-bold text-black dark:text-white">{calculatedTotalWeight} KG</b>
               </span>
             </div>
 
@@ -224,7 +224,7 @@ export const TransactionAdjustmentModal: React.FC<TransactionAdjustmentModalProp
                     <span className="font-bold text-xs text-black dark:text-white">
                       {it.item_name}
                     </span>
-                    <span className="font-mono font-extrabold text-xs text-black dark:text-white">
+                    <span className="tabular-nums font-sans font-extrabold text-xs text-black dark:text-white">
                       {formatCurrency(it.amount)}
                     </span>
                   </div>
@@ -240,7 +240,7 @@ export const TransactionAdjustmentModal: React.FC<TransactionAdjustmentModalProp
                         min="0.001"
                         value={it.quantity}
                         onChange={(e) => handleItemChange(idx, 'quantity', e.target.value)}
-                        className="w-full h-9 px-2.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-bold font-mono text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white"
+                        className="w-full h-9 px-2.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-bold tabular-nums font-sans text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white"
                         required
                       />
                     </div>
@@ -254,7 +254,7 @@ export const TransactionAdjustmentModal: React.FC<TransactionAdjustmentModalProp
                         min="0"
                         value={it.rate}
                         onChange={(e) => handleItemChange(idx, 'rate', e.target.value)}
-                        className="w-full h-9 px-2.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-bold font-mono text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white"
+                        className="w-full h-9 px-2.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-bold tabular-nums font-sans text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white"
                         required
                       />
                     </div>
@@ -266,7 +266,7 @@ export const TransactionAdjustmentModal: React.FC<TransactionAdjustmentModalProp
             {/* Bill Summary */}
             <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs font-bold">
               <span className="text-zinc-500">Updated Total Amount:</span>
-              <span className="font-mono text-sm text-black dark:text-white">
+              <span className="tabular-nums font-sans font-extrabold text-sm text-black dark:text-white">
                 {formatCurrency(calculatedTotalAmount)}
               </span>
             </div>
@@ -294,7 +294,7 @@ export const TransactionAdjustmentModal: React.FC<TransactionAdjustmentModalProp
         {/* Complete Deletion Section */}
         <div className="p-4 rounded-2xl border border-red-200 dark:border-red-950/60 bg-red-50/50 dark:bg-red-950/10 space-y-3">
           <div className="flex items-center gap-1.5 font-bold text-xs text-red-600 dark:text-red-400">
-            <Trash2 className="w-4 h-4" />
+            <IconTrash size={16} />
             <span>Delete Bill Completely (यह बिल हमेशा के लिए हटाएं)</span>
           </div>
 
@@ -311,7 +311,7 @@ export const TransactionAdjustmentModal: React.FC<TransactionAdjustmentModalProp
               onClick={() => setIsConfirmingDelete(true)}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-300 dark:border-red-800 bg-white dark:bg-zinc-950 text-red-600 dark:text-red-400 text-xs font-bold hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
             >
-              <Trash2 className="w-3.5 h-3.5" />
+              <IconTrash size={14} />
               <span>Delete Bill #{docNumber}</span>
             </button>
           ) : (

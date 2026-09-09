@@ -9,13 +9,11 @@ import {
   NavSettings,
   IconSearch,
   IconPlus,
+  IconSun,
+  IconMoon,
+  IconMonitor,
+  IconLock,
 } from '../common/Icons';
-import {
-  Sun,
-  Moon,
-  Laptop,
-  Lock,
-} from 'lucide-react';
 import { useTheme, ThemeMode } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 
@@ -79,7 +77,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <IconSearch size={14} className="text-zinc-400" />
             <span>Search (खोजें)...</span>
           </span>
-          <kbd className="text-[10px] text-zinc-500 font-mono bg-zinc-200 dark:bg-zinc-800 px-1.5 py-0.5 rounded">
+          <kbd className="text-[10px] text-zinc-500 tabular-nums font-sans font-bold bg-zinc-200 dark:bg-zinc-800 px-1.5 py-0.5 rounded">
             ⌘K
           </kbd>
         </button>
@@ -128,9 +126,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white'
                 }`}
               >
-                {mode === 'system' && <Laptop className="w-3 h-3" />}
-                {mode === 'light' && <Sun className="w-3 h-3" />}
-                {mode === 'dark' && <Moon className="w-3 h-3" />}
+                {mode === 'system' && <IconMonitor size={12} />}
+                {mode === 'light' && <IconSun size={12} />}
+                {mode === 'dark' && <IconMoon size={12} />}
                 <span className="capitalize">{mode}</span>
               </button>
             );
@@ -144,7 +142,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 mt-2 rounded-lg border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors btn-press"
           title="Lock / Logout Application"
         >
-          <Lock className="w-3.5 h-3.5" />
+          <IconLock size={14} />
           <span>Lock App (लॉग आउट)</span>
         </button>
       </div>

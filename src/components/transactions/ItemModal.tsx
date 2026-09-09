@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Tag, PackagePlus, AlertCircle } from 'lucide-react';
+import { IconTag, IconPackagePlus, IconAlert } from '../common/Icons';
 import { BottomSheet } from '../common/BottomSheet';
 import { api } from '../../services/api';
 import { ScrapItem, ScrapUnit } from '../../types';
@@ -111,7 +111,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
 
         {/* Dynamic Rate Guidance Banner */}
         <div className="p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 flex items-start gap-2.5">
-          <AlertCircle className="w-4 h-4 text-zinc-600 dark:text-zinc-300 shrink-0 mt-0.5" />
+          <IconAlert size={16} className="text-zinc-600 dark:text-zinc-300 shrink-0 mt-0.5" />
           <div className="text-[11px] leading-relaxed text-zinc-600 dark:text-zinc-400">
             <span className="font-bold text-black dark:text-white">फ्लोटिंग रेट (Spot Pricing): </span>
             स्क्रैप के दाम हर दिन व गाड़ी के अनुसार बदलते हैं। इस समय की सटीक खरीद दर (Spot Purchase Rate) यहाँ सेट करें ताकि खरीद बिल में यह अपने आप आ जाए।
@@ -179,7 +179,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
         {/* Spot Purchase Rate Section */}
         <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/30 p-3.5 space-y-3">
           <div className="flex items-center gap-1.5 font-bold text-black dark:text-white">
-            <Tag className="w-3.5 h-3.5" />
+            <IconTag size={14} />
             <span>Spot Pricing & Valuation (दाम व मूल्य दर)</span>
           </div>
 
@@ -237,7 +237,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                 Opening Stock in Godown (शुरुआती स्टॉक - यदि गोदाम में पहले से हो)
               </label>
               <div className="relative">
-                <PackagePlus className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+                <IconPackagePlus size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
                 <input
                   type="number"
                   step="any"

@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { Plus, Download, Search, Printer, SlidersHorizontal } from 'lucide-react';
+import {
+  IconPlus,
+  IconDownload,
+  IconSearch,
+  IconPrinter,
+  IconSliders,
+  IconClose,
+} from '../components/common/Icons';
 import { PageHeader } from '../components/layout/PageHeader';
 import { BottomSheet } from '../components/common/BottomSheet';
 import { TransactionAdjustmentModal } from '../components/transactions/TransactionAdjustmentModal';
@@ -103,7 +110,7 @@ export const Sales: React.FC = () => {
               onClick={handleExportCSV}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-black dark:text-white text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 btn-press shadow-xs"
             >
-              <Download className="w-3.5 h-3.5" />
+              <IconDownload size={14} />
               <span>Export CSV</span>
             </button>
             <button
@@ -111,7 +118,7 @@ export const Sales: React.FC = () => {
               onClick={openSale}
               className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-bold hover:opacity-90 btn-press shadow-xs"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <IconPlus size={14} />
               <span>Nayi Bikri (Sell)</span>
             </button>
           </div>
@@ -137,7 +144,7 @@ export const Sales: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           {/* Search Input */}
           <div className="relative flex-1">
-            <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <IconSearch size={16} className="text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
@@ -149,9 +156,10 @@ export const Sales: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 text-[10px] flex items-center justify-center hover:bg-zinc-300"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 flex items-center justify-center hover:bg-zinc-300 dark:hover:bg-zinc-600 transition-colors"
+                title="Clear search"
               >
-                ✕
+                <IconClose size={10} strokeWidth={2.5} />
               </button>
             )}
           </div>
@@ -298,7 +306,7 @@ export const Sales: React.FC = () => {
                       <span className="text-sm font-black text-black dark:text-white truncate">
                         {s.party_name || 'Walk-in Cash'}
                       </span>
-                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
+                      <span className="text-[10px] tabular-nums font-sans font-bold px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
                         {s.sale_number}
                       </span>
                     </div>
@@ -308,7 +316,7 @@ export const Sales: React.FC = () => {
                   </div>
 
                   <div className="text-right shrink-0">
-                    <div className="text-base font-black text-black dark:text-white font-mono">
+                    <div className="text-base font-black text-black dark:text-white tabular-nums font-sans">
                       {formatCurrency(s.total_amount)}
                     </div>
                     <span className="text-[10px] text-zinc-400 font-semibold">{weight} KG</span>
@@ -332,7 +340,7 @@ export const Sales: React.FC = () => {
                     onClick={() => setSaleToAdjust(s)}
                     className="px-3 py-1 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-bold btn-press shadow-xs flex items-center gap-1"
                   >
-                    <SlidersHorizontal className="w-3 h-3" />
+                    <IconSliders size={12} />
                     <span>Adjust (सुधार)</span>
                   </button>
                 </div>
@@ -367,7 +375,7 @@ export const Sales: React.FC = () => {
               ) : (
                 filteredSales.map((s) => (
                   <tr key={s.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition-colors">
-                    <td className="px-5 py-3.5 font-mono font-bold text-black dark:text-white">
+                    <td className="px-5 py-3.5 tabular-nums font-sans font-bold text-black dark:text-white">
                       {s.sale_number}
                     </td>
                     <td className="px-5 py-3.5 font-medium text-zinc-600 dark:text-zinc-400">
@@ -400,7 +408,7 @@ export const Sales: React.FC = () => {
                           className="flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-md border border-black dark:border-white bg-black dark:bg-white text-white dark:text-black hover:opacity-90 transition-opacity btn-press shadow-xs"
                           title="Adjust Weight, Price or Delete Bill"
                         >
-                          <SlidersHorizontal className="w-3 h-3" />
+                          <IconSliders size={12} />
                           <span>Adjust (सुधार)</span>
                         </button>
                       </div>
@@ -503,7 +511,7 @@ export const Sales: React.FC = () => {
                 }}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-black dark:text-white text-xs font-bold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
               >
-                <SlidersHorizontal className="w-3.5 h-3.5" />
+                <IconSliders size={14} />
                 <span>Adjust / Delete Bill (सुधार या हटाएं)</span>
               </button>
               <button
@@ -511,7 +519,7 @@ export const Sales: React.FC = () => {
                 onClick={handlePrint}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-black dark:bg-white text-white dark:text-black text-xs font-bold hover:opacity-90 transition-opacity"
               >
-                <Printer className="w-3.5 h-3.5" />
+                <IconPrinter size={14} />
                 <span>Print Bill (प्रिंट)</span>
               </button>
             </div>

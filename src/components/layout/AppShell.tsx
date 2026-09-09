@@ -9,12 +9,12 @@ import { SaleModal } from '../transactions/SaleModal';
 import { StockAdjustmentModal } from '../transactions/StockAdjustmentModal';
 import { ItemModal } from '../transactions/ItemModal';
 import {
-  Search,
-  Plus,
-  Sun,
-  Moon,
-  Laptop,
-} from 'lucide-react';
+  IconSearch,
+  IconPlus,
+  IconSun,
+  IconMoon,
+  IconMonitor,
+} from '../common/Icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTheme } from '../../context/ThemeContext';
 import { ScrapItem } from '../../types';
@@ -114,11 +114,11 @@ export const AppShell: React.FC = () => {
               title={`Theme: ${theme}`}
             >
               {theme === 'system' ? (
-                <Laptop className="w-4 h-4" />
+                <IconMonitor size={16} />
               ) : resolvedTheme === 'dark' ? (
-                <Moon className="w-4 h-4" />
+                <IconMoon size={16} />
               ) : (
-                <Sun className="w-4 h-4" />
+                <IconSun size={16} />
               )}
             </button>
 
@@ -128,14 +128,14 @@ export const AppShell: React.FC = () => {
               className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 icon-press"
               aria-label="Search"
             >
-              <Search className="w-4 h-4" />
+              <IconSearch size={16} />
             </button>
             <button
               type="button"
               onClick={() => setIsQuickActionOpen(true)}
               className="flex items-center space-x-1 px-3 py-1.5 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-bold shadow-xs btn-press"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <IconPlus size={14} />
               <span>New</span>
             </button>
           </div>

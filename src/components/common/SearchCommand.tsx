@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Search, X, Package, ShoppingBag, TrendingUp } from 'lucide-react';
+import {
+  IconSearch,
+  IconClose,
+  IconPackage,
+  IconShoppingBag,
+  IconTrendingUp,
+} from './Icons';
 import { api } from '../../services/api';
 import { ScrapItem, Party, Purchase, Sale } from '../../types';
 import { formatCurrency, formatQuantity } from '../../utils/formatters';
@@ -66,7 +72,7 @@ export const SearchCommand: React.FC<SearchCommandProps> = ({
       <div className="relative w-full max-w-xl bg-white dark:bg-zinc-950 rounded-2xl shadow-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden z-10 flex flex-col max-h-[80vh]">
         {/* Search Input Bar */}
         <div className="flex items-center px-4 py-3 border-b border-zinc-200 dark:border-zinc-800">
-          <Search className="w-4 h-4 text-zinc-400 mr-2.5 shrink-0" />
+          <IconSearch size={16} className="text-zinc-400 mr-2.5 shrink-0" />
           <input
             type="text"
             value={query}
@@ -80,7 +86,7 @@ export const SearchCommand: React.FC<SearchCommandProps> = ({
               onClick={() => setQuery('')}
               className="text-zinc-400 hover:text-black dark:hover:text-white p-1"
             >
-              <X className="w-4 h-4" />
+              <IconClose size={14} />
             </button>
           )}
         </div>
@@ -115,7 +121,7 @@ export const SearchCommand: React.FC<SearchCommandProps> = ({
                   className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 cursor-pointer transition-colors"
                 >
                   <div className="flex items-center space-x-2.5">
-                    <Package className="w-4 h-4 text-zinc-400" />
+                    <IconPackage size={16} className="text-zinc-400" />
                     <div>
                       <span className="font-bold text-black dark:text-white">{item.name}</span>
                       <span className="ml-1.5 text-zinc-500">· {item.local_name}</span>
@@ -148,7 +154,7 @@ export const SearchCommand: React.FC<SearchCommandProps> = ({
                   className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 cursor-pointer transition-colors"
                 >
                   <div className="flex items-center space-x-2.5">
-                    <ShoppingBag className="w-4 h-4 text-zinc-400" />
+                    <IconShoppingBag size={16} className="text-zinc-400" />
                     <div>
                       <span className="font-bold text-black dark:text-white">{purchase.purchase_number}</span>
                       <span className="ml-1.5 text-zinc-500">
@@ -181,7 +187,7 @@ export const SearchCommand: React.FC<SearchCommandProps> = ({
                   className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 cursor-pointer transition-colors"
                 >
                   <div className="flex items-center space-x-2.5">
-                    <TrendingUp className="w-4 h-4 text-zinc-400" />
+                    <IconTrendingUp size={16} className="text-zinc-400" />
                     <div>
                       <span className="font-bold text-black dark:text-white">{sale.sale_number}</span>
                       <span className="ml-1.5 text-zinc-500">
