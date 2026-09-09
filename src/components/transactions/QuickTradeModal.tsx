@@ -35,26 +35,14 @@ export const QuickTradeModal: React.FC<QuickTradeModalProps> = ({
       setErrorMessage('');
       const defaultId = initialItemId || (items.length > 0 ? items[0].id : '');
       setSelectedItemId(defaultId);
-      const matched = items.find((i) => i.id === defaultId);
-      if (matched) {
-        setRate(matched.default_purchase_rate ? String(matched.default_purchase_rate) : '');
-      } else {
-        setRate('');
-      }
+      setRate('');
       setQuantity('');
     }
   }, [isOpen, initialItemId, items]);
 
   const handleItemChange = (id: string) => {
     setSelectedItemId(id);
-    const matched = items.find((i) => i.id === id);
-    if (matched) {
-      if (isBuy && matched.default_purchase_rate) {
-        setRate(String(matched.default_purchase_rate));
-      } else if (!isBuy && matched.default_sale_rate) {
-        setRate(String(matched.default_sale_rate));
-      }
-    }
+    setRate('');
   };
 
   const parsedQty = parseFloat(quantity) || 0;

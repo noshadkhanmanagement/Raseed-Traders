@@ -95,7 +95,6 @@ export const MobileTabBar: React.FC = () => {
       prevIndexRef.current = targetIndex;
 
       const currentY = (gsap.getProperty(pill, 'y') as number) || 0;
-      const vy = dragVelocityYRef.current || 0;
 
       const tl = gsap.timeline({ overwrite: 'auto' });
 
@@ -105,45 +104,40 @@ export const MobileTabBar: React.FC = () => {
         {
           x: targetX,
           width: targetW,
-          duration: fromDrag ? 0.48 : 0.44,
+          duration: fromDrag ? 0.42 : 0.38,
           ease: 'power3.out',
         },
         0
       );
 
-      // Coupled 2D Liquid Wobble (Equal Side Jiggle + Up/Down Harmonic Bounce)
+      // Coupled 2D Liquid Wobble (Equal Micro-Jiggle on Lateral & Vertical Axes)
       if (direction !== 0 || fromDrag) {
         const dir = direction !== 0 ? direction : 1;
-        // Dynamic Y snap depending on release state
-        let yPhase1 = 3.6;
-        let yPhase2 = -4.2;
-        let yPhase3 = 1.4;
+        // Dynamic Y snap depending on release state (contained to ~2px)
+        let yPhase1 = 1.8;
+        let yPhase2 = -1.5;
 
-        if (fromDrag && Math.abs(currentY) > 1.5) {
-          if (currentY < -1.5) {
-            // Dragged UP: energetic launch downwards, then upward rebound
-            yPhase1 = Math.min(6.5, -currentY * 0.45 + Math.max(0, vy * 0.2));
-            yPhase2 = -3.8;
-            yPhase3 = 1.2;
+        if (fromDrag && Math.abs(currentY) > 0.5) {
+          if (currentY < 0) {
+            yPhase1 = Math.min(2.5, -currentY * 0.6);
+            yPhase2 = -1.2;
           } else {
-            // Dragged DOWN: energetic launch upwards, then downward rebound
-            yPhase1 = Math.max(-6.5, -currentY * 0.45 + Math.min(0, vy * 0.2));
-            yPhase2 = 3.8;
-            yPhase3 = -1.2;
+            yPhase1 = Math.max(-2.5, -currentY * 0.6);
+            yPhase2 = 1.2;
           }
         }
 
         tl.to(
           pill,
           {
-            // Phase 1: Impact & Primary Jiggle (Equal ~4.4px lateral and vertical energy)
-            x: targetX + dir * 4.4,
+            // Phase 1: Micro-Impact & Symmetrical Relaxation
+            x: targetX + dir * 2.5,
             y: yPhase1,
-            scaleX: 1.18,
-            scaleY: 0.82,
-            skewX: -dir * 5.2,
+            scaleX: 1.03,
+            scaleY: 1.03,
+            skewX: -dir * 2.5,
             skewY: 0,
-            duration: 0.16,
+            duration: 0.14,
             ease: 'power2.out',
           },
           0
@@ -151,55 +145,41 @@ export const MobileTabBar: React.FC = () => {
           .to(
             pill,
             {
-              // Phase 2: Recoil & Launch
-              x: targetX - dir * 3.0,
+              // Phase 2: Recoil
+              x: targetX - dir * 1.2,
               y: yPhase2,
-              scaleX: 0.86,
-              scaleY: 1.16,
-              skewX: dir * 3.6,
-              duration: 0.16,
+              scaleX: 0.99,
+              scaleY: 0.99,
+              skewX: dir * 1.2,
+              duration: 0.14,
               ease: 'power2.inOut',
             },
-            0.16
+            0.14
           )
           .to(
             pill,
             {
-              // Phase 3: Secondary Jiggle
-              x: targetX + dir * 1.0,
-              y: yPhase3,
-              scaleX: 1.05,
-              scaleY: 0.95,
-              skewX: -dir * 1.4,
-              duration: 0.12,
-              ease: 'power1.out',
-            },
-            0.32
-          )
-          .to(
-            pill,
-            {
-              // Phase 4: Rest & Relaxation
+              // Phase 3: Settle to exact 1.0 rest
               x: targetX,
               y: 0,
               scaleX: 1.0,
               scaleY: 1.0,
               skewX: 0,
               skewY: 0,
-              duration: 0.08,
-              ease: 'power1.inOut',
+              duration: 0.10,
+              ease: 'power1.out',
             },
-            0.44
+            0.28
           );
       } else {
-        // Balanced 2D Liquid Tap Pulse (Side Ripple + Up/Down Dip & Pop)
+        // Balanced 2D Liquid Tap Pulse: uniform expansion & pop
         tl.to(
           pill,
           {
-            y: 3.2,
-            scaleY: 0.86,
-            scaleX: 1.10,
-            skewX: 2.2,
+            y: 0,
+            scaleY: 1.05,
+            scaleX: 1.05,
+            skewX: 0,
             duration: 0.12,
             ease: 'power2.out',
           },
@@ -208,10 +188,10 @@ export const MobileTabBar: React.FC = () => {
           .to(
             pill,
             {
-              y: -3.6,
-              scaleY: 1.14,
-              scaleX: 0.90,
-              skewX: -1.8,
+              y: 0,
+              scaleY: 0.99,
+              scaleX: 0.99,
+              skewX: 0,
               duration: 0.14,
               ease: 'power2.inOut',
             },
@@ -220,26 +200,14 @@ export const MobileTabBar: React.FC = () => {
           .to(
             pill,
             {
-              y: 1.2,
-              scaleY: 0.96,
-              scaleX: 1.03,
-              skewX: 0.6,
-              duration: 0.10,
-              ease: 'power1.out',
-            },
-            0.26
-          )
-          .to(
-            pill,
-            {
               y: 0,
               scaleY: 1.0,
               scaleX: 1.0,
               skewX: 0,
-              duration: 0.08,
-              ease: 'power1.inOut',
+              duration: 0.10,
+              ease: 'power1.out',
             },
-            0.36
+            0.26
           );
       }
     },
@@ -258,7 +226,7 @@ export const MobileTabBar: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [activeIndex, triggerWobble]);
 
-  // Pointer Down: Grab pill with ZERO initial shift/jitter & tactile press squish
+  // Pointer Down: Apple Uniform Omnidirectional Growth (All 4 sides expand equally by ~5%)
   const handlePointerDown = (e: React.PointerEvent) => {
     if (!containerRef.current || !pillRef.current) return;
 
@@ -305,12 +273,13 @@ export const MobileTabBar: React.FC = () => {
 
     setHoverOrDragIndex(touchedIdx);
 
-    // Immediate tactile liquid indentation on press (Y-axis depth + volume squish)
+    // Apple Touch & Hold Physics: Omnidirectional Symmetrical Growth
+    // Expands outward uniformly by 1.05 from center (50% 50%) on all four sides (top, bottom, left, right)
     gsap.to(pillRef.current, {
-      y: 2.0,
-      scaleY: 0.90,
-      scaleX: 1.06,
-      duration: 0.12,
+      y: 0,
+      scaleX: 1.05,
+      scaleY: 1.05,
+      duration: 0.16,
       ease: 'power2.out',
     });
 
@@ -330,7 +299,7 @@ export const MobileTabBar: React.FC = () => {
     const dx = e.clientX - pointerStartRef.current.x;
     const dy = e.clientY - pointerStartRef.current.y;
 
-    // Calculate velocities for smooth directional wobble lean
+    // Calculate velocities
     const vx = e.clientX - prevTouchXRef.current;
     const vy = e.clientY - prevTouchYRef.current;
     prevTouchXRef.current = e.clientX;
@@ -355,49 +324,40 @@ export const MobileTabBar: React.FC = () => {
     const minX = 3;
     const maxX = 195; // 3 + 2 * 96
 
-    // Fluid rubber-band physics at horizontal boundaries
+    // Strictly contained horizontal rubber-band bounds: asymptotic clamp to at most 4px outside
     let clampedX = targetX;
     if (targetX < minX) {
-      clampedX = minX - Math.pow(minX - targetX, 0.72) * 1.2;
+      const excess = minX - targetX;
+      clampedX = minX - (1 - Math.exp(-excess / 25)) * 4.0;
     } else if (targetX > maxX) {
-      clampedX = maxX + Math.pow(targetX - maxX, 0.72) * 1.2;
+      const excess = targetX - maxX;
+      clampedX = maxX + (1 - Math.exp(-excess / 25)) * 4.0;
     }
 
-    // Up & Down draggability: whole authentic Apple rubber-band resistance
+    // Strictly contained vertical draggability: asymptotic clamp to at most 4px outside (Up & Down equal)
     let clampedY = 0;
     if (dy < 0) {
-      // Dragged UP: stretches upwards into screen (up to -16px)
-      clampedY = -Math.pow(Math.min(65, -dy), 0.72) * 1.5;
+      // Dragged UP: strictly clamped to at most -4.0px
+      clampedY = -(1 - Math.exp(-Math.abs(dy) / 25)) * 4.0;
     } else if (dy > 0) {
-      // Dragged DOWN: compresses downwards toward bottom edge (up to +14px)
-      clampedY = Math.pow(Math.min(60, dy), 0.72) * 1.4;
+      // Dragged DOWN: strictly clamped to at most +4.0px
+      clampedY = (1 - Math.exp(-Math.abs(dy) / 25)) * 4.0;
     }
 
-    // Directional liquid wobble lean:
-    const dynamicSkew = Math.max(-6.5, Math.min(6.5, -vx * 0.45));
-    const dynamicSkewY = Math.max(-4.0, Math.min(4.0, vy * 0.25));
+    // Directional micro-skew (subtle, max ±3 deg)
+    const dynamicSkew = Math.max(-3.0, Math.min(3.0, -vx * 0.25));
+    const dynamicSkewY = Math.max(-2.0, Math.min(2.0, vy * 0.15));
 
-    // Horizontal velocity expansion
-    const dynamicScaleX = Math.min(1.18, 1.04 + Math.abs(vx) * 0.015);
-    const dynamicScaleY = Math.max(0.88, 0.96 - Math.abs(vx) * 0.012);
-
-    // Vertical stretch & squish volume preservation
-    const verticalScaleY = dy < 0
-      ? Math.min(1.26, 1.0 + (-dy * 0.006))
-      : Math.max(0.78, 0.94 - (dy * 0.005));
-    const verticalScaleX = dy < 0
-      ? Math.max(0.86, 1.0 - (-dy * 0.004))
-      : Math.min(1.24, 1.04 + (dy * 0.005));
-
-    const combinedScaleX = Math.min(1.28, Math.max(0.80, dynamicScaleX * verticalScaleX));
-    const combinedScaleY = Math.min(1.28, Math.max(0.78, dynamicScaleY * verticalScaleY));
+    // Maintain uniform touch growth during drag (scale: 1.05)
+    const speed = Math.sqrt(vx * vx + vy * vy);
+    const dynamicScale = Math.min(1.06, 1.05 + speed * 0.001);
 
     gsap.set(pillRef.current, {
       x: clampedX,
       y: clampedY,
       width: tabW,
-      scaleX: combinedScaleX,
-      scaleY: combinedScaleY,
+      scaleX: dynamicScale,
+      scaleY: dynamicScale,
       skewX: dynamicSkew,
       skewY: dynamicSkewY,
     });

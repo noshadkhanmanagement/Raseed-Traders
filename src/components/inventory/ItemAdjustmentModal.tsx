@@ -39,10 +39,6 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
   const [deltaQuantityInput, setDeltaQuantityInput] = useState('');
   const [reason, setReason] = useState('');
 
-  // Form State: Price / Rates
-  const [purchaseRateInput, setPurchaseRateInput] = useState('');
-  const [saleRateInput, setSaleRateInput] = useState('');
-
   // Option 1: Delete / Reset Counts State
   const [isConfirmingResetCounts, setIsConfirmingResetCounts] = useState(false);
   const [isResettingCounts, setIsResettingCounts] = useState(false);
@@ -58,8 +54,6 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
       setDirectStockInput(String(it.current_stock ?? 0));
       setDeltaQuantityInput('');
       setDeltaDirection('ADD');
-      setPurchaseRateInput(it.default_purchase_rate ? String(it.default_purchase_rate) : '');
-      setSaleRateInput(it.default_sale_rate ? String(it.default_sale_rate) : '');
       setReason('');
     }
   }, [items]);
@@ -127,12 +121,6 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      const newPurchaseRate = parseFloat(purchaseRateInput) || 0;
-      const newSaleRate = parseFloat(saleRateInput) || 0;
-      const rateChanged =
-        newPurchaseRate !== selectedItem.default_purchase_rate ||
-        newSaleRate !== selectedItem.default_sale_rate;
-
       const stockChanged = Math.abs(calculatedStockChange) > 0.0001;
 
       // 1. If stock changed, apply stock adjustment record
@@ -142,14 +130,6 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
           quantity: calculatedStockChange,
           adjustment_type: 'MANUAL',
           reason: reason.trim() || (stockMode === 'DIRECT' ? 'Physical Stock Adjustment (कांटा मिलान)' : 'Manual Stock Correction'),
-        });
-      }
-
-      // 2. If rate changed, update item master
-      if (rateChanged) {
-        await api.updateItem(selectedItem.id, {
-          default_purchase_rate: newPurchaseRate,
-          default_sale_rate: newSaleRate,
         });
       }
 
@@ -208,7 +188,7 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={selectedItem ? `Edit: ${selectedItem.name} (${selectedItem.local_name})` : 'Edit Material (सामग्री सुधार)'}
-      subtitle={selectedItem ? `Current Stock: ${currentStock.toLocaleString('en-IN')} ${unit} · Unit: ${unit}` : 'Update stock and spot rates'}
+      subtitle={selectedItem ? `Current Stock: ${currentStock.toLocaleString('en-IN')} ${unit} · Unit: ${unit}` : 'Update stock count'}
       maxWidth="max-w-md"
     >
       <div className="space-y-3.5">
@@ -284,49 +264,6 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
                 </span>
               </div>
             )}
-          </div>
-
-          {/* Spot Rates Field (Purchase & Sale Rates side-by-side) */}
-          <div className="grid grid-cols-2 gap-2.5">
-            <div>
-              <label className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 mb-1">
-                Spot Buy Rate (खरीद भाव)
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-zinc-400 pointer-events-none">
-                  ₹
-                </span>
-                <input
-                  type="number"
-                  step="any"
-                  min="0"
-                  value={purchaseRateInput}
-                  onChange={(e) => setPurchaseRateInput(e.target.value)}
-                  placeholder="0"
-                  className="w-full h-10 pl-6 pr-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-bold tabular-nums font-sans text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 mb-1">
-                Spot Sale Rate (बिक्री भाव)
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-zinc-400 pointer-events-none">
-                  ₹
-                </span>
-                <input
-                  type="number"
-                  step="any"
-                  min="0"
-                  value={saleRateInput}
-                  onChange={(e) => setSaleRateInput(e.target.value)}
-                  placeholder="0"
-                  className="w-full h-10 pl-6 pr-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-bold tabular-nums font-sans text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white"
-                />
-              </div>
-            </div>
           </div>
 
           {/* Save Button */}

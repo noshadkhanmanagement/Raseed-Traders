@@ -141,7 +141,7 @@ export const LiveBhaavTicker: React.FC<LiveBhaavTickerProps> = ({
               Live Bhaav Ticker (चालू मंडी भाव)
             </h3>
             <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
-              Lakhnadon Market Spot Rates — Tap for Rate History
+              Lakhnadon Material Catalog — Tap for Trade History
             </p>
           </div>
         </div>

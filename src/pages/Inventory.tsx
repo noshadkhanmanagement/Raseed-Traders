@@ -121,7 +121,7 @@ export const Inventory: React.FC = () => {
     <div className="space-y-4 page-enter">
       <PageHeader
         title="Kitna Stock Hai (स्टॉक / माल)"
-        subtitle="Current scrap inventory & spot pricing (सामग्रियों का स्टॉक व चालू खरीद दर)"
+        subtitle="Current scrap inventory & stock count (सामग्रियों का स्टॉक व मात्रा)"
         actions={
           <button
             type="button"
@@ -322,7 +322,7 @@ export const Inventory: React.FC = () => {
                 onClick={() => handleOpenHistory(it)}
                 className="p-3.5 flex items-center justify-between gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/40 active:bg-zinc-100 dark:active:bg-zinc-800 transition-colors cursor-pointer"
               >
-                {/* Left: Unit Badge + Material Names + Rate */}
+                {/* Left: Unit Badge + Material Names */}
                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
                   <span className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white tabular-nums font-sans text-[11px] font-extrabold flex items-center justify-center shrink-0 border border-zinc-200/60 dark:border-zinc-700/60">
                     {it.default_unit}
@@ -332,8 +332,8 @@ export const Inventory: React.FC = () => {
                       <span>{it.name}</span>
                       <span className="text-[11px] text-zinc-400 font-normal">({it.local_name})</span>
                     </h4>
-                    <div className="flex items-center gap-2 text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5">
-                      <span>Kharidi: <b className="text-black dark:text-white tabular-nums font-sans">{spotRate > 0 ? `₹${spotRate}` : '₹0'}</b>/{it.default_unit}</span>
+                    <div className="text-[10px] text-zinc-400 mt-0.5">
+                      <span>Tap to view trade history</span>
                     </div>
                   </div>
                 </div>
@@ -360,7 +360,7 @@ export const Inventory: React.FC = () => {
                       type="button"
                       onClick={() => handleAdjustClick(it)}
                       className="px-2.5 py-1 rounded-full bg-black dark:bg-white text-white dark:text-black text-[11px] font-bold btn-press shadow-xs"
-                      title="Adjust Weight, Price & Delete"
+                      title="Adjust Stock"
                     >
                       Adjust
                     </button>
@@ -389,7 +389,6 @@ export const Inventory: React.FC = () => {
               <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100/70 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400">
                 <th className="px-5 py-3 font-semibold">#</th>
                 <th className="px-5 py-3 font-semibold">Material (सामग्री का नाम)</th>
-                <th className="px-5 py-3 font-semibold text-right">Spot Purchase Rate (खरीद दर ₹)</th>
                 <th className="px-5 py-3 font-semibold text-right">Available Stock (स्टॉक)</th>
                 <th className="px-5 py-3 font-semibold text-center">Unit (इकाई)</th>
                 <th className="px-5 py-3 font-semibold text-center">Status</th>
@@ -399,20 +398,19 @@ export const Inventory: React.FC = () => {
             <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800 text-black dark:text-white">
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="px-5 py-10 text-center text-zinc-500 dark:text-zinc-400">
+                  <td colSpan={6} className="px-5 py-10 text-center text-zinc-500 dark:text-zinc-400">
                     Loading inventory materials...
                   </td>
                 </tr>
               ) : filteredItems.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-5 py-10 text-center text-zinc-500 dark:text-zinc-400">
+                  <td colSpan={6} className="px-5 py-10 text-center text-zinc-500 dark:text-zinc-400">
                     No matching scrap materials found.
                   </td>
                 </tr>
               ) : (
                 filteredItems.map((it, idx) => {
                   const hasStock = it.current_stock > 0;
-                  const spotRate = it.default_purchase_rate || 0;
                   return (
                     <tr key={it.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition-colors">
                       <td className="px-5 py-3.5 tabular-nums font-sans font-bold text-zinc-400">{idx + 1}</td>
@@ -427,16 +425,6 @@ export const Inventory: React.FC = () => {
                           <IconHistory size={12} className="text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
                         <div className="text-xs text-zinc-500 dark:text-zinc-400">{it.local_name}</div>
-                      </td>
-                      <td className="px-5 py-3.5 text-right tabular-nums font-sans">
-                        {spotRate > 0 ? (
-                          <div className="inline-flex items-center gap-1 font-bold text-xs text-black dark:text-white">
-                            <span>{formatCurrency(spotRate)}</span>
-                            <span className="text-[10px] text-zinc-400">/{it.default_unit}</span>
-                          </div>
-                        ) : (
-                          <span className="text-zinc-400 text-[11px] italic">Not set</span>
-                        )}
                       </td>
                       <td className="px-5 py-3.5 text-right font-extrabold text-base">
                         {it.current_stock.toLocaleString('en-IN')}

@@ -167,6 +167,12 @@ class LocalEngine {
             }
           });
 
+          // Strictly enforce zero default rate everywhere in DB (only set at buy/sell time)
+          parsed.items.forEach((it: ScrapItem) => {
+            it.default_purchase_rate = 0;
+            it.default_sale_rate = 0;
+          });
+
           return parsed;
         }
       }

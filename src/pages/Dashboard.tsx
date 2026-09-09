@@ -315,7 +315,7 @@ export const Dashboard: React.FC = () => {
                 className="p-3.5 flex items-center justify-between gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/40 active:bg-zinc-100 dark:active:bg-zinc-800 transition-colors cursor-pointer"
                 title="Touch to view Buy & Sell history"
               >
-                {/* Left: Unit Badge + Material Names + Spot Rate */}
+                {/* Left: Unit Badge + Material Names */}
                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
                   <span className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white tabular-nums font-sans text-[11px] font-extrabold flex items-center justify-center shrink-0 border border-zinc-200/60 dark:border-zinc-700/60">
                     {it.default_unit}
@@ -325,8 +325,8 @@ export const Dashboard: React.FC = () => {
                       <span>{it.name}</span>
                       <span className="text-[11px] text-zinc-400 font-normal">({it.local_name})</span>
                     </h4>
-                    <div className="flex items-center gap-2 text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5">
-                      <span>Rate: <b className="text-black dark:text-white tabular-nums font-sans">{spotRate > 0 ? `₹${spotRate}` : '₹0'}</b>/{it.default_unit}</span>
+                    <div className="flex items-center gap-2 text-[10px] text-zinc-400 mt-0.5">
+                      <span>Tap to view history</span>
                     </div>
                   </div>
                 </div>
@@ -355,7 +355,7 @@ export const Dashboard: React.FC = () => {
                       type="button"
                       onClick={() => handleOpenAdjust(it)}
                       className="px-2.5 py-1 rounded-full bg-black dark:bg-white text-white dark:text-black text-[11px] font-bold btn-press shadow-xs"
-                      title="Edit Count & Rate"
+                      title="Edit Count"
                     >
                       Edit
                     </button>
@@ -363,7 +363,7 @@ export const Dashboard: React.FC = () => {
                       type="button"
                       onClick={() => handleOpenReset(it)}
                       className="p-1 rounded-full text-zinc-400 hover:text-amber-600 icon-press"
-                      title="Reset count and rate to 0"
+                      title="Reset count to 0"
                     >
                       <IconReset size={13} />
                     </button>
@@ -383,7 +383,6 @@ export const Dashboard: React.FC = () => {
             <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/75 dark:bg-zinc-900/50 text-[11px] text-zinc-500 dark:text-zinc-400 uppercase tracking-wider font-bold">
               <th className="px-5 py-3 w-12 text-zinc-400">#</th>
               <th className="px-5 py-3">Material Name (सामग्री)</th>
-              <th className="px-5 py-3 text-right">Spot Rate (चालू भाव)</th>
               <th className="px-5 py-3 text-right">Stock (कुल स्टॉक)</th>
               <th className="px-5 py-3 text-center">Unit</th>
               <th className="px-5 py-3 text-center">Status</th>
@@ -393,20 +392,19 @@ export const Dashboard: React.FC = () => {
           <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800/80">
             {isLoading ? (
               <tr>
-                <td colSpan={7} className="px-5 py-12 text-center text-zinc-400">
+                <td colSpan={6} className="px-5 py-12 text-center text-zinc-400">
                   Loading stock materials...
                 </td>
               </tr>
             ) : filteredItems.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-5 py-12 text-center text-zinc-400">
+                <td colSpan={6} className="px-5 py-12 text-center text-zinc-400">
                   No materials found matching criteria.
                 </td>
               </tr>
             ) : (
               filteredItems.map((it, idx) => {
                 const hasStock = it.current_stock > 0;
-                const spotRate = it.default_purchase_rate || 0;
                 return (
                   <tr key={it.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition-colors">
                     <td className="px-5 py-3.5 tabular-nums font-sans font-bold text-zinc-400">{idx + 1}</td>
@@ -421,16 +419,6 @@ export const Dashboard: React.FC = () => {
                       </div>
                       <div className="text-xs text-zinc-500 dark:text-zinc-400">{it.local_name}</div>
                     </td>
-                    <td className="px-5 py-3.5 text-right tabular-nums font-sans">
-                      {spotRate > 0 ? (
-                        <div className="inline-flex items-center gap-1 font-bold text-xs text-black dark:text-white">
-                          <span>{formatCurrency(spotRate)}</span>
-                          <span className="text-[10px] text-zinc-400">/{it.default_unit}</span>
-                        </div>
-                      ) : (
-                        <span className="text-zinc-400 text-[11px] italic">Not set</span>
-                      )}
-                    </td>
                     <td className="px-5 py-3.5 text-right font-extrabold text-base">
                       {it.current_stock.toLocaleString('en-IN')}
                     </td>
@@ -439,10 +427,10 @@ export const Dashboard: React.FC = () => {
                     </td>
                     <td className="px-5 py-3.5 text-center">
                       <span
-                        className={`inline-block px-2 py-0.5 rounded text-[11px] font-semibold ${
+                        className={`text-[9px] font-bold px-2 py-0.5 rounded-full inline-block ${
                           hasStock
-                            ? 'bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white'
-                            : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-400'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400'
+                            : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400'
                         }`}
                       >
                         {hasStock ? 'In Stock' : '0 Stock'}
@@ -453,17 +441,16 @@ export const Dashboard: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleOpenAdjust(it)}
-                          className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-full border border-black dark:border-white bg-black dark:bg-white text-white dark:text-black hover:opacity-90 transition-opacity btn-press shadow-xs"
-                          title="Edit Count & Rate"
+                          className="px-2.5 py-1 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-semibold btn-press shadow-xs"
+                          title="Edit Stock"
                         >
-                          <IconAdjust size={13} />
-                          <span>Edit</span>
+                          Edit
                         </button>
                         <button
                           type="button"
                           onClick={() => handleOpenReset(it)}
-                          className="p-1.5 text-xs font-semibold rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-400 hover:text-amber-600 hover:border-amber-300 dark:hover:border-amber-800 transition-colors"
-                          title="Reset count and rate to 0"
+                          className="p-1 rounded-full text-zinc-400 hover:text-amber-600 icon-press"
+                          title="Reset count to 0"
                         >
                           <IconReset size={14} />
                         </button>

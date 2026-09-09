@@ -42,7 +42,6 @@ export const Settings: React.FC = () => {
   const [quickName, setQuickName] = useState('');
   const [quickLocalName, setQuickLocalName] = useState('');
   const [quickUnit, setQuickUnit] = useState<ScrapUnit>('KG');
-  const [quickRate, setQuickRate] = useState('');
   const [isAddingQuickItem, setIsAddingQuickItem] = useState(false);
   const [itemMessage, setItemMessage] = useState('');
 
@@ -155,7 +154,7 @@ export const Settings: React.FC = () => {
         name: quickName.trim().toUpperCase(),
         local_name: quickLocalName.trim(),
         default_unit: quickUnit,
-        default_purchase_rate: parseFloat(quickRate) || 0,
+        default_purchase_rate: 0,
         default_sale_rate: 0,
         current_stock: 0,
         is_active: true,
@@ -163,7 +162,6 @@ export const Settings: React.FC = () => {
       const createdUnit = quickUnit;
       setQuickName('');
       setQuickLocalName('');
-      setQuickRate('');
       setQuickUnit('KG');
       setItemMessage(`Material added successfully as "${createdUnit}"!`);
       setTimeout(() => setItemMessage(''), 3000);
@@ -253,7 +251,7 @@ export const Settings: React.FC = () => {
           </div>
         )}
 
-        {/* INLINE QUICK ITEM ADDER WITH KG / PIECE OPTION */}
+        {/* INLINE QUICK ITEM ADDER WITH KG / PIECE OPTION (NO RATE FIELD) */}
         <form onSubmit={handleQuickAddItem} className="p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/75 dark:bg-zinc-900/60 space-y-3.5">
           <div className="flex items-center justify-between">
             <span className="text-xs font-extrabold text-black dark:text-white flex items-center gap-1.5">
@@ -300,7 +298,7 @@ export const Settings: React.FC = () => {
                   Item Unit (सामान की इकाई)
                 </label>
                 <span className="text-[10px] font-extrabold text-black dark:text-white">
-                  {quickUnit === 'KG' ? 'Kilogram (किलो)' : 'Piece (नग / पीस)'}
+                  {quickUnit === 'KG' ? 'Kilogram (किलो)' : 'Piece (नग / संख्या)'}
                 </span>
               </div>
               <div className="grid grid-cols-2 p-1 rounded-xl bg-zinc-200/80 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700">
@@ -329,36 +327,22 @@ export const Settings: React.FC = () => {
               </div>
             </div>
 
-            {/* Spot Rate & Submit */}
-            <div className="flex items-center gap-2">
-              <div className="flex-1">
-                <label className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 mb-1">
-                  Spot Rate (₹ / {quickUnit})
-                </label>
-                <input
-                  type="number"
-                  step="any"
-                  min="0"
-                  value={quickRate}
-                  onChange={(e) => setQuickRate(e.target.value)}
-                  placeholder="0"
-                  className="w-full px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-bold text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white"
-                />
-              </div>
+            {/* Submit Button */}
+            <div className="flex items-end">
               <button
                 type="submit"
                 disabled={isAddingQuickItem || !quickName.trim() || !quickLocalName.trim()}
-                className="h-[38px] px-4 rounded-xl bg-black dark:bg-white text-white dark:text-black text-xs font-black hover:opacity-90 disabled:opacity-40 transition-all btn-press shadow-xs flex items-center gap-1.5 shrink-0"
+                className="w-full h-[38px] px-4 rounded-xl bg-black dark:bg-white text-white dark:text-black text-xs font-black hover:opacity-90 disabled:opacity-40 transition-all btn-press shadow-xs flex items-center justify-center gap-1.5"
               >
                 <IconPlus size={14} strokeWidth={2.5} />
-                <span>{isAddingQuickItem ? 'Saving...' : 'Add Material'}</span>
+                <span>{isAddingQuickItem ? 'Saving...' : 'Add Material (सामान जोड़ें)'}</span>
               </button>
             </div>
           </div>
         </form>
 
-        {/* Materials List with Inline KG / PIECE Switcher */}
-        <div className="max-h-80 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800/70 border border-zinc-200/60 dark:border-zinc-800 rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/40">
+        {/* Full Materials List (Display full list without mini scrollable widget) */}
+        <div className="divide-y divide-zinc-100 dark:divide-zinc-800/70 border border-zinc-200/60 dark:border-zinc-800 rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/40">
           {items.map((it) => {
             const isPermanent = isDefaultScrapItem(it.name);
             return (
@@ -381,7 +365,7 @@ export const Settings: React.FC = () => {
                     )}
                   </div>
                   <div className="text-[10px] text-zinc-400 mt-0.5">
-                    Stock: {it.current_stock.toLocaleString('en-IN')} {it.default_unit} · Rate: ₹{it.default_purchase_rate || 0}/{it.default_unit}
+                    Stock: {it.current_stock.toLocaleString('en-IN')} {it.default_unit}
                   </div>
                 </div>
 
