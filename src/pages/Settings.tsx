@@ -38,6 +38,14 @@ export const Settings: React.FC = () => {
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
   const [selectedItemToEdit, setSelectedItemToEdit] = useState<ScrapItem | null>(null);
 
+  // Quick Add Material State
+  const [quickName, setQuickName] = useState('');
+  const [quickLocalName, setQuickLocalName] = useState('');
+  const [quickUnit, setQuickUnit] = useState<ScrapUnit>('KG');
+  const [quickRate, setQuickRate] = useState('');
+  const [isAddingQuickItem, setIsAddingQuickItem] = useState(false);
+  const [itemMessage, setItemMessage] = useState('');
+
   const loadSettings = useCallback(async () => {
     try {
       const biz = await api.getBusiness();
@@ -137,6 +145,48 @@ export const Settings: React.FC = () => {
     }
   };
 
+  const handleQuickAddItem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickName.trim() || !quickLocalName.trim()) return;
+
+    setIsAddingQuickItem(true);
+    try {
+      await api.createItem({
+        name: quickName.trim().toUpperCase(),
+        local_name: quickLocalName.trim(),
+        default_unit: quickUnit,
+        default_purchase_rate: parseFloat(quickRate) || 0,
+        default_sale_rate: 0,
+        current_stock: 0,
+        is_active: true,
+      });
+      const createdUnit = quickUnit;
+      setQuickName('');
+      setQuickLocalName('');
+      setQuickRate('');
+      setQuickUnit('KG');
+      setItemMessage(`Material added successfully as "${createdUnit}"!`);
+      setTimeout(() => setItemMessage(''), 3000);
+      await loadItems();
+    } catch (err: any) {
+      alert(err.message || 'Error adding material');
+    } finally {
+      setIsAddingQuickItem(false);
+    }
+  };
+
+  const handleUpdateItemUnit = async (item: ScrapItem, newUnit: ScrapUnit) => {
+    if (item.default_unit === newUnit) return;
+    try {
+      await api.updateItem(item.id, { default_unit: newUnit });
+      setItemMessage(`Updated "${item.name}" unit to ${newUnit}`);
+      setTimeout(() => setItemMessage(''), 2500);
+      await loadItems();
+    } catch (err: any) {
+      alert(err.message || 'Error updating unit');
+    }
+  };
+
   const handleDeleteCustomItem = async (it: ScrapItem) => {
     const confirmed = window.confirm(`Permanently remove material "${it.name}" from catalog?`);
     if (!confirmed) return;
@@ -167,7 +217,7 @@ export const Settings: React.FC = () => {
         </div>
       )}
 
-      {/* 1. MANAGE MATERIAL NAMES (Exclusively manage add/edit/delete here) */}
+      {/* 1. MANAGE MATERIAL NAMES & UNITS */}
       <div className="rounded-[26px] border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.5)] space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
           <div className="flex items-center gap-3">
@@ -179,7 +229,7 @@ export const Settings: React.FC = () => {
                 Manage Material Names (सामग्री नाम प्रबंधन)
               </h2>
               <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                Add new scrap materials or edit names and units ({items.length} total)
+                Add materials, set unit as KG or PIECE, and manage items ({items.length} total)
               </p>
             </div>
           </div>
@@ -190,15 +240,125 @@ export const Settings: React.FC = () => {
               setSelectedItemToEdit(null);
               setIsItemModalOpen(true);
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-bold hover:opacity-90 btn-press shadow-xs"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white text-xs font-bold hover:bg-zinc-200 dark:hover:bg-zinc-700 btn-press shadow-xs"
           >
             <IconPlus size={13} strokeWidth={2.5} />
-            <span>Add Material</span>
+            <span>Full Form</span>
           </button>
         </div>
 
-        {/* Materials List */}
-        <div className="max-h-72 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800/70 border border-zinc-200/60 dark:border-zinc-800 rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/40">
+        {itemMessage && (
+          <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 text-xs font-bold">
+            {itemMessage}
+          </div>
+        )}
+
+        {/* INLINE QUICK ITEM ADDER WITH KG / PIECE OPTION */}
+        <form onSubmit={handleQuickAddItem} className="p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/75 dark:bg-zinc-900/60 space-y-3.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-extrabold text-black dark:text-white flex items-center gap-1.5">
+              <IconPlus size={14} strokeWidth={2.5} />
+              <span>Add New Material (नया सामान जोड़ें)</span>
+            </span>
+            <span className="text-[10px] font-semibold text-zinc-400">KG या PIECE में सेट करें</span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div>
+              <label className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 mb-1">
+                Name in English <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={quickName}
+                onChange={(e) => setQuickName(e.target.value)}
+                placeholder="e.g. BATTERY, DRUM, COPPER"
+                className="w-full px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-bold uppercase text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 mb-1">
+                Name in Hindi <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={quickLocalName}
+                onChange={(e) => setQuickLocalName(e.target.value)}
+                placeholder="उदा: बैटरी, ड्रम, ताँबा"
+                className="w-full px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-bold text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 items-end">
+            {/* Unit Selector (KG or PIECE) */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300">
+                  Item Unit (सामान की इकाई)
+                </label>
+                <span className="text-[10px] font-extrabold text-black dark:text-white">
+                  {quickUnit === 'KG' ? 'Kilogram (किलो)' : 'Piece (नग / पीस)'}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 p-1 rounded-xl bg-zinc-200/80 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700">
+                <button
+                  type="button"
+                  onClick={() => setQuickUnit('KG')}
+                  className={`py-1.5 px-3 rounded-lg text-xs font-extrabold transition-all ${
+                    quickUnit === 'KG'
+                      ? 'bg-white dark:bg-black text-black dark:text-white shadow-xs'
+                      : 'text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
+                  }`}
+                >
+                  KG (किलो)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setQuickUnit('PIECE')}
+                  className={`py-1.5 px-3 rounded-lg text-xs font-extrabold transition-all ${
+                    quickUnit === 'PIECE'
+                      ? 'bg-white dark:bg-black text-black dark:text-white shadow-xs'
+                      : 'text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
+                  }`}
+                >
+                  PIECE (नग)
+                </button>
+              </div>
+            </div>
+
+            {/* Spot Rate & Submit */}
+            <div className="flex items-center gap-2">
+              <div className="flex-1">
+                <label className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 mb-1">
+                  Spot Rate (₹ / {quickUnit})
+                </label>
+                <input
+                  type="number"
+                  step="any"
+                  min="0"
+                  value={quickRate}
+                  onChange={(e) => setQuickRate(e.target.value)}
+                  placeholder="0"
+                  className="w-full px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-bold text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isAddingQuickItem || !quickName.trim() || !quickLocalName.trim()}
+                className="h-[38px] px-4 rounded-xl bg-black dark:bg-white text-white dark:text-black text-xs font-black hover:opacity-90 disabled:opacity-40 transition-all btn-press shadow-xs flex items-center gap-1.5 shrink-0"
+              >
+                <IconPlus size={14} strokeWidth={2.5} />
+                <span>{isAddingQuickItem ? 'Saving...' : 'Add Material'}</span>
+              </button>
+            </div>
+          </div>
+        </form>
+
+        {/* Materials List with Inline KG / PIECE Switcher */}
+        <div className="max-h-80 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800/70 border border-zinc-200/60 dark:border-zinc-800 rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/40">
           {items.map((it) => {
             const isPermanent = isDefaultScrapItem(it.name);
             return (
@@ -221,11 +381,39 @@ export const Settings: React.FC = () => {
                     )}
                   </div>
                   <div className="text-[10px] text-zinc-400 mt-0.5">
-                    Unit: {it.default_unit} · Stock: {it.current_stock.toLocaleString('en-IN')} {it.default_unit}
+                    Stock: {it.current_stock.toLocaleString('en-IN')} {it.default_unit} · Rate: ₹{it.default_purchase_rate || 0}/{it.default_unit}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
+                  {/* Inline Unit Toggle: KG or PIECE */}
+                  <div className="inline-flex p-0.5 rounded-lg bg-zinc-200/80 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700">
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateItemUnit(it, 'KG')}
+                      className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold transition-all ${
+                        it.default_unit === 'KG'
+                          ? 'bg-black dark:bg-white text-white dark:text-black shadow-xs'
+                          : 'text-zinc-500 hover:text-black dark:hover:text-white'
+                      }`}
+                      title="Set unit to KG"
+                    >
+                      KG
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateItemUnit(it, 'PIECE')}
+                      className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold transition-all ${
+                        it.default_unit === 'PIECE'
+                          ? 'bg-black dark:bg-white text-white dark:text-black shadow-xs'
+                          : 'text-zinc-500 hover:text-black dark:hover:text-white'
+                      }`}
+                      title="Set unit to PIECE"
+                    >
+                      PIECE
+                    </button>
+                  </div>
+
                   <button
                     type="button"
                     onClick={() => {
@@ -233,7 +421,7 @@ export const Settings: React.FC = () => {
                       setIsItemModalOpen(true);
                     }}
                     className="px-2.5 py-1 text-xs font-semibold rounded-full border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-1"
-                    title="Edit Name & Unit"
+                    title="Edit Name & Rates"
                   >
                     <IconEdit size={12} />
                     <span>Edit</span>

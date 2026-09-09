@@ -153,26 +153,39 @@ export const ItemModal: React.FC<ItemModalProps> = ({
           </div>
         </div>
 
-        {/* Measurement Unit */}
+        {/* Measurement Unit: KG or PIECE */}
         <div>
-          <label className="block font-medium text-black dark:text-white mb-1">
-            Measurement Unit (मापने की इकाई) <span className="text-red-500">*</span>
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            {(['KG', 'PIECE'] as ScrapUnit[]).map((u) => (
-              <button
-                key={u}
-                type="button"
-                onClick={() => setDefaultUnit(u)}
-                className={`py-2 px-3 rounded-lg border text-center font-bold transition-colors ${
-                  defaultUnit === u
-                    ? 'border-black dark:border-white bg-black dark:bg-white text-white dark:text-black'
-                    : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300'
-                }`}
-              >
-                {u === 'KG' ? 'Kilogram (KG / किलो)' : 'Piece (PIECE / नग)'}
-              </button>
-            ))}
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block font-bold text-black dark:text-white">
+              Measurement Unit (मापने की इकाई: KG या PIECE) <span className="text-red-500">*</span>
+            </label>
+            <span className="text-[10px] font-extrabold text-zinc-500 dark:text-zinc-400">
+              {defaultUnit === 'KG' ? 'Kilogram (किलो)' : 'Piece (नग / संख्या)'}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 p-1 rounded-2xl bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200/80 dark:border-zinc-700/80 gap-1">
+            {(['KG', 'PIECE'] as ScrapUnit[]).map((u) => {
+              const isSelected = defaultUnit === u;
+              return (
+                <button
+                  key={u}
+                  type="button"
+                  onClick={() => setDefaultUnit(u)}
+                  className={`py-2.5 px-3 rounded-xl text-center font-extrabold transition-all text-xs flex flex-col items-center justify-center gap-0.5 ${
+                    isSelected
+                      ? 'bg-white dark:bg-zinc-950 text-black dark:text-white shadow-xs border border-zinc-200/60 dark:border-zinc-700/60'
+                      : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white'
+                  }`}
+                >
+                  <span className="text-xs font-black tracking-wide">
+                    {u === 'KG' ? 'KG (किलोग्राम)' : 'PIECE (नग)'}
+                  </span>
+                  <span className="text-[10px] font-medium opacity-75">
+                    {u === 'KG' ? 'By Weight (वज़न)' : 'By Count (गिनती)'}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
