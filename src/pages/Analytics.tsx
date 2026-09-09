@@ -2,12 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Download, Printer, ArrowDownLeft, ArrowUpRight, Calculator, RefreshCw } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { api } from '../services/api';
-import { formatCurrency, formatQuantity, formatDate, downloadCSV } from '../utils/formatters';
+import { formatCurrency, formatQuantity, formatDate, downloadCSV, getLocalDateString, getDateRangePreset } from '../utils/formatters';
 
 type QuickRange = 'TODAY' | 'YESTERDAY' | 'THIS_MONTH' | 'LAST_MONTH' | 'LAST_30_DAYS';
 
 export const Analytics: React.FC = () => {
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateString();
 
   const [startDate, setStartDate] = useState<string>(today);
   const [endDate, setEndDate] = useState<string>(today);
@@ -63,33 +63,9 @@ export const Analytics: React.FC = () => {
   >([]);
 
   const applyQuickRange = (range: QuickRange) => {
-    const now = new Date();
-    let start = today;
-    let end = today;
-
-    if (range === 'TODAY') {
-      start = today;
-      end = today;
-    } else if (range === 'YESTERDAY') {
-      const y = new Date();
-      y.setDate(y.getDate() - 1);
-      start = y.toISOString().split('T')[0];
-      end = start;
-    } else if (range === 'THIS_MONTH') {
-      start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-      end = today;
-    } else if (range === 'LAST_MONTH') {
-      start = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0];
-      end = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0];
-    } else if (range === 'LAST_30_DAYS') {
-      const d = new Date();
-      d.setDate(d.getDate() - 30);
-      start = d.toISOString().split('T')[0];
-      end = today;
-    }
-
-    setStartDate(start);
-    setEndDate(end);
+    const { startDate: s, endDate: e } = getDateRangePreset(range);
+    setStartDate(s);
+    setEndDate(e);
     setActiveRange(range);
   };
 

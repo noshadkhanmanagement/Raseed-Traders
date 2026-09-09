@@ -3,7 +3,7 @@ import { Plus, Trash2, Calendar } from 'lucide-react';
 import { BottomSheet } from '../common/BottomSheet';
 import { api } from '../../services/api';
 import { ScrapItem, Party, ScrapUnit } from '../../types';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency, getLocalDateString } from '../../utils/formatters';
 
 interface PurchaseModalProps {
   isOpen: boolean;
@@ -32,7 +32,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
   const [items, setItems] = useState<ScrapItem[]>([]);
   const [selectedPartyId, setSelectedPartyId] = useState('');
   const [customPartyName, setCustomPartyName] = useState('');
-  const [purchaseDate, setPurchaseDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [purchaseDate, setPurchaseDate] = useState(() => getLocalDateString());
   const [lines, setLines] = useState<PurchaseLine[]>([]);
   const [paidAmount, setPaidAmount] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -78,7 +78,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
       // Full form reset on every open to prevent stale data bleed-through
       setPaidAmount('');
       setCustomPartyName('');
-      setPurchaseDate(new Date().toISOString().split('T')[0]);
+      setPurchaseDate(getLocalDateString());
       setErrorMessage('');
       setIsSubmitting(false);
       loadDependencies();

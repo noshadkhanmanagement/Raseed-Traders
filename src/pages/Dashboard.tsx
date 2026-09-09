@@ -8,7 +8,7 @@ import {
 import { IconPlus } from '../components/common/Icons';
 import { api } from '../services/api';
 import { ScrapItem, Purchase, Sale } from '../types';
-import { formatCurrency, formatDate } from '../utils/formatters';
+import { formatCurrency, formatDate, getLocalDateString } from '../utils/formatters';
 import { ItemRateHistoryModal } from '../components/inventory/ItemRateHistoryModal';
 import { ItemModal } from '../components/transactions/ItemModal';
 import { BottomSheet } from '../components/common/BottomSheet';
@@ -43,7 +43,7 @@ export const Dashboard: React.FC = () => {
     data: Purchase | Sale;
   } | null>(null);
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getLocalDateString();
 
   const loadData = useCallback(async () => {
     try {

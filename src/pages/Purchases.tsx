@@ -6,7 +6,7 @@ import { BottomSheet } from '../components/common/BottomSheet';
 import { TransactionAdjustmentModal } from '../components/transactions/TransactionAdjustmentModal';
 import { api } from '../services/api';
 import { Purchase } from '../types';
-import { formatCurrency, formatDate, downloadCSV } from '../utils/formatters';
+import { formatCurrency, formatDate, downloadCSV, getLocalDateString } from '../utils/formatters';
 
 interface ContextType {
   openPurchase: () => void;
@@ -37,7 +37,7 @@ export const Purchases: React.FC = () => {
   const [paymentFilter, setPaymentFilter] = useState<'ALL' | 'CASH' | 'CREDIT'>('ALL');
   const [sortBy, setSortBy] = useState<'newest' | 'amount_desc' | 'weight_desc'>('newest');
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getLocalDateString();
   const currentMonthStr = todayStr.substring(0, 7);
 
   const todayCount = purchases.filter((p) => p.purchase_date && p.purchase_date.startsWith(todayStr)).length;

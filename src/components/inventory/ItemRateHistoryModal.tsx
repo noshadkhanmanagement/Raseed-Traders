@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Tag,
   History,
@@ -112,7 +112,7 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
     };
   } | null>(null);
 
-  const loadHistory = async (id: string) => {
+  const loadHistory = useCallback(async (id: string) => {
     setLoading(true);
     try {
       const res = await api.getItemRateHistory(id);
@@ -122,7 +122,7 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (isOpen && itemId) {
@@ -131,7 +131,7 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
       setHistoryData(null);
       setActiveTab('ALL');
     }
-  }, [isOpen, itemId]);
+  }, [isOpen, itemId, loadHistory]);
 
   const item = historyData?.item;
   const stats = historyData?.stats;

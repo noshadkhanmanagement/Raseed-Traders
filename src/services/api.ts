@@ -14,6 +14,7 @@ import {
   InventoryLedgerEntry,
   DashboardKPIs,
 } from '../types';
+import { getLocalDateString } from '../utils/formatters';
 
 export const api = {
   // Business
@@ -755,7 +756,7 @@ export const api = {
   }): Promise<StockAdjustment> {
     if (isSupabaseConfigured && supabase) {
       const biz = await this.getBusiness();
-      const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
+      const today = getLocalDateString().replace(/-/g, '');
       const adjNum = `ADJ-${today}-${Date.now().toString().slice(-4)}`;
       const rpcPayload = {
         business_id: biz.id,
@@ -880,7 +881,7 @@ export const api = {
       this.getExpenses(),
     ]);
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateString();
 
     const todayPurchases = purchases.filter((p) => p.purchase_date === today && p.status === 'FINAL');
     const todaySales = sales.filter((s) => s.sale_date === today && s.status === 'FINAL');

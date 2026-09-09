@@ -51,14 +51,19 @@ export function formatDate(dateString?: string): string {
 }
 
 /**
- * Get date presets: Today, Yesterday, Last 7 Days, This Month, Last Month, This Year
+ * Format Date object into local YYYY-MM-DD string without UTC offset shifts
+ */
+export function getLocalDateString(d: Date = new Date()): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/**
+ * Get date presets: Today, Yesterday, Last 7 Days, Last 30 Days, This Month, Last Month, This Year
  */
 export function getDateRangePreset(preset: string): { startDate: string; endDate: string } {
   const today = new Date();
-  const pad = (n: number) => String(n).padStart(2, '0');
-  const toISO = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-
-  const todayStr = toISO(today);
+  const todayStr = getLocalDateString(today);
 
   switch (preset) {
     case 'TODAY':
@@ -67,30 +72,36 @@ export function getDateRangePreset(preset: string): { startDate: string; endDate
     case 'YESTERDAY': {
       const y = new Date(today);
       y.setDate(today.getDate() - 1);
-      const yStr = toISO(y);
+      const yStr = getLocalDateString(y);
       return { startDate: yStr, endDate: yStr };
     }
 
     case 'LAST_7_DAYS': {
       const d = new Date(today);
       d.setDate(today.getDate() - 6);
-      return { startDate: toISO(d), endDate: todayStr };
+      return { startDate: getLocalDateString(d), endDate: todayStr };
+    }
+
+    case 'LAST_30_DAYS': {
+      const d = new Date(today);
+      d.setDate(today.getDate() - 30);
+      return { startDate: getLocalDateString(d), endDate: todayStr };
     }
 
     case 'THIS_MONTH': {
       const first = new Date(today.getFullYear(), today.getMonth(), 1);
-      return { startDate: toISO(first), endDate: todayStr };
+      return { startDate: getLocalDateString(first), endDate: todayStr };
     }
 
     case 'LAST_MONTH': {
       const first = new Date(today.getFullYear(), today.getMonth() - 1, 1);
       const last = new Date(today.getFullYear(), today.getMonth(), 0);
-      return { startDate: toISO(first), endDate: toISO(last) };
+      return { startDate: getLocalDateString(first), endDate: getLocalDateString(last) };
     }
 
     case 'THIS_YEAR': {
       const first = new Date(today.getFullYear(), 0, 1);
-      return { startDate: toISO(first), endDate: todayStr };
+      return { startDate: getLocalDateString(first), endDate: todayStr };
     }
 
     default:

@@ -3,7 +3,7 @@ import { Plus, Trash2, Calendar } from 'lucide-react';
 import { BottomSheet } from '../common/BottomSheet';
 import { api } from '../../services/api';
 import { ScrapItem, Party, ScrapUnit, BusinessSettings } from '../../types';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency, getLocalDateString } from '../../utils/formatters';
 
 interface SaleModalProps {
   isOpen: boolean;
@@ -33,7 +33,7 @@ export const SaleModal: React.FC<SaleModalProps> = ({
   const [settings, setSettings] = useState<BusinessSettings | null>(null);
   const [selectedPartyId, setSelectedPartyId] = useState('');
   const [customPartyName, setCustomPartyName] = useState('');
-  const [saleDate, setSaleDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [saleDate, setSaleDate] = useState(() => getLocalDateString());
   const [lines, setLines] = useState<SaleLine[]>([]);
   const [receivedAmount, setReceivedAmount] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -80,7 +80,7 @@ export const SaleModal: React.FC<SaleModalProps> = ({
       // Full form reset on every open to prevent stale data bleed-through
       setReceivedAmount('');
       setCustomPartyName('');
-      setSaleDate(new Date().toISOString().split('T')[0]);
+      setSaleDate(getLocalDateString());
       setErrorMessage('');
       setIsSubmitting(false);
       loadDependencies();

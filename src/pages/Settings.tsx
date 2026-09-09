@@ -4,6 +4,7 @@ import { PageHeader } from '../components/layout/PageHeader';
 import { api } from '../services/api';
 import { ScrapUnit } from '../types';
 import { useAuth } from '../context/AuthContext';
+import { getLocalDateString } from '../utils/formatters';
 
 export const Settings: React.FC = () => {
   const { logout } = useAuth();
@@ -62,7 +63,7 @@ export const Settings: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Raseed_Traders_Backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `Raseed_Traders_Backup_${getLocalDateString()}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

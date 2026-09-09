@@ -13,6 +13,7 @@ import {
   StockCostHistory,
   DashboardKPIs,
 } from '../types';
+import { getLocalDateString } from '../utils/formatters';
 
 const STORAGE_KEY = 'scrap_management_storage_db';
 
@@ -1217,7 +1218,7 @@ class LocalEngine {
 
   // Dashboard KPIs
   public getDashboardKPIs(startDate: string, endDate: string): DashboardKPIs {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateString();
 
     const todayPurchases = this.data.purchases.filter((p) => p.purchase_date === today && p.status === 'FINAL');
     const todaySales = this.data.sales.filter((s) => s.sale_date === today && s.status === 'FINAL');
