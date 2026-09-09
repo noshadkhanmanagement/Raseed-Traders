@@ -75,6 +75,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
           <button
             type="button"
             onClick={onClose}
+            aria-label="Close dialog"
             className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-500 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors btn-press"
           >
             <IconClose size={16} />

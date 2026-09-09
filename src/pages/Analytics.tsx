@@ -336,39 +336,39 @@ export const Analytics: React.FC = () => {
         </div>
       </div>
 
-      {/* Date Range Item-by-Item Breakdown */}
-      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 overflow-hidden shadow-sm">
-        <div className="px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-900/50">
+      {/* Material-wise Breakdown */}
+      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 overflow-hidden shadow-xs">
+        <div className="px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/70 dark:bg-zinc-900/50">
           <div>
-            <h3 className="text-sm font-semibold text-black dark:text-white">
+            <h3 className="text-xs sm:text-sm font-bold text-black dark:text-white">
               Material-wise Breakdown ({formatDate(startDate)} to {formatDate(endDate)})
             </h3>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Kitna maal khareeda aur kitna becha is samay me
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+              Total bought & sold during this period
             </p>
           </div>
-          <span className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">
-            {rangeData.itemBreakdown.length} Items active
+          <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+            {rangeData.itemBreakdown.length} Items
           </span>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100/70 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400">
-                <th className="px-4 py-2.5 font-medium">Material (सामग्री)</th>
-                <th className="px-4 py-2.5 font-medium text-right">Khareeda Qty (खरीदा)</th>
-                <th className="px-4 py-2.5 font-medium text-right">Khareeda ₹ (रुपये)</th>
-                <th className="px-4 py-2.5 font-medium text-right">Becha Qty (बेचा)</th>
-                <th className="px-4 py-2.5 font-medium text-right">Becha ₹ (रुपये)</th>
-                <th className="px-4 py-2.5 font-medium text-right">Net ₹ (अंतर)</th>
+              <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100/60 dark:bg-zinc-900/80 text-[11px] text-zinc-500 dark:text-zinc-400 uppercase tracking-wider font-bold">
+                <th className="px-4 py-2.5">Material (सामग्री)</th>
+                <th className="px-4 py-2.5 text-right">Khareeda Qty</th>
+                <th className="px-4 py-2.5 text-right">Khareeda (₹)</th>
+                <th className="px-4 py-2.5 text-right">Becha Qty</th>
+                <th className="px-4 py-2.5 text-right">Becha (₹)</th>
+                <th className="px-4 py-2.5 text-right">Net Balance (₹)</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800 text-black dark:text-white">
+            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800/80 text-black dark:text-white">
               {rangeData.itemBreakdown.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-zinc-500 dark:text-zinc-400">
-                    No buy or sell transactions found in this date range. (इस तारीख़ में कोई रिकॉर्ड नहीं है)
+                  <td colSpan={6} className="px-4 py-10 text-center text-xs text-zinc-400">
+                    No transactions found in this date range.
                   </td>
                 </tr>
               ) : (
@@ -376,25 +376,25 @@ export const Analytics: React.FC = () => {
                   const diff = row.sellAmount - row.buyAmount;
                   return (
                     <tr key={row.itemId} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition-colors">
-                      <td className="px-4 py-2.5 font-medium">
-                        <span className="font-semibold">{row.itemName}</span>
+                      <td className="px-4 py-2.5 font-bold">
+                        <span>{row.itemName}</span>
                         {row.localName && (
-                          <span className="ml-1.5 text-zinc-500 dark:text-zinc-400">({row.localName})</span>
+                          <span className="ml-1.5 text-zinc-400 font-normal">({row.localName})</span>
                         )}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-medium">
+                      <td className="px-4 py-2.5 text-right font-medium tabular-nums font-sans">
                         {row.buyQty > 0 ? `${row.buyQty} ${row.unit}` : '—'}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-medium">
+                      <td className="px-4 py-2.5 text-right font-medium tabular-nums font-sans">
                         {row.buyAmount > 0 ? formatCurrency(row.buyAmount) : '—'}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-medium">
+                      <td className="px-4 py-2.5 text-right font-medium tabular-nums font-sans">
                         {row.sellQty > 0 ? `${row.sellQty} ${row.unit}` : '—'}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-medium">
+                      <td className="px-4 py-2.5 text-right font-medium tabular-nums font-sans">
                         {row.sellAmount > 0 ? formatCurrency(row.sellAmount) : '—'}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-semibold">
+                      <td className="px-4 py-2.5 text-right font-extrabold tabular-nums font-sans">
                         <span className={diff >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}>
                           {diff >= 0 ? '+' : ''}{formatCurrency(diff)}
                         </span>
@@ -403,65 +403,6 @@ export const Analytics: React.FC = () => {
                   );
                 })
               )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Har Month Kitne Rupaye Ka Total Kharida / Becha (Monthly Summary Table) */}
-      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 overflow-hidden shadow-sm">
-        <div className="px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-900/50">
-          <div>
-            <h3 className="text-sm font-semibold text-black dark:text-white">
-              Har Month Ka Total Hisab (Month-by-Month Summary {new Date().getFullYear()})
-            </h3>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Har mahine kitne rupaye ka total khareeda aur becha
-            </p>
-          </div>
-          <span className="text-xs tabular-nums font-sans font-bold text-zinc-500 dark:text-zinc-400">
-            Year {new Date().getFullYear()}
-          </span>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100/70 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400">
-                <th className="px-4 py-2.5 font-medium">Month (महीना)</th>
-                <th className="px-4 py-2.5 font-medium text-right">Total Kharida ₹ (खरीदी)</th>
-                <th className="px-4 py-2.5 font-medium text-right">Kharida Weight</th>
-                <th className="px-4 py-2.5 font-medium text-right">Total Becha ₹ (बिक्री)</th>
-                <th className="px-4 py-2.5 font-medium text-right">Becha Weight</th>
-                <th className="px-4 py-2.5 font-medium text-right">Net Difference (अंतर)</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800 text-black dark:text-white">
-              {monthlyData.map((m) => (
-                <tr key={m.monthKey} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition-colors">
-                  <td className="px-4 py-2.5 font-medium">
-                    <span className="font-semibold">{m.monthName}</span>
-                    <span className="ml-1 text-zinc-500 dark:text-zinc-400">({m.monthHindi})</span>
-                  </td>
-                  <td className="px-4 py-2.5 text-right font-medium">
-                    {m.purchaseAmount > 0 ? formatCurrency(m.purchaseAmount) : '₹0'}
-                  </td>
-                  <td className="px-4 py-2.5 text-right text-zinc-500 dark:text-zinc-400">
-                    {m.purchaseWeight > 0 ? `${m.purchaseWeight} KG` : '0 KG'}
-                  </td>
-                  <td className="px-4 py-2.5 text-right font-medium">
-                    {m.saleAmount > 0 ? formatCurrency(m.saleAmount) : '₹0'}
-                  </td>
-                  <td className="px-4 py-2.5 text-right text-zinc-500 dark:text-zinc-400">
-                    {m.saleWeight > 0 ? `${m.saleWeight} KG` : '0 KG'}
-                  </td>
-                  <td className="px-4 py-2.5 text-right font-semibold">
-                    <span className={m.netDifference >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}>
-                      {m.netDifference >= 0 ? '+' : ''}{formatCurrency(m.netDifference)}
-                    </span>
-                  </td>
-                </tr>
-              ))}
             </tbody>
           </table>
         </div>

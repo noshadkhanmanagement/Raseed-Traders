@@ -1,10 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
-  NavHome,
-  NavBuy,
   NavStock,
-  NavSell,
   NavAnalytics,
   NavSettings,
   IconSearch,
@@ -30,11 +27,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { logout } = useAuth();
 
   const navItems = [
-    { to: '/', label: 'Dashboard (डैशबोर्ड)', icon: NavHome },
-    { to: '/purchases', label: 'Purchases (खरीदी)', icon: NavBuy },
-    { to: '/inventory', label: 'Stock (स्टॉक)', icon: NavStock },
-    { to: '/sales', label: 'Sales (बिक्री)', icon: NavSell },
-    { to: '/analytics', label: 'Analytics (हिसाब-किताब)', icon: NavAnalytics },
+    { to: '/', label: 'Stock (स्टॉक व व्यापार)', icon: NavStock },
+    { to: '/analytics', label: 'Hisab (हिसाब-किताब)', icon: NavAnalytics },
     { to: '/settings', label: 'Settings (सेटिंग्स)', icon: NavSettings },
   ];
 

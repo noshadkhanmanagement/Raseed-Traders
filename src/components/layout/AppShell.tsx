@@ -64,10 +64,8 @@ export const AppShell: React.FC = () => {
     if (action === 'item') setIsItemOpen(true);
   };
 
-  const handleSearchResultClick = (type: 'item' | 'party' | 'purchase' | 'sale') => {
-    if (type === 'item') navigate('/inventory');
-    if (type === 'purchase') navigate('/purchases');
-    if (type === 'sale') navigate('/sales');
+  const handleSearchResultClick = () => {
+    navigate('/');
   };
 
   const cycleTheme = () => {

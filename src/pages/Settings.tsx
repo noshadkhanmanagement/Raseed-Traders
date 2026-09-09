@@ -8,10 +8,15 @@ import {
   IconLock,
   IconAlert,
   IconReset,
+  IconPlus,
+  IconEdit,
+  IconDelete,
+  IconLayers,
 } from '../components/common/Icons';
 import { PageHeader } from '../components/layout/PageHeader';
-import { api } from '../services/api';
-import { ScrapUnit } from '../types';
+import { ItemModal } from '../components/transactions/ItemModal';
+import { api, isDefaultScrapItem } from '../services/api';
+import { ScrapItem, ScrapUnit } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { getLocalDateString } from '../utils/formatters';
 
@@ -28,6 +33,11 @@ export const Settings: React.FC = () => {
   const [isSaved, setIsSaved] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
 
+  // Manage Materials State
+  const [items, setItems] = useState<ScrapItem[]>([]);
+  const [isItemModalOpen, setIsItemModalOpen] = useState(false);
+  const [selectedItemToEdit, setSelectedItemToEdit] = useState<ScrapItem | null>(null);
+
   const loadSettings = useCallback(async () => {
     try {
       const biz = await api.getBusiness();
@@ -41,9 +51,19 @@ export const Settings: React.FC = () => {
     }
   }, []);
 
+  const loadItems = useCallback(async () => {
+    try {
+      const all = await api.getItems();
+      setItems(all);
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
+
   useEffect(() => {
     loadSettings();
-  }, [loadSettings]);
+    loadItems();
+  }, [loadSettings, loadItems]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +75,7 @@ export const Settings: React.FC = () => {
       });
 
       setIsSaved(true);
-      setSaveMessage('Settings updated successfully (सेटिंग्स सहेजी गईं)!');
+      setSaveMessage('Settings updated successfully!');
       setTimeout(() => {
         setIsSaved(false);
         setSaveMessage('');
@@ -88,7 +108,7 @@ export const Settings: React.FC = () => {
       try {
         const json = JSON.parse(event.target?.result as string);
         api.importBackup(json);
-        alert('Backup imported successfully (डेटा रीस्टोर हो गया)!');
+        alert('Backup imported successfully!');
         window.location.reload();
       } catch (err: any) {
         alert('Error importing backup: ' + err.message);
@@ -101,7 +121,7 @@ export const Settings: React.FC = () => {
 
   const handleResetData = async () => {
     const confirmed = window.confirm(
-      'Are you sure you want to reset all data and restore the clean 25 default items with ₹0 counts?\n(क्या आप सभी डेटा रीसेट करके 25 मुख्य सामानों की साफ़ सूची वापस लाना चाहते हैं?)'
+      'Are you sure you want to reset all data and restore clean 25 default items with 0 stock & rates?'
     );
     if (!confirmed) return;
 
@@ -117,11 +137,22 @@ export const Settings: React.FC = () => {
     }
   };
 
+  const handleDeleteCustomItem = async (it: ScrapItem) => {
+    const confirmed = window.confirm(`Permanently remove material "${it.name}" from catalog?`);
+    if (!confirmed) return;
+    try {
+      await api.deleteItem(it.id);
+      await loadItems();
+    } catch (err: any) {
+      alert(err.message || 'Error deleting material');
+    }
+  };
+
   return (
     <div className="space-y-5 max-w-3xl mx-auto page-enter">
       <PageHeader
         title="Settings (सेटिंग्स)"
-        subtitle="Shop details, business rules, and database management"
+        subtitle="Shop profile, material catalog management, and database tools"
       />
 
       {saveMessage && (
@@ -136,7 +167,96 @@ export const Settings: React.FC = () => {
         </div>
       )}
 
-      {/* 1. iOS Inset Group: Business Profile */}
+      {/* 1. MANAGE MATERIAL NAMES (Exclusively manage add/edit/delete here) */}
+      <div className="rounded-[26px] border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.5)] space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-black dark:bg-white text-white dark:text-black flex items-center justify-center shrink-0 shadow-xs">
+              <IconLayers size={16} />
+            </div>
+            <div>
+              <h2 className="text-sm font-extrabold text-black dark:text-white tracking-tight">
+                Manage Material Names (सामग्री नाम प्रबंधन)
+              </h2>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                Add new scrap materials or edit names and units ({items.length} total)
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedItemToEdit(null);
+              setIsItemModalOpen(true);
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-bold hover:opacity-90 btn-press shadow-xs"
+          >
+            <IconPlus size={13} strokeWidth={2.5} />
+            <span>Add Material</span>
+          </button>
+        </div>
+
+        {/* Materials List */}
+        <div className="max-h-72 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800/70 border border-zinc-200/60 dark:border-zinc-800 rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/40">
+          {items.map((it) => {
+            const isPermanent = isDefaultScrapItem(it.name);
+            return (
+              <div
+                key={it.id}
+                className="p-3 flex items-center justify-between gap-2 hover:bg-white dark:hover:bg-zinc-800/40 transition-colors"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-black dark:text-white truncate">
+                      {it.name}
+                    </span>
+                    <span className="text-[10px] text-zinc-400 font-normal">
+                      ({it.local_name})
+                    </span>
+                    {isPermanent && (
+                      <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded-full bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 uppercase">
+                        Permanent
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[10px] text-zinc-400 mt-0.5">
+                    Unit: {it.default_unit} · Stock: {it.current_stock.toLocaleString('en-IN')} {it.default_unit}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedItemToEdit(it);
+                      setIsItemModalOpen(true);
+                    }}
+                    className="px-2.5 py-1 text-xs font-semibold rounded-full border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-1"
+                    title="Edit Name & Unit"
+                  >
+                    <IconEdit size={12} />
+                    <span>Edit</span>
+                  </button>
+
+                  {!isPermanent && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteCustomItem(it)}
+                      className="p-1 rounded-full text-zinc-400 hover:text-red-600 icon-press"
+                      title="Delete Custom Material"
+                    >
+                      <IconDelete size={13} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 2. Business Profile */}
       <form onSubmit={handleSave} className="rounded-[26px] border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.5)] space-y-4">
         <div className="flex items-center gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
           <div className="w-8 h-8 rounded-xl bg-blue-500 text-white flex items-center justify-center shrink-0 shadow-xs">
@@ -147,7 +267,7 @@ export const Settings: React.FC = () => {
               Business Profile (व्यापार विवरण)
             </h2>
             <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-              Printed on bills, purchase slips, and invoices
+              Printed on header and reports
             </p>
           </div>
         </div>
@@ -207,37 +327,20 @@ export const Settings: React.FC = () => {
             />
           </div>
 
-          <div className="pt-2 flex items-center justify-between border-t border-zinc-100 dark:border-zinc-800/80">
-            <div>
-              <span className="text-xs font-bold text-black dark:text-white block">
-                Negative Stock Allowance
-              </span>
-              <span className="text-[11px] text-zinc-500">Allow selling items even if stock is 0</span>
-            </div>
-            <input
-              type="checkbox"
-              checked={allowNegativeStock}
-              onChange={(e) => setAllowNegativeStock(e.target.checked)}
-              className="w-5 h-5 rounded-md accent-black dark:accent-white cursor-pointer"
-            />
-          </div>
-        </div>
-
-        <div className="pt-2 flex justify-end">
           <button
             type="submit"
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-bold hover:opacity-90 btn-press shadow-xs"
+            className="flex items-center justify-center gap-1.5 w-full sm:w-auto px-5 py-2.5 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-bold hover:opacity-90 btn-press shadow-xs"
           >
             <IconSave size={14} />
-            <span>Save Settings (सहेजें)</span>
+            <span>Save Profile (सेव करें)</span>
           </button>
         </div>
       </form>
 
-      {/* 2. iOS Inset Group: Data Backup & Management */}
+      {/* 3. Data Backup & Restore */}
       <div className="rounded-[26px] border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.5)] space-y-3.5">
         <div className="flex items-center gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
-          <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+          <div className="w-8 h-8 rounded-xl bg-purple-500 text-white flex items-center justify-center shrink-0 shadow-xs">
             <IconDatabase size={16} />
           </div>
           <div>
@@ -245,7 +348,7 @@ export const Settings: React.FC = () => {
               Data Backup & Restore (डेटा बैकअप)
             </h2>
             <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-              Download complete database file or restore onto another device
+              Safeguard all transactions, materials, and records offline
             </p>
           </div>
         </div>
@@ -254,29 +357,24 @@ export const Settings: React.FC = () => {
           <button
             type="button"
             onClick={handleExportBackup}
-            className="flex items-center justify-center gap-2 p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50/70 dark:bg-zinc-900/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-black dark:text-white text-xs font-bold btn-press shadow-2xs"
+            className="flex items-center justify-center gap-2 p-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-xs font-bold text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 btn-press"
           >
-            <IconDownload size={16} />
-            <span>Export Backup (डाउनलोड बैकअप)</span>
+            <IconDownload size={14} />
+            <span>Download Backup JSON</span>
           </button>
 
-          <label className="flex items-center justify-center gap-2 p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50/70 dark:bg-zinc-900/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-black dark:text-white text-xs font-bold btn-press shadow-2xs cursor-pointer">
-            <IconUpload size={16} />
-            <span>Restore Backup (बैकअप लोड करें)</span>
-            <input
-              type="file"
-              accept=".json"
-              onChange={handleImportBackup}
-              className="hidden"
-            />
+          <label className="flex items-center justify-center gap-2 p-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-xs font-bold text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 btn-press cursor-pointer">
+            <IconUpload size={14} />
+            <span>Restore Backup JSON</span>
+            <input type="file" accept=".json" onChange={handleImportBackup} className="hidden" />
           </label>
         </div>
       </div>
 
-      {/* 3. iOS Inset Group: Security & Logout */}
+      {/* 4. App Security & Logout */}
       <div className="rounded-[26px] border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.5)] space-y-3.5">
         <div className="flex items-center gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
-          <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+          <div className="w-8 h-8 rounded-xl bg-zinc-800 text-white flex items-center justify-center shrink-0 shadow-xs">
             <IconLock size={16} />
           </div>
           <div>
@@ -303,7 +401,7 @@ export const Settings: React.FC = () => {
         </div>
       </div>
 
-      {/* 4. iOS Inset Group: Danger Zone */}
+      {/* 5. Factory Reset */}
       <div className="rounded-[26px] border border-red-200/80 dark:border-red-900/40 bg-red-50/40 dark:bg-red-950/20 backdrop-blur-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.04)] space-y-3.5">
         <div className="flex items-center gap-3 pb-3 border-b border-red-200/60 dark:border-red-900/40">
           <div className="w-8 h-8 rounded-xl bg-red-600 text-white flex items-center justify-center shrink-0 shadow-xs">
@@ -314,7 +412,7 @@ export const Settings: React.FC = () => {
               Factory Data Reset (डेटा रीसेट)
             </h2>
             <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-              Permanently clear all bills, zero all counts, and restore 25 clean items
+              Zero all counts and restore 25 clean items
             </p>
           </div>
         </div>
@@ -334,6 +432,17 @@ export const Settings: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Modal for adding/editing material names */}
+      <ItemModal
+        isOpen={isItemModalOpen}
+        onClose={() => {
+          setIsItemModalOpen(false);
+          setSelectedItemToEdit(null);
+        }}
+        editItem={selectedItemToEdit}
+        onSuccess={loadItems}
+      />
     </div>
   );
 };

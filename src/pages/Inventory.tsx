@@ -13,7 +13,6 @@ import {
 import { PageHeader } from '../components/layout/PageHeader';
 import { BottomSheet } from '../components/common/BottomSheet';
 import { ItemAdjustmentModal } from '../components/inventory/ItemAdjustmentModal';
-import { ItemModal } from '../components/transactions/ItemModal';
 import { ItemRateHistoryModal } from '../components/inventory/ItemRateHistoryModal';
 import { api } from '../services/api';
 import { ScrapItem } from '../types';
@@ -33,18 +32,14 @@ export const Inventory: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
-  const [isItemModalOpen, setIsItemModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [selectedItemToAdjust, setSelectedItemToAdjust] = useState<ScrapItem | null>(null);
-  const [selectedItemToEdit, setSelectedItemToEdit] = useState<ScrapItem | null>(null);
   const [selectedHistoryItemId, setSelectedHistoryItemId] = useState<string | null>(null);
 
-  // 2-Option Deletion / Count Reset State
-  const [itemForDeletion, setItemForDeletion] = useState<ScrapItem | null>(null);
-  const [isDeleteChoiceModalOpen, setIsDeleteChoiceModalOpen] = useState(false);
-  const [isConfirmingPermanentDelete, setIsConfirmingPermanentDelete] = useState(false);
+  // Count Reset State (Stock resets to 0 KG, item stays permanent in database)
+  const [itemToResetStock, setItemToResetStock] = useState<ScrapItem | null>(null);
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
   const [isProcessingAction, setIsProcessingAction] = useState(false);
-  const [isRestoringDefaults, setIsRestoringDefaults] = useState(false);
 
   const handleOpenHistory = (item: ScrapItem) => {
     setSelectedHistoryItemId(item.id);
@@ -102,56 +97,23 @@ export const Inventory: React.FC = () => {
     setIsAdjustModalOpen(true);
   };
 
-  const handleAddNewClick = () => {
-    setSelectedItemToEdit(null);
-    setIsItemModalOpen(true);
+  const handleResetStockClick = (item: ScrapItem) => {
+    setItemToResetStock(item);
+    setIsResetConfirmOpen(true);
   };
 
-  const handleDeleteClick = (item: ScrapItem) => {
-    setItemForDeletion(item);
-    setIsConfirmingPermanentDelete(false);
-    setIsDeleteChoiceModalOpen(true);
-  };
-
-  const handleResetCountsAction = async () => {
-    if (!itemForDeletion) return;
+  const handleConfirmResetStock = async () => {
+    if (!itemToResetStock) return;
     setIsProcessingAction(true);
     try {
-      await api.resetItemStock(itemForDeletion.id);
+      await api.resetItemStock(itemToResetStock.id);
       await loadInventory();
-      setIsDeleteChoiceModalOpen(false);
-      setItemForDeletion(null);
+      setIsResetConfirmOpen(false);
+      setItemToResetStock(null);
     } catch (err: any) {
-      alert(err.message || 'Error resetting counts');
+      alert(err.message || 'Error resetting stock count');
     } finally {
       setIsProcessingAction(false);
-    }
-  };
-
-  const handlePermanentDeleteAction = async () => {
-    if (!itemForDeletion) return;
-    setIsProcessingAction(true);
-    try {
-      await api.deleteItem(itemForDeletion.id);
-      await loadInventory();
-      setIsDeleteChoiceModalOpen(false);
-      setItemForDeletion(null);
-    } catch (err: any) {
-      alert(err.message || 'Error deleting item');
-    } finally {
-      setIsProcessingAction(false);
-    }
-  };
-
-  const handleRestoreDefaults = async () => {
-    setIsRestoringDefaults(true);
-    try {
-      await api.restoreDefaultItems();
-      await loadInventory();
-    } catch (err: any) {
-      alert(err.message || 'Error restoring default items');
-    } finally {
-      setIsRestoringDefaults(false);
     }
   };
 
@@ -161,34 +123,14 @@ export const Inventory: React.FC = () => {
         title="Kitna Stock Hai (स्टॉक / माल)"
         subtitle="Current scrap inventory & spot pricing (सामग्रियों का स्टॉक व चालू खरीद दर)"
         actions={
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleRestoreDefaults}
-              disabled={isRestoringDefaults}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 btn-press shadow-xs disabled:opacity-50"
-              title="Restore any missing default items (डिफ़ॉल्ट 25 सामग्री रीस्टोर करें)"
-            >
-              <IconReset size={14} className={isRestoringDefaults ? 'animate-spin' : ''} />
-              <span className="hidden sm:inline">Reset Defaults (25)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleAdjustClick()}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-black dark:text-white text-xs font-bold hover:bg-zinc-100 dark:hover:bg-zinc-800 btn-press shadow-xs"
-            >
-              <IconAdjust size={14} />
-              <span>Adjust Stock</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleAddNewClick}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-bold hover:opacity-90 btn-press shadow-xs"
-            >
-              <IconPlus size={14} />
-              <span>Add Material</span>
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => handleAdjustClick()}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-black dark:text-white text-xs font-bold hover:bg-zinc-100 dark:hover:bg-zinc-800 btn-press shadow-xs"
+          >
+            <IconAdjust size={14} />
+            <span>Adjust Stock</span>
+          </button>
         }
       />
 
@@ -424,11 +366,11 @@ export const Inventory: React.FC = () => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDeleteClick(it)}
-                      className="p-1 rounded-full text-zinc-400 hover:text-red-600 icon-press"
-                      title="Delete / Reset Counts"
+                      onClick={() => handleResetStockClick(it)}
+                      className="p-1 rounded-full text-zinc-400 hover:text-amber-600 icon-press"
+                      title="Reset Stock Count to 0 (स्टॉक 0 करें)"
                     >
-                      <IconDelete size={13} />
+                      <IconReset size={13} />
                     </button>
                   </div>
                   <IconChevron size={14} className="text-zinc-300 dark:text-zinc-600 rotate-270 shrink-0" />
@@ -526,11 +468,11 @@ export const Inventory: React.FC = () => {
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleDeleteClick(it)}
-                            className="p-1.5 text-xs font-semibold rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-400 hover:text-red-600 hover:border-red-300 dark:hover:border-red-800 transition-colors"
-                            title="Delete Material (सामग्री हटाएं)"
+                            onClick={() => handleResetStockClick(it)}
+                            className="p-1.5 text-xs font-semibold rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-400 hover:text-amber-600 hover:border-amber-300 dark:hover:border-amber-800 transition-colors"
+                            title="Reset Stock Count to 0 (स्टॉक 0 करें)"
                           >
-                            <IconDelete size={14} />
+                            <IconReset size={14} />
                           </button>
                         </div>
                       </td>
@@ -543,142 +485,58 @@ export const Inventory: React.FC = () => {
         </div>
       </div>
 
-      {/* Unified Item Adjustment & Deletion Modal */}
-      <ItemAdjustmentModal
-        isOpen={isAdjustModalOpen}
-        onClose={() => {
-          setIsAdjustModalOpen(false);
-          setSelectedItemToAdjust(null);
-        }}
-        preselectedItemId={selectedItemToAdjust?.id}
-        onSuccess={loadInventory}
-      />
-
-      {/* Add / Edit Item Modal */}
-      <ItemModal
-        isOpen={isItemModalOpen}
-        onClose={() => {
-          setIsItemModalOpen(false);
-          setSelectedItemToEdit(null);
-        }}
-        editItem={selectedItemToEdit}
-        onSuccess={loadInventory}
-      />
-
-      {/* Item Rate History & Ledger Modal */}
-      <ItemRateHistoryModal
-        isOpen={isHistoryModalOpen}
-        onClose={() => {
-          setIsHistoryModalOpen(false);
-          setSelectedHistoryItemId(null);
-        }}
-        itemId={selectedHistoryItemId}
-        onRecordPurchase={(it) => openPurchase?.(it)}
-        onRecordSale={(it) => openSale?.(it)}
-      />
-
-      {/* 2-Option Delete / Reset Counts Modal */}
+      {/* Reset Stock to 0 Modal (Item remains permanent in database) */}
       <BottomSheet
-        isOpen={isDeleteChoiceModalOpen && !!itemForDeletion}
+        isOpen={isResetConfirmOpen && !!itemToResetStock}
         onClose={() => {
-          setIsDeleteChoiceModalOpen(false);
-          setItemForDeletion(null);
-          setIsConfirmingPermanentDelete(false);
+          setIsResetConfirmOpen(false);
+          setItemToResetStock(null);
         }}
-        title="Delete or Reset Material (सामग्री हटाएं या गिनती 0 करें)"
-        subtitle={itemForDeletion ? `${itemForDeletion.name} — ${itemForDeletion.local_name} (${itemForDeletion.default_unit})` : ''}
+        title="Reset Stock to 0 (स्टॉक शून्य करें)"
+        subtitle="Item stays permanently in catalog with 0 count"
         maxWidth="max-w-md"
       >
-        {itemForDeletion && (
+        {itemToResetStock && (
           <div className="space-y-4">
-            <div className="p-3 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs">
-              <div className="font-extrabold text-black dark:text-white">
-                {itemForDeletion.name} <span className="text-zinc-500 font-normal">({itemForDeletion.local_name})</span>
+            <div className="p-3.5 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs">
+              <div>
+                <div className="font-extrabold text-black dark:text-white text-sm">
+                  {itemToResetStock.name}
+                </div>
+                <div className="text-zinc-500 font-medium">({itemToResetStock.local_name})</div>
               </div>
-              <div className="tabular-nums font-sans font-bold text-zinc-700 dark:text-zinc-300">
-                Stock: {itemForDeletion.current_stock.toLocaleString('en-IN')} {itemForDeletion.default_unit}
+              <div className="tabular-nums font-sans font-bold text-right">
+                <div className="text-zinc-400 text-[10px]">Current Stock</div>
+                <div className="text-black dark:text-white font-black text-sm">
+                  {itemToResetStock.current_stock.toLocaleString('en-IN')} {itemToResetStock.default_unit}
+                </div>
               </div>
             </div>
 
-            <div className="space-y-3">
-              {/* Option 1: Reset Counts / Stock to 0 */}
-              <div className="p-3.5 rounded-xl border border-amber-300/70 dark:border-amber-900/50 bg-amber-50/60 dark:bg-amber-950/20 space-y-2">
-                <div className="flex items-center gap-1.5 text-xs font-extrabold text-amber-900 dark:text-amber-200">
-                  <IconReset size={14} className="text-amber-600 dark:text-amber-400 shrink-0" />
-                  <span>Option 1: Delete Counts (सिर्फ गिनती / स्टॉक 0 करें)</span>
-                </div>
-                <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-snug">
-                  सामग्री लिस्ट में हमेशा सुरक्षित रहेगी, केवल इसका स्टॉक शून्य (0) हो जाएगा। (Keep in list, reset stock count to 0)
-                </p>
+            <div className="p-3.5 rounded-2xl border border-amber-300/70 dark:border-amber-900/50 bg-amber-50/60 dark:bg-amber-950/20 space-y-2">
+              <p className="text-xs text-zinc-700 dark:text-zinc-300 leading-snug">
+                क्या आप वाकई <strong>{itemToResetStock.name}</strong> का स्टॉक शून्य (0) करना चाहते हैं? यह सामग्री आपकी लिस्ट में हमेशा सुरक्षित रहेगी।
+              </p>
+              <div className="pt-2 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsResetConfirmOpen(false);
+                    setItemToResetStock(null);
+                  }}
+                  className="flex-1 py-2 px-3 rounded-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-200"
+                >
+                  रद्द करें (Cancel)
+                </button>
                 <button
                   type="button"
                   disabled={isProcessingAction}
-                  onClick={handleResetCountsAction}
-                  className="w-full py-2 px-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-50 btn-press"
+                  onClick={handleConfirmResetStock}
+                  className="flex-1 py-2 px-3 rounded-full bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold disabled:opacity-50 btn-press shadow-xs"
                 >
-                  <IconReset size={14} />
-                  <span>{isProcessingAction ? 'Resetting...' : 'Reset Stock Count to 0 (गिनती 0 करें)'}</span>
+                  {isProcessingAction ? 'Resetting...' : 'हाँ, स्टॉक 0 करें'}
                 </button>
               </div>
-
-              {/* Option 2: Delete Completely from List */}
-              <div className="p-3.5 rounded-xl border border-red-300/70 dark:border-red-900/50 bg-red-50/60 dark:bg-red-950/20 space-y-2">
-                <div className="flex items-center gap-1.5 text-xs font-extrabold text-red-900 dark:text-red-200">
-                  <IconDelete size={14} className="text-red-600 dark:text-red-400 shrink-0" />
-                  <span>Option 2: Delete from List (सामग्री पूरी तरह हटाएं)</span>
-                </div>
-                <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-snug">
-                  सावधानी: यह सामग्री लिस्ट और इसके सभी रिकॉर्ड्स हमेशा के लिए हटा दिए जाएंगे।
-                </p>
-
-                {!isConfirmingPermanentDelete ? (
-                  <button
-                    type="button"
-                    onClick={() => setIsConfirmingPermanentDelete(true)}
-                    className="w-full py-2 px-3 rounded-xl border border-red-400 dark:border-red-700 bg-white dark:bg-zinc-900 text-red-700 dark:text-red-400 text-xs font-bold hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors flex items-center justify-center gap-1.5 shadow-xs"
-                  >
-                    <IconDelete size={14} />
-                    <span>Delete "{itemForDeletion.name}" Permanently</span>
-                  </button>
-                ) : (
-                  <div className="p-2.5 rounded-lg bg-red-100/80 dark:bg-red-900/40 border border-red-300 dark:border-red-700 space-y-2">
-                    <p className="text-[11px] font-bold text-red-900 dark:text-red-200 leading-tight">
-                      क्या आप वाकई "{itemForDeletion.name}" को हमेशा के लिए हटाना चाहते हैं?
-                    </p>
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => setIsConfirmingPermanentDelete(false)}
-                        className="flex-1 py-1 px-2 rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-[10px] font-semibold text-zinc-700 dark:text-zinc-200"
-                      >
-                        रद्द करें (Keep)
-                      </button>
-                      <button
-                        type="button"
-                        disabled={isProcessingAction}
-                        onClick={handlePermanentDeleteAction}
-                        className="flex-1 py-1 px-2 rounded-md bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold disabled:opacity-50 btn-press"
-                      >
-                        {isProcessingAction ? 'Deleting...' : 'हाँ, हमेशा हटाएं'}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800 flex justify-end">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsDeleteChoiceModalOpen(false);
-                  setItemForDeletion(null);
-                  setIsConfirmingPermanentDelete(false);
-                }}
-                className="px-4 py-1.5 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white rounded-lg transition-colors"
-              >
-                रद्द करें (Cancel)
-              </button>
             </div>
           </div>
         )}

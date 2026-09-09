@@ -1,5 +1,6 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import { localDb, INITIAL_SCRAP_ITEMS } from './localEngine';
+import { localDb, INITIAL_SCRAP_ITEMS, isDefaultScrapItem } from './localEngine';
+export { isDefaultScrapItem } from './localEngine';
 import {
   Business,
   ScrapItem,
@@ -355,6 +356,12 @@ export const api = {
   },
 
   async deleteItem(id: string): Promise<void> {
+    const localItem = localDb.getItemById(id);
+    if (localItem && isDefaultScrapItem(localItem.name)) {
+      await this.resetItemStock(id);
+      return;
+    }
+
     if (isSupabaseConfigured && supabase) {
       try {
         // Step 1: Cascade delete child records

@@ -67,6 +67,12 @@ export const INITIAL_SCRAP_ITEMS: Omit<ScrapItem, 'id' | 'business_id' | 'create
   { name: 'TYRE', local_name: 'टायर', default_unit: 'PIECE', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
 ];
 
+export const isDefaultScrapItem = (name?: string): boolean => {
+  if (!name) return false;
+  const norm = name.toUpperCase().trim();
+  return INITIAL_SCRAP_ITEMS.some((def) => def.name.toUpperCase().trim() === norm);
+};
+
 export interface AppDatabaseSchema {
   business: Business;
   items: ScrapItem[];
@@ -301,6 +307,16 @@ class LocalEngine {
   }
 
   public deleteItem(id: string): void {
+    const item = this.getItemById(id);
+    if (!item) return;
+
+    // Default 25 items are permanent in the database and can never be removed
+    // Deleting them simply resets their count to 0 KG!
+    if (isDefaultScrapItem(item.name)) {
+      this.resetItemStock(id);
+      return;
+    }
+
     // 1. Clean up ledger and cost history
     this.data.inventory_ledger = this.data.inventory_ledger.filter((l) => l.item_id !== id);
     this.data.stock_cost_history = this.data.stock_cost_history.filter((h) => h.item_id !== id);

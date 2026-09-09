@@ -11,9 +11,6 @@ import { ScrollToTop } from './components/common/ScrollToTop';
 
 // Zero-lag route code-splitting for 1000/1000 performance
 const Dashboard = lazy(() => import('./pages/Dashboard').then((m) => ({ default: m.Dashboard })));
-const Purchases = lazy(() => import('./pages/Purchases').then((m) => ({ default: m.Purchases })));
-const Sales = lazy(() => import('./pages/Sales').then((m) => ({ default: m.Sales })));
-const Inventory = lazy(() => import('./pages/Inventory').then((m) => ({ default: m.Inventory })));
 const AnalyticsPage = lazy(() => import('./pages/Analytics').then((m) => ({ default: m.Analytics })));
 const Settings = lazy(() => import('./pages/Settings').then((m) => ({ default: m.Settings })));
 
@@ -50,10 +47,11 @@ const AppContent: React.FC = () => {
         <Routes>
           <Route path="/" element={<AppShell />}>
             <Route index element={<Dashboard />} />
-            <Route path="purchases" element={<Purchases />} />
-            <Route path="sales" element={<Sales />} />
-            <Route path="inventory" element={<Inventory />} />
+            <Route path="inventory" element={<Navigate to="/" replace />} />
+            <Route path="purchases" element={<Navigate to="/" replace />} />
+            <Route path="sales" element={<Navigate to="/" replace />} />
             <Route path="analytics" element={<AnalyticsPage />} />
+            <Route path="hisab" element={<AnalyticsPage />} />
             <Route path="reports" element={<Navigate to="/analytics" replace />} />
             <Route path="settings" element={<Settings />} />
             <Route path="*" element={<Navigate to="/" replace />} />
