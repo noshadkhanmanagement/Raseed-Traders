@@ -40,15 +40,24 @@ export const Purchases: React.FC = () => {
     loadPurchases();
   }, [loadPurchases, refreshCounter]);
 
-  const [periodFilter, setPeriodFilter] = useState<'ALL' | 'TODAY' | 'THIS_MONTH'>('ALL');
-  const [paymentFilter, setPaymentFilter] = useState<'ALL' | 'CASH'>('ALL');
+  const [periodFilter, setPeriodFilter] = useState<'ALL' | 'TODAY' | 'YESTERDAY' | 'THIS_MONTH' | 'LAST_30_DAYS'>('ALL');
   const [sortBy, setSortBy] = useState<'newest' | 'amount_desc' | 'weight_desc'>('newest');
 
   const todayStr = getLocalDateString();
+  const yDate = new Date();
+  yDate.setDate(yDate.getDate() - 1);
+  const yesterdayStr = getLocalDateString(yDate);
+
+  const thirtyDaysAgoDate = new Date();
+  thirtyDaysAgoDate.setDate(thirtyDaysAgoDate.getDate() - 30);
+  const thirtyDaysAgoStr = getLocalDateString(thirtyDaysAgoDate);
+
   const currentMonthStr = todayStr.substring(0, 7);
 
   const todayCount = purchases.filter((p) => p.purchase_date && p.purchase_date.startsWith(todayStr)).length;
+  const yesterdayCount = purchases.filter((p) => p.purchase_date && p.purchase_date.startsWith(yesterdayStr)).length;
   const thisMonthCount = purchases.filter((p) => p.purchase_date && p.purchase_date.startsWith(currentMonthStr)).length;
+  const last30DaysCount = purchases.filter((p) => p.purchase_date && p.purchase_date >= thirtyDaysAgoStr && p.purchase_date <= todayStr).length;
 
   const filteredPurchases = purchases
     .filter((p) => {
@@ -61,7 +70,9 @@ export const Purchases: React.FC = () => {
         if (!match) return false;
       }
       if (periodFilter === 'TODAY' && (!p.purchase_date || !p.purchase_date.startsWith(todayStr))) return false;
+      if (periodFilter === 'YESTERDAY' && (!p.purchase_date || !p.purchase_date.startsWith(yesterdayStr))) return false;
       if (periodFilter === 'THIS_MONTH' && (!p.purchase_date || !p.purchase_date.startsWith(currentMonthStr))) return false;
+      if (periodFilter === 'LAST_30_DAYS' && (!p.purchase_date || p.purchase_date < thirtyDaysAgoStr || p.purchase_date > todayStr)) return false;
       return true;
     })
     .sort((a, b) => {
@@ -160,78 +171,77 @@ export const Purchases: React.FC = () => {
               </button>
             )}
           </div>
-
-          {/* Period Segmented Control */}
-          <div className="inline-flex p-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800 shrink-0 self-start sm:self-auto">
-            <button
-              type="button"
-              onClick={() => setPeriodFilter('ALL')}
-              className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
-                periodFilter === 'ALL'
-                  ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
-                  : 'text-zinc-500 hover:text-black dark:hover:text-white'
-              }`}
-            >
-              All ({purchases.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setPeriodFilter('TODAY')}
-              className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
-                periodFilter === 'TODAY'
-                  ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
-                  : 'text-zinc-500 hover:text-black dark:hover:text-white'
-              }`}
-            >
-              Today ({todayCount})
-            </button>
-            <button
-              type="button"
-              onClick={() => setPeriodFilter('THIS_MONTH')}
-              className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
-                periodFilter === 'THIS_MONTH'
-                  ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
-                  : 'text-zinc-500 hover:text-black dark:hover:text-white'
-              }`}
-            >
-              Month ({thisMonthCount})
-            </button>
-          </div>
         </div>
 
-        {/* Row 2: Secondary Exact Options (Payment Mode Segments + Sort Segments) */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-zinc-100 dark:border-zinc-800/80">
-          {/* Payment Mode Segments */}
-          <div className="inline-flex items-center gap-1 text-xs">
-            <span className="text-[11px] font-bold text-zinc-400 mr-1">Payment:</span>
-            <div className="inline-flex p-0.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800">
+        {/* Row 2: Date Switches & Sort - Line 1 (Today / Yesterday) & Line 2 (This Month / 30 Days / All) on Mobile */}
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5 pt-1 border-t border-zinc-100 dark:border-zinc-800/80">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            {/* Switch Line 1: Today & Yesterday */}
+            <div className="inline-flex p-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800 shrink-0">
               <button
                 type="button"
-                onClick={() => setPaymentFilter('ALL')}
-                className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all ${
-                  paymentFilter === 'ALL'
+                onClick={() => setPeriodFilter('TODAY')}
+                className={`flex-1 sm:flex-initial px-3 py-1 rounded-full text-xs font-bold transition-all text-center ${
+                  periodFilter === 'TODAY'
                     ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
                     : 'text-zinc-500 hover:text-black dark:hover:text-white'
                 }`}
               >
-                All (सभी)
+                Today ({todayCount})
               </button>
               <button
                 type="button"
-                onClick={() => setPaymentFilter('CASH')}
-                className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all ${
-                  paymentFilter === 'CASH'
+                onClick={() => setPeriodFilter('YESTERDAY')}
+                className={`flex-1 sm:flex-initial px-3 py-1 rounded-full text-xs font-bold transition-all text-center ${
+                  periodFilter === 'YESTERDAY'
                     ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
                     : 'text-zinc-500 hover:text-black dark:hover:text-white'
                 }`}
               >
-                Full Cash (नकद)
+                Yesterday ({yesterdayCount})
+              </button>
+            </div>
+
+            {/* Switch Line 2: This Month, 30 Days & All */}
+            <div className="inline-flex p-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800 shrink-0">
+              <button
+                type="button"
+                onClick={() => setPeriodFilter('THIS_MONTH')}
+                className={`flex-1 sm:flex-initial px-3 py-1 rounded-full text-xs font-bold transition-all text-center ${
+                  periodFilter === 'THIS_MONTH'
+                    ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                    : 'text-zinc-500 hover:text-black dark:hover:text-white'
+                }`}
+              >
+                This Month ({thisMonthCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setPeriodFilter('LAST_30_DAYS')}
+                className={`flex-1 sm:flex-initial px-3 py-1 rounded-full text-xs font-bold transition-all text-center ${
+                  periodFilter === 'LAST_30_DAYS'
+                    ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                    : 'text-zinc-500 hover:text-black dark:hover:text-white'
+                }`}
+              >
+                30 Days ({last30DaysCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setPeriodFilter('ALL')}
+                className={`flex-1 sm:flex-initial px-3 py-1 rounded-full text-xs font-bold transition-all text-center ${
+                  periodFilter === 'ALL'
+                    ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                    : 'text-zinc-500 hover:text-black dark:hover:text-white'
+                }`}
+              >
+                All ({purchases.length})
               </button>
             </div>
           </div>
 
           {/* Sort Segments */}
-          <div className="inline-flex items-center gap-1 text-xs">
+          <div className="inline-flex items-center gap-1 text-xs self-start lg:self-auto">
             <span className="text-[11px] font-bold text-zinc-400 mr-1">Sort:</span>
             <div className="inline-flex p-0.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800">
               <button

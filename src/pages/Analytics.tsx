@@ -157,13 +157,14 @@ export const Analytics: React.FC = () => {
             </div>
           </div>
 
-          {/* iOS Segmented Filter Pill (Scrollable on small screens, never breaks geometry) */}
-          <div className="w-full lg:w-auto overflow-x-auto no-scrollbar py-0.5">
-            <div className="inline-flex items-center gap-1 p-1 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200/60 dark:border-zinc-700/60 shrink-0">
+          {/* iOS Segmented Filter: Line 1 (Today / Yesterday) & Line 2 (This Month / Last Month / 30 Days) on Mobile */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
+            {/* Switch Line 1: Today & Yesterday */}
+            <div className="inline-flex items-center p-1 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200/60 dark:border-zinc-700/60 shrink-0">
               <button
                 type="button"
                 onClick={() => applyQuickRange('TODAY')}
-                className={`shrink-0 px-3.5 py-1.5 text-xs rounded-full transition-all duration-150 ${
+                className={`flex-1 sm:flex-initial px-3.5 py-1.5 text-xs rounded-full transition-all duration-150 text-center ${
                   activeRange === 'TODAY'
                     ? 'bg-white dark:bg-zinc-900 text-black dark:text-white font-extrabold shadow-xs'
                     : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white font-medium'
@@ -174,7 +175,7 @@ export const Analytics: React.FC = () => {
               <button
                 type="button"
                 onClick={() => applyQuickRange('YESTERDAY')}
-                className={`shrink-0 px-3.5 py-1.5 text-xs rounded-full transition-all duration-150 ${
+                className={`flex-1 sm:flex-initial px-3.5 py-1.5 text-xs rounded-full transition-all duration-150 text-center ${
                   activeRange === 'YESTERDAY'
                     ? 'bg-white dark:bg-zinc-900 text-black dark:text-white font-extrabold shadow-xs'
                     : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white font-medium'
@@ -182,10 +183,14 @@ export const Analytics: React.FC = () => {
               >
                 Yesterday (कल)
               </button>
+            </div>
+
+            {/* Switch Line 2: This Month, Last Month & 30 Days */}
+            <div className="inline-flex items-center p-1 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200/60 dark:border-zinc-700/60 shrink-0">
               <button
                 type="button"
                 onClick={() => applyQuickRange('THIS_MONTH')}
-                className={`shrink-0 px-3.5 py-1.5 text-xs rounded-full transition-all duration-150 ${
+                className={`flex-1 sm:flex-initial px-3.5 py-1.5 text-xs rounded-full transition-all duration-150 text-center ${
                   activeRange === 'THIS_MONTH'
                     ? 'bg-white dark:bg-zinc-900 text-black dark:text-white font-extrabold shadow-xs'
                     : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white font-medium'
@@ -196,7 +201,7 @@ export const Analytics: React.FC = () => {
               <button
                 type="button"
                 onClick={() => applyQuickRange('LAST_MONTH')}
-                className={`shrink-0 px-3.5 py-1.5 text-xs rounded-full transition-all duration-150 ${
+                className={`flex-1 sm:flex-initial px-3.5 py-1.5 text-xs rounded-full transition-all duration-150 text-center ${
                   activeRange === 'LAST_MONTH'
                     ? 'bg-white dark:bg-zinc-900 text-black dark:text-white font-extrabold shadow-xs'
                     : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white font-medium'
@@ -207,7 +212,7 @@ export const Analytics: React.FC = () => {
               <button
                 type="button"
                 onClick={() => applyQuickRange('LAST_30_DAYS')}
-                className={`shrink-0 px-3.5 py-1.5 text-xs rounded-full transition-all duration-150 ${
+                className={`flex-1 sm:flex-initial px-3.5 py-1.5 text-xs rounded-full transition-all duration-150 text-center ${
                   activeRange === 'LAST_30_DAYS'
                     ? 'bg-white dark:bg-zinc-900 text-black dark:text-white font-extrabold shadow-xs'
                     : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white font-medium'

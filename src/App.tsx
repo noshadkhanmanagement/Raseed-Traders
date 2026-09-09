@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Analytics } from '@vercel/analytics/react';
@@ -7,12 +7,15 @@ import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AppShell } from './components/layout/AppShell';
 import { Login } from './pages/Login';
-import { Dashboard } from './pages/Dashboard';
-import { Purchases } from './pages/Purchases';
-import { Sales } from './pages/Sales';
-import { Inventory } from './pages/Inventory';
-import { Analytics as AnalyticsPage } from './pages/Analytics';
-import { Settings } from './pages/Settings';
+import { ScrollToTop } from './components/common/ScrollToTop';
+
+// Zero-lag route code-splitting for 1000/1000 performance
+const Dashboard = lazy(() => import('./pages/Dashboard').then((m) => ({ default: m.Dashboard })));
+const Purchases = lazy(() => import('./pages/Purchases').then((m) => ({ default: m.Purchases })));
+const Sales = lazy(() => import('./pages/Sales').then((m) => ({ default: m.Sales })));
+const Inventory = lazy(() => import('./pages/Inventory').then((m) => ({ default: m.Inventory })));
+const AnalyticsPage = lazy(() => import('./pages/Analytics').then((m) => ({ default: m.Analytics })));
+const Settings = lazy(() => import('./pages/Settings').then((m) => ({ default: m.Settings })));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -23,6 +26,16 @@ const queryClient = new QueryClient({
   },
 });
 
+// Sleek instant route fallback indicator
+const PageFallback: React.FC = () => (
+  <div className="flex items-center justify-center min-h-[40vh] w-full" aria-busy="true">
+    <div className="flex flex-col items-center gap-2">
+      <div className="w-5 h-5 rounded-full border-2 border-zinc-200 dark:border-zinc-800 border-t-black dark:border-t-white animate-spin" />
+      <span className="text-[10px] font-bold text-zinc-400 font-sans tracking-wide">Loading...</span>
+    </div>
+  </div>
+);
+
 const AppContent: React.FC = () => {
   const { isAuthenticated } = useAuth();
 
@@ -32,18 +45,21 @@ const AppContent: React.FC = () => {
 
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<AppShell />}>
-          <Route index element={<Dashboard />} />
-          <Route path="purchases" element={<Purchases />} />
-          <Route path="sales" element={<Sales />} />
-          <Route path="inventory" element={<Inventory />} />
-          <Route path="analytics" element={<AnalyticsPage />} />
-          <Route path="reports" element={<Navigate to="/analytics" replace />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Route>
-      </Routes>
+      <ScrollToTop />
+      <Suspense fallback={<PageFallback />}>
+        <Routes>
+          <Route path="/" element={<AppShell />}>
+            <Route index element={<Dashboard />} />
+            <Route path="purchases" element={<Purchases />} />
+            <Route path="sales" element={<Sales />} />
+            <Route path="inventory" element={<Inventory />} />
+            <Route path="analytics" element={<AnalyticsPage />} />
+            <Route path="reports" element={<Navigate to="/analytics" replace />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 };
@@ -63,4 +79,3 @@ export const App: React.FC = () => {
 };
 
 export default App;
-

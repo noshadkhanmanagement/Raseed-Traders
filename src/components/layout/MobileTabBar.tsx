@@ -404,6 +404,8 @@ export const MobileTabBar: React.FC = () => {
       const targetRoute = TABS[finalIndex].to;
       if (location.pathname !== targetRoute) {
         navigate(targetRoute);
+      } else {
+        window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
       }
       return;
     }
@@ -417,6 +419,8 @@ export const MobileTabBar: React.FC = () => {
     const targetRoute = TABS[targetIdx].to;
     if (location.pathname !== targetRoute) {
       navigate(targetRoute);
+    } else {
+      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
     }
   };
 
@@ -427,6 +431,8 @@ export const MobileTabBar: React.FC = () => {
     triggerWobble(idx, false, false);
     if (location.pathname !== to) {
       navigate(to);
+    } else {
+      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
     }
   };
 

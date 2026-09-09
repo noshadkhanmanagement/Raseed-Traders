@@ -517,15 +517,6 @@ export const Inventory: React.FC = () => {
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             type="button"
-                            onClick={() => handleOpenHistory(it)}
-                            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                            title="Rate Fluctuation Log (कब किस रेट में खरीदा गया)"
-                          >
-                            <IconHistory size={14} className="text-zinc-400" />
-                            <span className="hidden sm:inline">Rates</span>
-                          </button>
-                          <button
-                            type="button"
                             onClick={() => handleAdjustClick(it)}
                             className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-full border border-black dark:border-white bg-black dark:bg-white text-white dark:text-black hover:opacity-90 transition-opacity btn-press shadow-xs"
                             title="Adjust Weight, Price & Delete (वजन, भाव व विलोपन)"
