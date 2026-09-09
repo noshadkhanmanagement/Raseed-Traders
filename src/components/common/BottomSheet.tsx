@@ -35,7 +35,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Dimmed Clean Backdrop */}
       <div
         className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
@@ -44,12 +44,8 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
 
       {/* Sheet Content Container */}
       <div
-        className={`relative w-full ${maxWidth} bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-t-2xl md:rounded-2xl shadow-xl overflow-hidden z-10 max-h-[90dvh] md:max-h-[88vh] flex flex-col transition-all transform animate-in fade-in slide-in-from-bottom-6 duration-200`}
+        className={`relative w-full ${maxWidth} bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl overflow-hidden z-10 max-h-[90dvh] md:max-h-[88vh] flex flex-col transition-all transform animate-in fade-in zoom-in-95 duration-200`}
       >
-        {/* Mobile Pull Handle Indicator */}
-        <div className="md:hidden flex justify-center pt-2.5 pb-1">
-          <div className="w-10 h-1 bg-zinc-300 dark:bg-zinc-700 rounded-full" />
-        </div>
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
