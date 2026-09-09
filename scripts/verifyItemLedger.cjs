@@ -2,7 +2,7 @@ const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 
-const APP_URL = (process.env.APP_URL || 'http://localhost:5173').trim();
+const APP_URL = (process.argv[2] || process.env.APP_URL || 'http://localhost:5173').trim();
 
 // Load password dynamically from environment or local env files
 let APP_PASSWORD = (process.env.VITE_APP_PASSWORD || '').trim();
