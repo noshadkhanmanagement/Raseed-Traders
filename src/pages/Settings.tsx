@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Save, Download, Upload, RotateCcw, Lock, ShieldCheck } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { api } from '../services/api';
-import { ScrapUnit, PaymentMethod } from '../types';
+import { ScrapUnit } from '../types';
 import { useAuth } from '../context/AuthContext';
 
 export const Settings: React.FC = () => {
@@ -14,7 +14,6 @@ export const Settings: React.FC = () => {
 
   const [allowNegativeStock, setAllowNegativeStock] = useState(false);
   const [defaultUnit, setDefaultUnit] = useState<ScrapUnit>('KG');
-  const [defaultPaymentMethod, setDefaultPaymentMethod] = useState<PaymentMethod>('CASH');
 
   const [isSaved, setIsSaved] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
@@ -31,7 +30,6 @@ export const Settings: React.FC = () => {
       setAddress(biz.address || 'Behind Masjid, Bus Stand, Lakhnadon 480886');
       setAllowNegativeStock(biz.settings?.allow_negative_stock ?? false);
       setDefaultUnit(biz.settings?.default_unit ?? 'KG');
-      setDefaultPaymentMethod(biz.settings?.default_payment_method ?? 'CASH');
     } catch (err) {
       console.error(err);
     }
@@ -44,7 +42,6 @@ export const Settings: React.FC = () => {
       await api.updateSettings({
         allow_negative_stock: allowNegativeStock,
         default_unit: defaultUnit,
-        default_payment_method: defaultPaymentMethod,
       });
 
       setIsSaved(true);
@@ -166,21 +163,6 @@ export const Settings: React.FC = () => {
                 className="w-full h-9 px-3 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-medium text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white"
                 required
               />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-black dark:text-white mb-1">
-                Default Payment Method
-              </label>
-              <select
-                value={defaultPaymentMethod}
-                onChange={(e) => setDefaultPaymentMethod(e.target.value as PaymentMethod)}
-                className="w-full h-9 px-3 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-medium text-black dark:text-white outline-none"
-              >
-                <option value="CASH">Cash (नकद)</option>
-                <option value="ONLINE">UPI / Online</option>
-                <option value="CHEQUE">Bank / Cheque</option>
-              </select>
             </div>
           </div>
 

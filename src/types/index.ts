@@ -6,8 +6,6 @@ export type PartyType = 'SUPPLIER' | 'CUSTOMER' | 'BOTH';
 
 export type BalanceType = 'RECEIVABLE' | 'PAYABLE';
 
-export type PaymentMethod = 'CASH' | 'UPI' | 'BANK' | 'OTHER';
-
 export type PaymentType = 'PAYMENT_TO_SUPPLIER' | 'PAYMENT_RECEIVED_FROM_CUSTOMER';
 
 export type StockAdjustmentType = 'DAMAGE' | 'MISSING' | 'WEIGHING_CORRECTION' | 'OPENING_STOCK' | 'MANUAL';
@@ -26,7 +24,6 @@ export interface BusinessSettings {
   default_unit: ScrapUnit;
   stock_warning_threshold: number;
   currency: string;
-  default_payment_method: PaymentMethod;
 }
 
 export interface Business {
@@ -65,7 +62,6 @@ export interface Party {
   opening_balance: number;
   opening_balance_type?: BalanceType;
   current_balance: number; // >0 means customer owes us (receivable), <0 means we owe supplier (payable)
-  notes?: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -96,8 +92,6 @@ export interface Purchase {
   total_weight?: number;
   paid_amount: number;
   due_amount: number;
-  payment_method: PaymentMethod;
-  notes?: string;
   status: 'FINAL' | 'CANCELLED';
   items?: PurchaseItem[];
   created_at: string;
@@ -134,8 +128,6 @@ export interface Sale {
   due_amount: number;
   total_cost: number; // COGS
   total_profit: number; // Gross Profit
-  payment_method: PaymentMethod;
-  notes?: string;
   status: 'FINAL' | 'CANCELLED';
   items?: SaleItem[];
   created_at: string;
@@ -151,7 +143,6 @@ export interface StockAdjustment {
   quantity: number; // Positive (addition) or Negative (reduction)
   adjustment_type: StockAdjustmentType;
   reason: string;
-  notes?: string;
   created_at: string;
 }
 
@@ -164,11 +155,9 @@ export interface Payment {
   payment_type: PaymentType;
   amount: number;
   payment_date: string;
-  payment_method: PaymentMethod;
   reference?: string;
   purchase_id?: string;
   sale_id?: string;
-  notes?: string;
   created_at: string;
 }
 
@@ -179,8 +168,6 @@ export interface Expense {
   category: ExpenseCategory;
   amount: number;
   expense_date: string;
-  payment_method: PaymentMethod;
-  notes?: string;
   created_at: string;
 }
 
@@ -198,7 +185,6 @@ export interface InventoryLedgerEntry {
   running_quantity: number;
   party_id?: string;
   party_name?: string;
-  notes?: string;
   created_at: string;
 }
 

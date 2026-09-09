@@ -50,7 +50,6 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
       amount: number;
       unit: string;
       party_name: string;
-      payment_method: string;
     }>;
     sales: Array<{
       sale_id: string;
@@ -62,7 +61,6 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
       amount: number;
       unit: string;
       party_name: string;
-      payment_method: string;
       remaining_stock: number;
     }>;
     movements: Array<{
@@ -72,7 +70,6 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
       created_at: string;
       reference_number: string;
       party_name: string;
-      payment_method: string;
       rate: number;
       quantity: number;
       amount: number;
@@ -414,10 +411,6 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                                 <User className="w-3 h-3 text-zinc-400" />
                                 {m.party_name}
                               </span>
-                              <span className="flex items-center gap-1">
-                                <CreditCard className="w-3 h-3 text-zinc-400" />
-                                {m.payment_method}
-                              </span>
                             </div>
                           </div>
 
@@ -504,10 +497,6 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                               <User className="w-3 h-3 text-zinc-400" />
                               {b.party_name}
                             </span>
-                            <span className="flex items-center gap-1">
-                              <CreditCard className="w-3 h-3 text-zinc-400" />
-                              {b.payment_method}
-                            </span>
                           </div>
                         </div>
 
@@ -574,10 +563,6 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                             <span className="flex items-center gap-1">
                               <User className="w-3 h-3 text-zinc-400" />
                               {s.party_name}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <CreditCard className="w-3 h-3 text-zinc-400" />
-                              {s.payment_method}
                             </span>
                           </div>
                         </div>

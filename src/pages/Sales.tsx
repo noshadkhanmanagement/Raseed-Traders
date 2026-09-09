@@ -58,7 +58,6 @@ export const Sales: React.FC = () => {
       s.total_amount,
       s.received_amount,
       s.due_amount,
-      s.payment_method,
     ]);
     downloadCSV('Sales_Register', headers, rows);
   };
@@ -225,10 +224,6 @@ export const Sales: React.FC = () => {
               <div>
                 <span className="text-zinc-400">Customer:</span>{' '}
                 <span className="font-bold">{selectedSale.party_name || 'Walk-in Cash'}</span>
-              </div>
-              <div>
-                <span className="text-zinc-400">Payment:</span>{' '}
-                <span className="font-bold">{selectedSale.payment_method}</span>
               </div>
             </div>
 

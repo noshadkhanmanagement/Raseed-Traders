@@ -14,8 +14,7 @@ CREATE TABLE IF NOT EXISTS businesses (
         "allow_negative_stock": false,
         "default_unit": "KG",
         "stock_warning_threshold": 50,
-        "currency": "₹",
-        "default_payment_method": "CASH"
+        "currency": "₹"
     }'::jsonb,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -51,7 +50,6 @@ CREATE TABLE IF NOT EXISTS parties (
     opening_balance NUMERIC(14, 2) NOT NULL DEFAULT 0.00,
     opening_balance_type VARCHAR(20) NOT NULL DEFAULT 'RECEIVABLE', -- 'RECEIVABLE' (they owe us), 'PAYABLE' (we owe them)
     current_balance NUMERIC(14, 2) NOT NULL DEFAULT 0.00, -- Positive = Customer owes us (Receivable), Negative = We owe supplier (Payable)
-    notes TEXT,
     is_active BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -68,8 +66,6 @@ CREATE TABLE IF NOT EXISTS purchases (
     total_amount NUMERIC(14, 2) NOT NULL DEFAULT 0.00,
     paid_amount NUMERIC(14, 2) NOT NULL DEFAULT 0.00,
     due_amount NUMERIC(14, 2) NOT NULL DEFAULT 0.00,
-    payment_method VARCHAR(50) DEFAULT 'CASH',
-    notes TEXT,
     status VARCHAR(20) NOT NULL DEFAULT 'FINAL', -- 'FINAL', 'CANCELLED'
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -102,8 +98,6 @@ CREATE TABLE IF NOT EXISTS sales (
     due_amount NUMERIC(14, 2) NOT NULL DEFAULT 0.00,
     total_cost NUMERIC(14, 2) NOT NULL DEFAULT 0.00, -- Sum of COGS for all items
     total_profit NUMERIC(14, 2) NOT NULL DEFAULT 0.00, -- Total Amount - Total Cost
-    payment_method VARCHAR(50) DEFAULT 'CASH',
-    notes TEXT,
     status VARCHAR(20) NOT NULL DEFAULT 'FINAL', -- 'FINAL', 'CANCELLED'
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -135,7 +129,6 @@ CREATE TABLE IF NOT EXISTS stock_adjustments (
     quantity NUMERIC(14, 3) NOT NULL, -- Positive for increase, Negative for decrease
     adjustment_type VARCHAR(50) NOT NULL, -- 'DAMAGE', 'MISSING', 'WEIGHING_CORRECTION', 'OPENING_STOCK', 'MANUAL'
     reason TEXT NOT NULL,
-    notes TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -148,11 +141,9 @@ CREATE TABLE IF NOT EXISTS payments (
     payment_type VARCHAR(50) NOT NULL, -- 'PAYMENT_TO_SUPPLIER', 'PAYMENT_RECEIVED_FROM_CUSTOMER'
     amount NUMERIC(14, 2) NOT NULL,
     payment_date DATE NOT NULL DEFAULT CURRENT_DATE,
-    payment_method VARCHAR(50) NOT NULL DEFAULT 'CASH', -- 'CASH', 'UPI', 'BANK', 'OTHER'
     reference VARCHAR(100),
     purchase_id UUID REFERENCES purchases(id) ON DELETE SET NULL,
     sale_id UUID REFERENCES sales(id) ON DELETE SET NULL,
-    notes TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT chk_payment_amount CHECK (amount > 0)
 );
@@ -165,8 +156,6 @@ CREATE TABLE IF NOT EXISTS expenses (
     category VARCHAR(50) NOT NULL, -- 'TRANSPORT', 'LABOUR', 'ELECTRICITY', 'RENT', 'MAINTENANCE', 'LOADING_UNLOADING', 'OTHER'
     amount NUMERIC(14, 2) NOT NULL,
     expense_date DATE NOT NULL DEFAULT CURRENT_DATE,
-    payment_method VARCHAR(50) NOT NULL DEFAULT 'CASH',
-    notes TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT chk_expense_amount CHECK (amount > 0)
 );
@@ -184,7 +173,6 @@ CREATE TABLE IF NOT EXISTS inventory_ledger (
     rate NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
     running_quantity NUMERIC(14, 3) NOT NULL,
     party_id UUID REFERENCES parties(id) ON DELETE SET NULL,
-    notes TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -231,8 +219,6 @@ DECLARE
     v_total_amount NUMERIC(14, 2);
     v_paid_amount NUMERIC(14, 2);
     v_due_amount NUMERIC(14, 2);
-    v_payment_method VARCHAR(50);
-    v_notes TEXT;
     v_item RECORD;
     v_curr_stock NUMERIC(14, 3);
     v_curr_wac NUMERIC(12, 2);
@@ -252,18 +238,14 @@ BEGIN
     v_total_amount := (p_payload->>'total_amount')::NUMERIC;
     v_paid_amount := COALESCE((p_payload->>'paid_amount')::NUMERIC, 0.00);
     v_due_amount := v_total_amount - v_paid_amount;
-    v_payment_method := COALESCE(p_payload->>'payment_method', 'CASH');
-    v_notes := p_payload->>'notes';
 
     -- 1. Insert Purchase
     INSERT INTO purchases (
         business_id, purchase_number, party_id, purchase_date,
-        subtotal, total_amount, paid_amount, due_amount,
-        payment_method, notes
+        subtotal, total_amount, paid_amount, due_amount
     ) VALUES (
         v_business_id, v_purchase_number, v_party_id, v_purchase_date,
-        v_total_amount, v_total_amount, v_paid_amount, v_due_amount,
-        v_payment_method, v_notes
+        v_total_amount, v_total_amount, v_paid_amount, v_due_amount
     ) RETURNING id INTO v_purchase_id;
 
     -- 2. Process Line Items
@@ -315,11 +297,11 @@ BEGIN
         INSERT INTO inventory_ledger (
             business_id, item_id, transaction_type, reference_id,
             reference_number, quantity_change, unit, rate,
-            running_quantity, party_id, notes
+            running_quantity, party_id
         ) VALUES (
             v_business_id, v_item_id, 'PURCHASE', v_purchase_id,
             v_purchase_number, v_qty, v_unit, v_rate,
-            v_new_stock, v_party_id, 'Purchase from supplier'
+            v_new_stock, v_party_id
         );
     END LOOP;
 
@@ -335,10 +317,10 @@ BEGIN
         v_pay_num := 'PAY-' || to_char(CURRENT_DATE, 'YYYYMMDD') || '-' || substr(md5(random()::text), 1, 4);
         INSERT INTO payments (
             business_id, payment_number, party_id, payment_type,
-            amount, payment_date, payment_method, purchase_id, notes
+            amount, payment_date, purchase_id
         ) VALUES (
             v_business_id, v_pay_num, v_party_id, 'PAYMENT_TO_SUPPLIER',
-            v_paid_amount, v_purchase_date, v_payment_method, v_purchase_id, 'Initial payment on purchase ' || v_purchase_number
+            v_paid_amount, v_purchase_date, v_purchase_id
         );
     END IF;
 
@@ -366,8 +348,6 @@ DECLARE
     v_total_amount NUMERIC(14, 2);
     v_received_amount NUMERIC(14, 2);
     v_due_amount NUMERIC(14, 2);
-    v_payment_method VARCHAR(50);
-    v_notes TEXT;
     v_allow_negative_stock BOOLEAN := false;
     v_settings JSONB;
     v_item RECORD;
@@ -393,8 +373,6 @@ BEGIN
     v_total_amount := (p_payload->>'total_amount')::NUMERIC;
     v_received_amount := COALESCE((p_payload->>'received_amount')::NUMERIC, 0.00);
     v_due_amount := v_total_amount - v_received_amount;
-    v_payment_method := COALESCE(p_payload->>'payment_method', 'CASH');
-    v_notes := p_payload->>'notes';
 
     -- Check business negative stock setting
     SELECT settings INTO v_settings FROM businesses WHERE id = v_business_id;
@@ -418,11 +396,11 @@ BEGIN
     INSERT INTO sales (
         business_id, sale_number, party_id, sale_date,
         subtotal, total_amount, received_amount, due_amount,
-        total_cost, total_profit, payment_method, notes
+        total_cost, total_profit
     ) VALUES (
         v_business_id, v_sale_number, v_party_id, v_sale_date,
         v_total_amount, v_total_amount, v_received_amount, v_due_amount,
-        0.00, 0.00, v_payment_method, v_notes
+        0.00, 0.00
     ) RETURNING id INTO v_sale_id;
 
     -- Process Line Items
@@ -467,11 +445,11 @@ BEGIN
         INSERT INTO inventory_ledger (
             business_id, item_id, transaction_type, reference_id,
             reference_number, quantity_change, unit, rate,
-            running_quantity, party_id, notes
+            running_quantity, party_id
         ) VALUES (
             v_business_id, v_item_id, 'SALE', v_sale_id,
             v_sale_number, -v_qty, v_unit, v_rate,
-            v_new_stock, v_party_id, 'Sale to customer'
+            v_new_stock, v_party_id
         );
     END LOOP;
 
@@ -492,10 +470,10 @@ BEGIN
         v_pay_num := 'PAY-' || to_char(CURRENT_DATE, 'YYYYMMDD') || '-' || substr(md5(random()::text), 1, 4);
         INSERT INTO payments (
             business_id, payment_number, party_id, payment_type,
-            amount, payment_date, payment_method, sale_id, notes
+            amount, payment_date, sale_id
         ) VALUES (
             v_business_id, v_pay_num, v_party_id, 'PAYMENT_RECEIVED_FROM_CUSTOMER',
-            v_received_amount, v_sale_date, v_payment_method, v_sale_id, 'Initial payment on sale ' || v_sale_number
+            v_received_amount, v_sale_date, v_sale_id
         );
     END IF;
 
@@ -524,7 +502,6 @@ DECLARE
     v_quantity NUMERIC(14, 3);
     v_adj_type VARCHAR(50);
     v_reason TEXT;
-    v_notes TEXT;
     v_curr_stock NUMERIC(14, 3);
     v_curr_wac NUMERIC(12, 2);
     v_new_stock NUMERIC(14, 3);
@@ -536,7 +513,6 @@ BEGIN
     v_quantity := (p_payload->>'quantity')::NUMERIC;
     v_adj_type := p_payload->>'adjustment_type';
     v_reason := p_payload->>'reason';
-    v_notes := p_payload->>'notes';
 
     SELECT current_stock, average_cost, default_unit INTO v_curr_stock, v_curr_wac, v_unit
     FROM items WHERE id = v_item_id FOR UPDATE;
@@ -545,10 +521,10 @@ BEGIN
 
     INSERT INTO stock_adjustments (
         business_id, adjustment_number, item_id, quantity,
-        adjustment_type, reason, notes
+        adjustment_type, reason
     ) VALUES (
         v_business_id, v_adj_num, v_item_id, v_quantity,
-        v_adj_type, v_reason, v_notes
+        v_adj_type, v_reason
     ) RETURNING id INTO v_adj_id;
 
     UPDATE items
@@ -559,11 +535,11 @@ BEGIN
     INSERT INTO inventory_ledger (
         business_id, item_id, transaction_type, reference_id,
         reference_number, quantity_change, unit, rate,
-        running_quantity, notes
+        running_quantity
     ) VALUES (
         v_business_id, v_item_id, 'ADJUSTMENT', v_adj_id,
         v_adj_num, v_quantity, v_unit, v_curr_wac,
-        v_new_stock, v_reason
+        v_new_stock
     );
 
     RETURN jsonb_build_object(
@@ -588,11 +564,9 @@ DECLARE
     v_pay_type VARCHAR(50);
     v_amount NUMERIC(14, 2);
     v_pay_date DATE;
-    v_method VARCHAR(50);
     v_ref VARCHAR(100);
     v_purchase_id UUID;
     v_sale_id UUID;
-    v_notes TEXT;
 BEGIN
     v_business_id := (p_payload->>'business_id')::UUID;
     v_pay_num := p_payload->>'payment_number';
@@ -600,7 +574,6 @@ BEGIN
     v_pay_type := p_payload->>'payment_type';
     v_amount := (p_payload->>'amount')::NUMERIC;
     v_pay_date := COALESCE((p_payload->>'payment_date')::DATE, CURRENT_DATE);
-    v_method := COALESCE(p_payload->>'payment_method', 'CASH');
     v_ref := p_payload->>'reference';
     IF p_payload->>'purchase_id' IS NOT NULL THEN
         v_purchase_id := (p_payload->>'purchase_id')::UUID;
@@ -608,16 +581,15 @@ BEGIN
     IF p_payload->>'sale_id' IS NOT NULL THEN
         v_sale_id := (p_payload->>'sale_id')::UUID;
     END IF;
-    v_notes := p_payload->>'notes';
 
     INSERT INTO payments (
         business_id, payment_number, party_id, payment_type,
-        amount, payment_date, payment_method, reference,
-        purchase_id, sale_id, notes
+        amount, payment_date, reference,
+        purchase_id, sale_id
     ) VALUES (
         v_business_id, v_pay_num, v_party_id, v_pay_type,
-        v_amount, v_pay_date, v_method, v_ref,
-        v_purchase_id, v_sale_id, v_notes
+        v_amount, v_pay_date, v_ref,
+        v_purchase_id, v_sale_id
     ) RETURNING id INTO v_pay_id;
 
     IF v_pay_type = 'PAYMENT_TO_SUPPLIER' THEN
@@ -732,31 +704,31 @@ ON CONFLICT (id) DO NOTHING;
 
 -- Seed the 25 Master Scrap Items
 INSERT INTO items (business_id, name, local_name, default_unit, default_purchase_rate, default_sale_rate) VALUES
-('00000000-0000-0000-0000-000000000001', 'LOHA', 'लोहा', 'KG', 0.00, 0.00),
-('00000000-0000-0000-0000-000000000001', 'TEEN', 'टीन', 'KG', 0.00, 0.00),
-('00000000-0000-0000-0000-000000000001', 'PLASTIC', 'प्लास्टिक', 'KG', 0.00, 0.00),
-('00000000-0000-0000-0000-000000000001', 'KALI PLASTIC', 'काली प्लास्टिक', 'KG', 0.00, 0.00),
-('00000000-0000-0000-0000-000000000001', 'PADPAD', 'पड़पड़', 'KG', 0.00, 0.00),
-('00000000-0000-0000-0000-000000000001', 'DABBA', 'डब्बा', 'KG', 0.00, 0.00),
-('00000000-0000-0000-0000-000000000001', 'RADDI', 'रद्दी', 'KG', 0.00, 0.00),
-('00000000-0000-0000-0000-000000000001', 'KHADDA', 'खड्डा', 'KG', 0.00, 0.00),
-('00000000-0000-0000-0000-000000000001', 'TAMBA', 'ताँबा', 'KG', 0.00, 0.00),
-('00000000-0000-0000-0000-000000000001', 'PEETAL', 'पीतल', 'KG', 0.00, 0.00),
-('00000000-0000-0000-0000-000000000001', 'GERMAN', 'जर्मन', 'KG', 0.00, 0.00),
+('00000000-0000-0000-0000-000000000001', '2 TYRE', '2 टायर', 'PIECE', 0.00, 0.00),
 ('00000000-0000-0000-0000-000000000001', 'ARMATURE', 'आर्मेचर', 'KG', 0.00, 0.00),
-('00000000-0000-0000-0000-000000000001', 'PLATE', 'प्लेट', 'KG', 0.00, 0.00),
 ('00000000-0000-0000-0000-000000000001', 'BATTERY', 'बैटरी', 'KG', 0.00, 0.00),
+('00000000-0000-0000-0000-000000000001', 'BEER BOTTLE', 'बीयर बोतल', 'PIECE', 0.00, 0.00),
+('00000000-0000-0000-0000-000000000001', 'DABBA', 'डब्बा', 'KG', 0.00, 0.00),
+('00000000-0000-0000-0000-000000000001', 'FOAM', 'फ़ोम', 'KG', 0.00, 0.00),
+('00000000-0000-0000-0000-000000000001', 'GERMAN', 'जर्मन', 'KG', 0.00, 0.00),
+('00000000-0000-0000-0000-000000000001', 'KAACH BOTTLE', 'काँच बोतल', 'PIECE', 0.00, 0.00),
+('00000000-0000-0000-0000-000000000001', 'KALA FOAM', 'काला फ़ोम', 'KG', 0.00, 0.00),
+('00000000-0000-0000-0000-000000000001', 'KALI PLASTIC', 'काली प्लास्टिक', 'KG', 0.00, 0.00),
+('00000000-0000-0000-0000-000000000001', 'KHADDA', 'खड्डा', 'KG', 0.00, 0.00),
+('00000000-0000-0000-0000-000000000001', 'LOHA', 'लोहा', 'KG', 0.00, 0.00),
+('00000000-0000-0000-0000-000000000001', 'PADPAD', 'पड़पड़', 'KG', 0.00, 0.00),
+('00000000-0000-0000-0000-000000000001', 'PALIYA', 'पलिया', 'KG', 0.00, 0.00),
+('00000000-0000-0000-0000-000000000001', 'PAUA BOTTLE', 'पौआ बोतल', 'PIECE', 0.00, 0.00),
+('00000000-0000-0000-0000-000000000001', 'PEETAL', 'पीतल', 'KG', 0.00, 0.00),
+('00000000-0000-0000-0000-000000000001', 'PLASTIC', 'प्लास्टिक', 'KG', 0.00, 0.00),
+('00000000-0000-0000-0000-000000000001', 'PLATE', 'प्लेट', 'KG', 0.00, 0.00),
+('00000000-0000-0000-0000-000000000001', 'RADDI', 'रद्दी', 'KG', 0.00, 0.00),
 ('00000000-0000-0000-0000-000000000001', 'REGULATOR', 'रेगुलेटर', 'PIECE', 0.00, 0.00),
 ('00000000-0000-0000-0000-000000000001', 'STEEL', 'स्टील', 'KG', 0.00, 0.00),
-('00000000-0000-0000-0000-000000000001', 'PALIYA', 'पलिया', 'KG', 0.00, 0.00),
+('00000000-0000-0000-0000-000000000001', 'TAMBA', 'ताँबा', 'KG', 0.00, 0.00),
+('00000000-0000-0000-0000-000000000001', 'TEEN', 'टीन', 'KG', 0.00, 0.00),
 ('00000000-0000-0000-0000-000000000001', 'TUBE', 'ट्यूब', 'KG', 0.00, 0.00),
-('00000000-0000-0000-0000-000000000001', 'TYRE', 'टायर', 'PIECE', 0.00, 0.00),
-('00000000-0000-0000-0000-000000000001', '2 TYRE', '2 टायर', 'PIECE', 0.00, 0.00),
-('00000000-0000-0000-0000-000000000001', 'FOAM', 'फोम', 'KG', 0.00, 0.00),
-('00000000-0000-0000-0000-000000000001', 'KALA FOAM', 'काला फोम', 'KG', 0.00, 0.00),
-('00000000-0000-0000-0000-000000000001', 'PAUA BOTTLE', 'पौआ बोतल', 'PIECE', 0.00, 0.00),
-('00000000-0000-0000-0000-000000000001', 'BEER BOTTLE', 'बीयर बोतल', 'PIECE', 0.00, 0.00),
-('00000000-0000-0000-0000-000000000001', 'KAACH BOTTLE', 'काँच बोतल', 'PIECE', 0.00, 0.00)
+('00000000-0000-0000-0000-000000000001', 'TYRE', 'टायर', 'PIECE', 0.00, 0.00)
 ON CONFLICT DO NOTHING;
 
 -- ROW LEVEL SECURITY (RLS)

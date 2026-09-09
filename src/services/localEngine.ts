@@ -39,31 +39,31 @@ try {
 }
 
 export const INITIAL_SCRAP_ITEMS: Omit<ScrapItem, 'id' | 'business_id' | 'created_at' | 'updated_at'>[] = [
-  { name: 'LOHA', local_name: 'लोहा', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
-  { name: 'TEEN', local_name: 'टीन', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
-  { name: 'PLASTIC', local_name: 'प्लास्टिक', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
-  { name: 'KALI PLASTIC', local_name: 'काली प्लास्टिक', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
-  { name: 'PADPAD', local_name: 'पड़पड़', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
-  { name: 'DABBA', local_name: 'डब्बा', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
-  { name: 'RADDI', local_name: 'रद्दी', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
-  { name: 'KHADDA', local_name: 'खड्डा', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
-  { name: 'TAMBA', local_name: 'ताँबा', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
-  { name: 'PEETAL', local_name: 'पीतल', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
-  { name: 'GERMAN', local_name: 'जर्मन', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
+  { name: '2 TYRE', local_name: '2 टायर', default_unit: 'PIECE', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
   { name: 'ARMATURE', local_name: 'आर्मेचर', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
-  { name: 'PLATE', local_name: 'प्लेट', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
   { name: 'BATTERY', local_name: 'बैटरी', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
+  { name: 'BEER BOTTLE', local_name: 'बीयर बोतल', default_unit: 'PIECE', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
+  { name: 'DABBA', local_name: 'डब्बा', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
+  { name: 'FOAM', local_name: 'फ़ोम', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
+  { name: 'GERMAN', local_name: 'जर्मन', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
+  { name: 'KAACH BOTTLE', local_name: 'काँच बोतल', default_unit: 'PIECE', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
+  { name: 'KALA FOAM', local_name: 'काला फ़ोम', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
+  { name: 'KALI PLASTIC', local_name: 'काली प्लास्टिक', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
+  { name: 'KHADDA', local_name: 'खड्डा', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
+  { name: 'LOHA', local_name: 'लोहा', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
+  { name: 'PADPAD', local_name: 'पड़पड़', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
+  { name: 'PALIYA', local_name: 'पलिया', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
+  { name: 'PAUA BOTTLE', local_name: 'पौआ बोतल', default_unit: 'PIECE', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
+  { name: 'PEETAL', local_name: 'पीतल', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
+  { name: 'PLASTIC', local_name: 'प्लास्टिक', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
+  { name: 'PLATE', local_name: 'प्लेट', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
+  { name: 'RADDI', local_name: 'रद्दी', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
   { name: 'REGULATOR', local_name: 'रेगुलेटर', default_unit: 'PIECE', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
   { name: 'STEEL', local_name: 'स्टील', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
-  { name: 'PALIYA', local_name: 'पलिया', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
+  { name: 'TAMBA', local_name: 'ताँबा', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
+  { name: 'TEEN', local_name: 'टीन', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
   { name: 'TUBE', local_name: 'ट्यूब', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
   { name: 'TYRE', local_name: 'टायर', default_unit: 'PIECE', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
-  { name: '2 TYRE', local_name: '2 टायर', default_unit: 'PIECE', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
-  { name: 'FOAM', local_name: 'फोम', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
-  { name: 'KALA FOAM', local_name: 'काला फोम', default_unit: 'KG', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
-  { name: 'PAUA BOTTLE', local_name: 'पौआ बोतल', default_unit: 'PIECE', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
-  { name: 'BEER BOTTLE', local_name: 'बीयर बोतल', default_unit: 'PIECE', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
-  { name: 'KAACH BOTTLE', local_name: 'काँच बोतल', default_unit: 'PIECE', default_purchase_rate: 0, default_sale_rate: 0, current_stock: 0, average_cost: 0, is_active: true },
 ];
 
 export interface AppDatabaseSchema {
@@ -94,7 +94,6 @@ export const getInitialData = (): AppDatabaseSchema => {
       default_unit: 'KG',
       stock_warning_threshold: 50,
       currency: '₹',
-      default_payment_method: 'CASH',
     },
     created_at: now,
     updated_at: now,
@@ -351,8 +350,6 @@ class LocalEngine {
     purchase_date: string;
     items: { item_id: string; quantity: number; unit: any; rate: number; amount: number }[];
     paid_amount: number;
-    payment_method: any;
-    notes?: string;
   }): Purchase {
     let party: Party | undefined = this.getPartyById(payload.party_id);
     if (!party) {
@@ -466,8 +463,6 @@ class LocalEngine {
       total_weight: totalWeight,
       paid_amount: paidAmount,
       due_amount: dueAmount,
-      payment_method: payload.payment_method || 'CASH',
-      notes: payload.notes,
       status: 'FINAL',
       items: purchaseItems,
       created_at: now,
@@ -491,9 +486,7 @@ class LocalEngine {
         payment_type: 'PAYMENT_TO_SUPPLIER',
         amount: paidAmount,
         payment_date: payload.purchase_date,
-        payment_method: payload.payment_method || 'CASH',
         purchase_id: purchaseId,
-        notes: `Immediate payment on purchase ${purchaseNumber}`,
         created_at: now,
       };
       this.data.payments.unshift(payment);
@@ -509,8 +502,6 @@ class LocalEngine {
     sale_date: string;
     items: { item_id: string; quantity: number; unit: any; rate: number; amount: number }[];
     received_amount: number;
-    payment_method: any;
-    notes?: string;
   }): Sale {
     let party: Party | undefined = this.getPartyById(payload.party_id);
     if (!party) {
@@ -627,8 +618,6 @@ class LocalEngine {
       due_amount: dueAmount,
       total_cost: totalCogs,
       total_profit: totalGrossProfit,
-      payment_method: payload.payment_method || 'CASH',
-      notes: payload.notes,
       status: 'FINAL',
       items: saleItems,
       created_at: now,
@@ -652,9 +641,7 @@ class LocalEngine {
         payment_type: 'PAYMENT_RECEIVED_FROM_CUSTOMER',
         amount: receivedAmount,
         payment_date: payload.sale_date,
-        payment_method: payload.payment_method || 'CASH',
         sale_id: saleId,
-        notes: `Immediate payment on sale ${saleNumber}`,
         created_at: now,
       };
       this.data.payments.unshift(payment);
@@ -670,7 +657,6 @@ class LocalEngine {
     quantity: number; // Positive or negative
     adjustment_type: any;
     reason: string;
-    notes?: string;
   }): StockAdjustment {
     let item = this.getItemById(payload.item_id);
     if (!item) {
@@ -696,7 +682,6 @@ class LocalEngine {
       quantity: Number(payload.quantity),
       adjustment_type: payload.adjustment_type,
       reason: payload.reason,
-      notes: payload.notes,
       created_at: now,
     };
     this.data.stock_adjustments.unshift(adjustment);
@@ -714,7 +699,6 @@ class LocalEngine {
       unit: item.default_unit,
       rate: item.average_cost,
       running_quantity: newStock,
-      notes: `Adjustment: ${payload.reason}`,
       created_at: now,
     });
 
@@ -728,11 +712,9 @@ class LocalEngine {
     payment_type: any;
     amount: number;
     payment_date: string;
-    payment_method: any;
     reference?: string;
     purchase_id?: string;
     sale_id?: string;
-    notes?: string;
   }): Payment {
     const party = this.getPartyById(payload.party_id);
     if (!party) throw new Error('Party not found');
@@ -751,11 +733,9 @@ class LocalEngine {
       payment_type: payload.payment_type,
       amount,
       payment_date: payload.payment_date,
-      payment_method: payload.payment_method || 'CASH',
       reference: payload.reference,
       purchase_id: payload.purchase_id,
       sale_id: payload.sale_id,
-      notes: payload.notes,
       created_at: now,
     };
     this.data.payments.unshift(payment);
@@ -797,8 +777,6 @@ class LocalEngine {
     category: any;
     amount: number;
     expense_date: string;
-    payment_method: any;
-    notes?: string;
   }): Expense {
     const now = new Date().toISOString();
     const expNumber = this.generateDocNumber('EXP', payload.expense_date, this.data.expenses);
@@ -811,8 +789,6 @@ class LocalEngine {
       category: payload.category,
       amount: Number(payload.amount),
       expense_date: payload.expense_date,
-      payment_method: payload.payment_method || 'CASH',
-      notes: payload.notes,
       created_at: now,
     };
     this.data.expenses.unshift(expense);

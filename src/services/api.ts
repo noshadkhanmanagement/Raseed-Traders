@@ -465,8 +465,6 @@ export const api = {
           purchase_date: payload.purchase_date,
           total_amount: totalAmount,
           paid_amount: payload.paid_amount,
-          payment_method: payload.payment_method,
-          notes: payload.notes,
           items: payload.items,
         };
 
@@ -510,8 +508,6 @@ export const api = {
     sale_date: string;
     items: { item_id: string; quantity: number; unit: any; rate: number; amount: number }[];
     received_amount: number;
-    payment_method: any;
-    notes?: string;
   }): Promise<Sale> {
     if (isSupabaseConfigured && supabase) {
       try {
@@ -529,8 +525,6 @@ export const api = {
           sale_date: payload.sale_date,
           total_amount: totalAmount,
           received_amount: payload.received_amount,
-          payment_method: payload.payment_method,
-          notes: payload.notes,
           items: payload.items,
         };
 
@@ -566,7 +560,6 @@ export const api = {
     quantity: number;
     adjustment_type: any;
     reason: string;
-    notes?: string;
   }): Promise<StockAdjustment> {
     if (isSupabaseConfigured && supabase) {
       const biz = await this.getBusiness();
@@ -579,7 +572,6 @@ export const api = {
         quantity: payload.quantity,
         adjustment_type: payload.adjustment_type,
         reason: payload.reason,
-        notes: payload.notes,
       };
       const { data, error } = await supabase.rpc('rpc_create_stock_adjustment', { p_payload: rpcPayload });
       if (error) throw new Error(error.message);
@@ -610,11 +602,9 @@ export const api = {
     payment_type: any;
     amount: number;
     payment_date: string;
-    payment_method: any;
     reference?: string;
     purchase_id?: string;
     sale_id?: string;
-    notes?: string;
   }): Promise<Payment> {
     if (isSupabaseConfigured && supabase) {
       const biz = await this.getBusiness();
@@ -627,11 +617,9 @@ export const api = {
         payment_type: payload.payment_type,
         amount: payload.amount,
         payment_date: payload.payment_date,
-        payment_method: payload.payment_method,
         reference: payload.reference,
         purchase_id: payload.purchase_id,
         sale_id: payload.sale_id,
-        notes: payload.notes,
       };
       const { error } = await supabase.rpc('rpc_create_payment', { p_payload: rpcPayload });
       if (error) throw new Error(error.message);
@@ -659,8 +647,6 @@ export const api = {
     category: any;
     amount: number;
     expense_date: string;
-    payment_method: any;
-    notes?: string;
   }): Promise<Expense> {
     if (isSupabaseConfigured && supabase) {
       const biz = await this.getBusiness();
@@ -674,8 +660,6 @@ export const api = {
           category: payload.category,
           amount: payload.amount,
           expense_date: payload.expense_date,
-          payment_method: payload.payment_method,
-          notes: payload.notes,
         }])
         .select()
         .single();

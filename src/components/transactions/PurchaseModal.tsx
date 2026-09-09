@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Calendar } from 'lucide-react';
 import { BottomSheet } from '../common/BottomSheet';
 import { api } from '../../services/api';
-import { ScrapItem, Party, ScrapUnit, PaymentMethod } from '../../types';
+import { ScrapItem, Party, ScrapUnit } from '../../types';
 import { formatCurrency } from '../../utils/formatters';
 
 interface PurchaseModalProps {
@@ -35,8 +35,6 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
   const [purchaseDate, setPurchaseDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [lines, setLines] = useState<PurchaseLine[]>([]);
   const [paidAmount, setPaidAmount] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CASH');
-  const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -44,8 +42,6 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
     if (isOpen) {
       // Full form reset on every open to prevent stale data bleed-through
       setPaidAmount('');
-      setNotes('');
-      setPaymentMethod('CASH');
       setCustomPartyName('');
       setPurchaseDate(new Date().toISOString().split('T')[0]);
       setErrorMessage('');
@@ -195,8 +191,6 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
           amount: l.amount,
         })),
         paid_amount: paid,
-        payment_method: paymentMethod,
-        notes: notes.trim() || undefined,
       });
 
       onSuccess();
@@ -393,41 +387,12 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
               />
               <span className="text-[10px] text-zinc-500">Leave blank for full cash payment</span>
             </div>
-
-            <div>
-              <label className="block text-xs font-medium text-black dark:text-white mb-1">
-                Payment Method (माध्यम)
-              </label>
-              <select
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
-                className="w-full h-9 px-2.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs text-black dark:text-white outline-none"
-              >
-                <option value="CASH">Cash (नकद)</option>
-                <option value="ONLINE">UPI / Online Transfer</option>
-                <option value="CHEQUE">Cheque / Bank</option>
-              </select>
-            </div>
-          </div>
-
-          {due > 0 && (
-            <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-xs flex items-center justify-between">
-              <span>Remaining Due (बाकी उधारी):</span>
-              <span className="font-bold">{formatCurrency(due)}</span>
-            </div>
-          )}
-
-          <div>
-            <label className="block text-xs font-medium text-black dark:text-white mb-1">
-              Notes (टिप्पणी - Optional)
-            </label>
-            <input
-              type="text"
-              placeholder="Gadi number, reference, or description"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="w-full h-8 px-2.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs text-black dark:text-white outline-none"
-            />
+            {due > 0 && (
+              <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-xs flex items-center justify-between mt-auto h-9">
+                <span>Remaining Due (बाकी उधारी):</span>
+                <span className="font-bold">{formatCurrency(due)}</span>
+              </div>
+            )}
           </div>
         </div>
 
