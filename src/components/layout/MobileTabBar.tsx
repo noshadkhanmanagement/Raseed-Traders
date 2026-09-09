@@ -51,30 +51,27 @@ export const MobileTabBar: React.FC = () => {
   const dragVelocityRef = useRef<number>(0);
   const dragVelocityYRef = useRef<number>(0);
 
-  // Exact geometric positioning calculation
-  // Exact concentric iOS geometric positioning calculation
+  // Exact geometric positioning calculation (296px width, 4px inset, exactly 96px per tab)
   const getTabGeometry = useCallback((index: number) => {
     const tabEl = tabsRef.current[index];
-    if (tabEl && tabEl.offsetWidth > 0) {
-      return {
-        x: tabEl.offsetLeft,
-        w: tabEl.offsetWidth,
-      };
-    }
-
     const container = containerRef.current;
-    if (container) {
-      const tabW = (container.clientWidth - 8) / TABS.length;
-      return {
-        x: 4 + index * tabW,
-        w: tabW,
-      };
+    if (tabEl && container) {
+      const cRect = container.getBoundingClientRect();
+      const tRect = tabEl.getBoundingClientRect();
+      const borderLeft = container.clientLeft || 0;
+      // True padding-box coordinate of tab
+      const x = tRect.left - cRect.left - borderLeft;
+      const w = tRect.width;
+      if (w > 0) {
+        return { x, w };
+      }
     }
 
-    return { x: 4 + index * 95.33, w: 95.33 };
+    // Mathematical constant: 3px padding, exactly 96px per tab
+    return { x: 3 + index * 96, w: 96 };
   }, []);
 
-  // Liquid wobble physics animation sequence (Coupled 2D: Side Wobble + Up/Down Bounce)
+  // Liquid wobble physics animation sequence (Equal Side Jiggle + Up/Down Jiggle)
   const triggerWobble = useCallback(
     (targetIndex: number, immediate = false, fromDrag = false) => {
       const pill = pillRef.current;
@@ -97,6 +94,9 @@ export const MobileTabBar: React.FC = () => {
       const direction = targetIndex > prevIndex ? 1 : targetIndex < prevIndex ? -1 : 0;
       prevIndexRef.current = targetIndex;
 
+      const currentY = (gsap.getProperty(pill, 'y') as number) || 0;
+      const vy = dragVelocityYRef.current || 0;
+
       const tl = gsap.timeline({ overwrite: 'auto' });
 
       // Horizontal Translation & Width tween with smooth iOS power3 curve
@@ -111,16 +111,37 @@ export const MobileTabBar: React.FC = () => {
         0
       );
 
-      // Coupled 2D Liquid Wobble (Horizontal skew lean + Up/Down harmonic bounce)
+      // Coupled 2D Liquid Wobble (Equal Side Jiggle + Up/Down Harmonic Bounce)
       if (direction !== 0 || fromDrag) {
         const dir = direction !== 0 ? direction : 1;
+        // Dynamic Y snap depending on release state
+        let yPhase1 = 3.6;
+        let yPhase2 = -4.2;
+        let yPhase3 = 1.4;
+
+        if (fromDrag && Math.abs(currentY) > 1.5) {
+          if (currentY < -1.5) {
+            // Dragged UP: energetic launch downwards, then upward rebound
+            yPhase1 = Math.min(6.5, -currentY * 0.45 + Math.max(0, vy * 0.2));
+            yPhase2 = -3.8;
+            yPhase3 = 1.2;
+          } else {
+            // Dragged DOWN: energetic launch upwards, then downward rebound
+            yPhase1 = Math.max(-6.5, -currentY * 0.45 + Math.min(0, vy * 0.2));
+            yPhase2 = 3.8;
+            yPhase3 = -1.2;
+          }
+        }
+
         tl.to(
           pill,
           {
-            y: 2.2, // Impact down against the glass bed
-            scaleX: 1.16,
-            scaleY: 0.86,
-            skewX: -dir * 3.8,
+            // Phase 1: Impact & Primary Jiggle (Equal ~4.4px lateral and vertical energy)
+            x: targetX + dir * 4.4,
+            y: yPhase1,
+            scaleX: 1.18,
+            scaleY: 0.82,
+            skewX: -dir * 5.2,
             skewY: 0,
             duration: 0.16,
             ease: 'power2.out',
@@ -130,10 +151,12 @@ export const MobileTabBar: React.FC = () => {
           .to(
             pill,
             {
-              y: -2.8, // Rebound upward into the air!
-              scaleX: 0.90,
-              scaleY: 1.12,
-              skewX: dir * 2.2,
+              // Phase 2: Recoil & Launch
+              x: targetX - dir * 3.0,
+              y: yPhase2,
+              scaleX: 0.86,
+              scaleY: 1.16,
+              skewX: dir * 3.6,
               duration: 0.16,
               ease: 'power2.inOut',
             },
@@ -142,10 +165,12 @@ export const MobileTabBar: React.FC = () => {
           .to(
             pill,
             {
-              y: 0.9, // Gentle secondary settle
-              scaleX: 1.03,
-              scaleY: 0.97,
-              skewX: -dir * 0.7,
+              // Phase 3: Secondary Jiggle
+              x: targetX + dir * 1.0,
+              y: yPhase3,
+              scaleX: 1.05,
+              scaleY: 0.95,
+              skewX: -dir * 1.4,
               duration: 0.12,
               ease: 'power1.out',
             },
@@ -154,7 +179,9 @@ export const MobileTabBar: React.FC = () => {
           .to(
             pill,
             {
-              y: 0, // Rest position
+              // Phase 4: Rest & Relaxation
+              x: targetX,
+              y: 0,
               scaleX: 1.0,
               scaleY: 1.0,
               skewX: 0,
@@ -165,13 +192,14 @@ export const MobileTabBar: React.FC = () => {
             0.44
           );
       } else {
-        // Subtle vertical liquid tap pulse
+        // Balanced 2D Liquid Tap Pulse (Side Ripple + Up/Down Dip & Pop)
         tl.to(
           pill,
           {
-            y: 1.8,
-            scaleY: 0.92,
-            scaleX: 1.06,
+            y: 3.2,
+            scaleY: 0.86,
+            scaleX: 1.10,
+            skewX: 2.2,
             duration: 0.12,
             ease: 'power2.out',
           },
@@ -180,9 +208,10 @@ export const MobileTabBar: React.FC = () => {
           .to(
             pill,
             {
-              y: -2.0,
-              scaleY: 1.08,
-              scaleX: 0.94,
+              y: -3.6,
+              scaleY: 1.14,
+              scaleX: 0.90,
+              skewX: -1.8,
               duration: 0.14,
               ease: 'power2.inOut',
             },
@@ -191,13 +220,26 @@ export const MobileTabBar: React.FC = () => {
           .to(
             pill,
             {
-              y: 0,
-              scaleY: 1.0,
-              scaleX: 1.0,
+              y: 1.2,
+              scaleY: 0.96,
+              scaleX: 1.03,
+              skewX: 0.6,
               duration: 0.10,
               ease: 'power1.out',
             },
             0.26
+          )
+          .to(
+            pill,
+            {
+              y: 0,
+              scaleY: 1.0,
+              scaleX: 1.0,
+              skewX: 0,
+              duration: 0.08,
+              ease: 'power1.inOut',
+            },
+            0.36
           );
       }
     },
@@ -224,7 +266,8 @@ export const MobileTabBar: React.FC = () => {
     gsap.killTweensOf(pillRef.current);
 
     const rect = containerRef.current.getBoundingClientRect();
-    const touchX = e.clientX - rect.left;
+    const borderLeft = containerRef.current.clientLeft || 0;
+    const touchX = e.clientX - rect.left - borderLeft;
 
     // Detect touched tab
     let touchedIdx = -1;
@@ -264,9 +307,9 @@ export const MobileTabBar: React.FC = () => {
 
     // Immediate tactile liquid indentation on press (Y-axis depth + volume squish)
     gsap.to(pillRef.current, {
-      y: 1.8,
-      scaleY: 0.91,
-      scaleX: 1.05,
+      y: 2.0,
+      scaleY: 0.90,
+      scaleX: 1.06,
       duration: 0.12,
       ease: 'power2.out',
     });
@@ -282,7 +325,8 @@ export const MobileTabBar: React.FC = () => {
     }
 
     const rect = containerRef.current.getBoundingClientRect();
-    const touchX = e.clientX - rect.left;
+    const borderLeft = containerRef.current.clientLeft || 0;
+    const touchX = e.clientX - rect.left - borderLeft;
     const dx = e.clientX - pointerStartRef.current.x;
     const dy = e.clientY - pointerStartRef.current.y;
 
@@ -294,7 +338,7 @@ export const MobileTabBar: React.FC = () => {
     dragVelocityRef.current = vx;
     dragVelocityYRef.current = vy;
 
-    // Smoothly enter dragging state past 3px threshold (either horizontal or vertical!)
+    // Smoothly enter dragging state past 3px threshold in any direction
     if (!isDraggingRef.current) {
       if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
         isDraggingRef.current = true;
@@ -303,41 +347,35 @@ export const MobileTabBar: React.FC = () => {
       }
     }
 
-    const numTabs = TABS.length;
-    const { w: tabW } = getTabGeometry(0);
+    const tabW = 96;
 
     // Target X computed directly relative to touch offset (Zero Initial Jump!)
     const targetX = touchX - dragOffsetXRef.current;
 
-    const minX = (tabsRef.current[0]?.offsetLeft ?? 6) + 4;
-    const lastTab = tabsRef.current[numTabs - 1];
-    const maxX = lastTab
-      ? lastTab.offsetLeft + lastTab.offsetWidth - tabW - 4
-      : rect.width - tabW - 10;
+    const minX = 3;
+    const maxX = 195; // 3 + 2 * 96
 
     // Fluid rubber-band physics at horizontal boundaries
     let clampedX = targetX;
     if (targetX < minX) {
-      clampedX = minX - Math.pow(minX - targetX, 0.70);
+      clampedX = minX - Math.pow(minX - targetX, 0.72) * 1.2;
     } else if (targetX > maxX) {
-      clampedX = maxX + Math.pow(targetX - maxX, 0.70);
+      clampedX = maxX + Math.pow(targetX - maxX, 0.72) * 1.2;
     }
 
-    // Up & Down elasticity: authentic rubber-band resistance
+    // Up & Down draggability: whole authentic Apple rubber-band resistance
     let clampedY = 0;
     if (dy < 0) {
-      // Dragged UP: stretches upwards with rubber-band damping (max ~-8px)
-      clampedY = -Math.pow(Math.min(45, -dy), 0.65) * 1.6;
+      // Dragged UP: stretches upwards into screen (up to -16px)
+      clampedY = -Math.pow(Math.min(65, -dy), 0.72) * 1.5;
     } else if (dy > 0) {
-      // Dragged DOWN: compresses downwards with rubber-band damping (max ~+6px)
-      clampedY = Math.pow(Math.min(40, dy), 0.65) * 1.3;
+      // Dragged DOWN: compresses downwards toward bottom edge (up to +14px)
+      clampedY = Math.pow(Math.min(60, dy), 0.72) * 1.4;
     }
 
     // Directional liquid wobble lean:
-    // Drag right (vx > 0) -> leans right (negative skew)
-    // Drag left (vx < 0) -> leans left (positive skew)
-    const dynamicSkew = Math.max(-6, Math.min(6, -vx * 0.45));
-    const dynamicSkewY = Math.max(-3.5, Math.min(3.5, vy * 0.25));
+    const dynamicSkew = Math.max(-6.5, Math.min(6.5, -vx * 0.45));
+    const dynamicSkewY = Math.max(-4.0, Math.min(4.0, vy * 0.25));
 
     // Horizontal velocity expansion
     const dynamicScaleX = Math.min(1.18, 1.04 + Math.abs(vx) * 0.015);
@@ -345,14 +383,14 @@ export const MobileTabBar: React.FC = () => {
 
     // Vertical stretch & squish volume preservation
     const verticalScaleY = dy < 0
-      ? Math.min(1.18, 1.0 + (-dy * 0.008))
-      : Math.max(0.85, 0.94 - (dy * 0.006));
+      ? Math.min(1.26, 1.0 + (-dy * 0.006))
+      : Math.max(0.78, 0.94 - (dy * 0.005));
     const verticalScaleX = dy < 0
-      ? Math.max(0.88, 1.0 - (-dy * 0.006))
-      : Math.min(1.16, 1.04 + (dy * 0.005));
+      ? Math.max(0.86, 1.0 - (-dy * 0.004))
+      : Math.min(1.24, 1.04 + (dy * 0.005));
 
-    const combinedScaleX = Math.min(1.28, Math.max(0.82, dynamicScaleX * (verticalScaleX / 1.0)));
-    const combinedScaleY = Math.min(1.25, Math.max(0.80, dynamicScaleY * (verticalScaleY / 1.0)));
+    const combinedScaleX = Math.min(1.28, Math.max(0.80, dynamicScaleX * verticalScaleX));
+    const combinedScaleY = Math.min(1.28, Math.max(0.78, dynamicScaleY * verticalScaleY));
 
     gsap.set(pillRef.current, {
       x: clampedX,
@@ -369,16 +407,13 @@ export const MobileTabBar: React.FC = () => {
     // Real-time active tab detection under pill center
     const pillCenter = clampedX + tabW / 2;
     let closestIdx = 0;
-    let closestDist = Infinity;
-    tabsRef.current.forEach((t, i) => {
-      if (!t) return;
-      const center = t.offsetLeft + t.offsetWidth / 2;
-      const dist = Math.abs(center - pillCenter);
-      if (dist < closestDist) {
-        closestDist = dist;
-        closestIdx = i;
-      }
-    });
+    if (pillCenter < 99) {
+      closestIdx = 0;
+    } else if (pillCenter < 195) {
+      closestIdx = 1;
+    } else {
+      closestIdx = 2;
+    }
 
     if (closestIdx !== hoverOrDragIndex) {
       setHoverOrDragIndex(closestIdx);
@@ -402,23 +437,20 @@ export const MobileTabBar: React.FC = () => {
       } catch {}
     }
 
-    const { w: tabW } = getTabGeometry(0);
+    const tabW = 96;
 
     if (wasDragging) {
       // Find destination with momentum spring
       const projectedCenter = currentPillXRef.current + tabW / 2 + dragVelocityRef.current * 0.08;
 
       let finalIndex = 0;
-      let closestDist = Infinity;
-      tabsRef.current.forEach((t, i) => {
-        if (!t) return;
-        const center = t.offsetLeft + t.offsetWidth / 2;
-        const dist = Math.abs(center - projectedCenter);
-        if (dist < closestDist) {
-          closestDist = dist;
-          finalIndex = i;
-        }
-      });
+      if (projectedCenter < 99) {
+        finalIndex = 0;
+      } else if (projectedCenter < 195) {
+        finalIndex = 1;
+      } else {
+        finalIndex = 2;
+      }
 
       setHoverOrDragIndex(finalIndex);
       triggerWobble(finalIndex, false, true);
@@ -465,23 +497,25 @@ export const MobileTabBar: React.FC = () => {
 
       <nav
         aria-label="Mobile Navigation Bar"
-        className="md:hidden fixed bottom-[max(1.25rem,env(safe-area-inset-bottom,20px))] left-1/2 -translate-x-1/2 z-50 pointer-events-auto select-none"
+        className="md:hidden fixed inset-x-0 bottom-[max(1.25rem,env(safe-area-inset-bottom,20px))] z-50 flex justify-center pointer-events-none select-none"
       >
-        {/* Apple iOS 26 GlassEffectContainer (Primary Capsule: 52pt Height, 26pt Radius) */}
+        {/* Apple iOS 26 GlassEffectContainer (Primary Capsule: 52pt Height, 26pt Radius, 296px Width) */}
         <div
           ref={containerRef}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
-          className="relative pointer-events-auto flex items-center p-1 rounded-full bg-white/65 dark:bg-zinc-900/65 backdrop-blur-3xl backdrop-saturate-150 border border-black/[0.04] dark:border-white/[0.08] shadow-[0_12px_36px_-6px_rgba(0,0,0,0.14),0_2px_8px_rgba(0,0,0,0.04),inset_0_1px_1.5px_rgba(255,255,255,0.7),inset_0_-1px_1.5px_rgba(0,0,0,0.06)] dark:shadow-[0_16px_48px_-6px_rgba(0,0,0,0.75),0_2px_10px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.18),inset_0_-1px_1px_rgba(0,0,0,0.3)] w-[294px] h-[52px] touch-none select-none"
+          className="relative pointer-events-auto flex items-center px-[3px] py-[3px] rounded-full bg-white/65 dark:bg-zinc-900/65 backdrop-blur-3xl backdrop-saturate-150 border border-black/[0.04] dark:border-white/[0.08] shadow-[0_12px_36px_-6px_rgba(0,0,0,0.14),0_2px_8px_rgba(0,0,0,0.04),inset_0_1px_1.5px_rgba(255,255,255,0.7),inset_0_-1px_1.5px_rgba(0,0,0,0.06)] dark:shadow-[0_16px_48px_-6px_rgba(0,0,0,0.75),0_2px_10px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.18),inset_0_-1px_1px_rgba(0,0,0,0.3)] w-[296px] h-[52px] touch-none select-none box-border"
           style={{ willChange: 'transform' }}
         >
-          {/* Integrated Second Liquid Glass Shape (Concentric Active Capsule: 44pt Height, 22pt Radius) */}
+          {/* Integrated Second Liquid Glass Shape (Concentric Active Capsule: 44pt Height, 22pt Radius, 96px Width) */}
           <div
             ref={pillRef}
-            className="absolute top-1 bottom-1 rounded-full pointer-events-none z-0 backdrop-blur-xl bg-black/[0.05] dark:bg-white/[0.08] border border-black/[0.06] dark:border-white/[0.12] shadow-[0_4px_16px_rgba(0,0,0,0.06),inset_0_1px_1.5px_rgba(255,255,255,0.85),inset_0_-1px_1px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.22),inset_0_-1px_1px_rgba(0,0,0,0.25)] overflow-hidden will-change-transform"
+            className="absolute left-0 top-[3px] bottom-[3px] rounded-full pointer-events-none z-0 backdrop-blur-xl bg-black/[0.05] dark:bg-white/[0.08] border border-black/[0.06] dark:border-white/[0.12] shadow-[0_4px_16px_rgba(0,0,0,0.06),inset_0_1px_1.5px_rgba(255,255,255,0.85),inset_0_-1px_1px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.22),inset_0_-1px_1px_rgba(0,0,0,0.25)] overflow-hidden will-change-transform"
             style={{
+              left: 0,
+              width: 96,
               transformOrigin: '50% 50%',
               willChange: 'transform, width',
             }}
@@ -538,7 +572,7 @@ export const MobileTabBar: React.FC = () => {
                 onClick={() => handleTabClick(tab.to, idx)}
                 aria-label={tab.label}
                 aria-current={isSelected ? 'page' : undefined}
-                className={`relative z-10 flex-1 h-full min-h-[44px] min-w-[44px] flex flex-col items-center justify-center gap-0.5 rounded-full outline-none transition-colors duration-200 cursor-pointer select-none ${
+                className={`relative z-10 w-[96px] flex-1 h-full min-h-[44px] min-w-[44px] flex flex-col items-center justify-center gap-0.5 rounded-full outline-none transition-colors duration-200 cursor-pointer select-none ${
                   isSelected
                     ? 'text-black dark:text-white font-extrabold'
                     : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white font-medium'
@@ -572,3 +606,4 @@ export const MobileTabBar: React.FC = () => {
     </>
   );
 };
+

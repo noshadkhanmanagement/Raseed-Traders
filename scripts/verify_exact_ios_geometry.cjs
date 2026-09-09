@@ -83,23 +83,34 @@ async function verifyExactIosGeometry() {
       },
       tabsCount: tabs.length,
       tabWidths: tabs.map(t => Math.round(t.getBoundingClientRect().width)),
+      pillCenterDelta: Math.abs((pRect.left + pRect.width / 2) - (tabs[0].getBoundingClientRect().left + tabs[0].getBoundingClientRect().width / 2)),
+      screenCenterDelta: Math.abs((cRect.left + cRect.width / 2) - (window.innerWidth / 2)),
     };
   });
 
   console.log(' -> Capsule Metrics:', JSON.stringify(metrics, null, 2));
 
   // Assertions
-  if (metrics.container.width !== 294) {
-    console.warn(`Container width is ${metrics.container.width}, expected 294px`);
+  if (metrics.container.width !== 296) {
+    throw new Error(`Container width is ${metrics.container.width}, expected 296px`);
   }
   if (metrics.container.height !== 52) {
-    console.warn(`Container height is ${metrics.container.height}, expected 52px`);
+    throw new Error(`Container height is ${metrics.container.height}, expected 52px`);
   }
-  if (metrics.pill.height !== 44) {
-    console.warn(`Pill height is ${metrics.pill.height}, expected 44px (52 - 8)`);
+  if (metrics.pill.height < 42 || metrics.pill.height > 46) {
+    throw new Error(`Pill height is ${metrics.pill.height}, expected ~44px`);
   }
   if (metrics.tabsCount !== 3) {
     throw new Error(`Expected 3 tabs, found ${metrics.tabsCount}`);
+  }
+  if (metrics.tabWidths.some(w => w !== 96)) {
+    throw new Error(`Tab widths are ${metrics.tabWidths}, expected [96, 96, 96]`);
+  }
+  if (metrics.pillCenterDelta > 0.5) {
+    throw new Error(`Pill center delta is ${metrics.pillCenterDelta}, expected 0px`);
+  }
+  if (metrics.screenCenterDelta > 0.5) {
+    throw new Error(`Screen center delta is ${metrics.screenCenterDelta}, expected 0px`);
   }
 
   // D. Capture Light Mode Screenshot
