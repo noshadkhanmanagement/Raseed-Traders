@@ -1,22 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext, useNavigate, Link } from 'react-router-dom';
 import {
-  ShoppingBag,
-  TrendingUp,
-  Package,
-  Plus,
-  ArrowRight,
-  ArrowDownLeft,
-  ArrowUpRight,
-  Search,
-  History,
-  Tag,
-} from 'lucide-react';
+  MetricWidget,
+  LiveBhaavTicker,
+  RecentActivityFeed,
+  WidgetCard,
+} from '../components/widgets/iOSWidgets';
+import {
+  IconPlus,
+  IconHistory,
+  NavBuy,
+  NavSell,
+  NavStock,
+  NavAnalytics,
+  IconChevron,
+} from '../components/common/Icons';
 import { api } from '../services/api';
 import { ScrapItem, Purchase, Sale } from '../types';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { ItemRateHistoryModal } from '../components/inventory/ItemRateHistoryModal';
 import { ItemModal } from '../components/transactions/ItemModal';
+import { BottomSheet } from '../components/common/BottomSheet';
+import { TransactionAdjustmentModal } from '../components/transactions/TransactionAdjustmentModal';
 
 interface ContextType {
   openPurchase: (item?: ScrapItem) => void;
@@ -33,12 +38,20 @@ export const Dashboard: React.FC = () => {
   const [todaySales, setTodaySales] = useState<Sale[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Item Rate History & Custom Item States
+  // Modal states
   const [selectedHistoryItemId, setSelectedHistoryItemId] = useState<string | null>(null);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [stockFilter, setStockFilter] = useState<'ALL' | 'IN_STOCK' | 'ZERO_STOCK'>('ALL');
+
+  // Transaction view / adjustment state
+  const [selectedTx, setSelectedTx] = useState<{
+    type: 'purchase' | 'sale';
+    data: Purchase | Sale;
+  } | null>(null);
+  const [txToAdjust, setTxToAdjust] = useState<{
+    type: 'purchase' | 'sale';
+    data: Purchase | Sale;
+  } | null>(null);
 
   const todayStr = new Date().toISOString().split('T')[0];
 
@@ -83,19 +96,34 @@ export const Dashboard: React.FC = () => {
     0
   );
 
-  // Filter items based on search query and stock filter
-  const filteredItems = items.filter((it) => {
-    const q = searchQuery.trim().toLowerCase();
-    const matchesQuery =
-      !q ||
-      it.name.toLowerCase().includes(q) ||
-      it.local_name.toLowerCase().includes(q);
-    if (!matchesQuery) return false;
+  // 4. Net Balance
+  const netDailyCashFlow = todaySoldAmount - todayPurchasedAmount;
 
-    if (stockFilter === 'IN_STOCK') return it.current_stock > 0;
-    if (stockFilter === 'ZERO_STOCK') return it.current_stock <= 0;
-    return true;
-  });
+  // Build Chronological Recent Trades Activity Feed
+  const recentActivities = [
+    ...todayPurchases.map((p) => ({
+      id: `p-${p.id}`,
+      type: 'purchase' as const,
+      billNumber: p.purchase_number,
+      partyName: p.party_name || 'Walk-in Supplier',
+      date: p.purchase_date,
+      amount: p.total_amount,
+      weight: p.total_weight || p.items?.reduce((s, it) => s + it.quantity, 0) || 0,
+      itemsSummary: p.items?.map((it) => `${it.item_name} (${it.quantity}${it.unit})`).join(', ') || 'Scrap Material',
+      onClick: () => setSelectedTx({ type: 'purchase', data: p }),
+    })),
+    ...todaySales.map((s) => ({
+      id: `s-${s.id}`,
+      type: 'sale' as const,
+      billNumber: s.sale_number,
+      partyName: s.party_name || 'Cash Customer',
+      date: s.sale_date,
+      amount: s.total_amount,
+      weight: s.total_weight || s.items?.reduce((x, it) => x + it.quantity, 0) || 0,
+      itemsSummary: s.items?.map((it) => `${it.item_name} (${it.quantity}${it.unit})`).join(', ') || 'Scrap Material',
+      onClick: () => setSelectedTx({ type: 'sale', data: s }),
+    })),
+  ].sort((a, b) => b.id.localeCompare(a.id));
 
   const handleOpenHistory = (item: ScrapItem) => {
     setSelectedHistoryItemId(item.id);
@@ -103,396 +131,225 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 page-enter">
-      {/* Top Header & Fast Action Buttons */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-zinc-200 dark:border-zinc-800">
+    <div className="space-y-5 page-enter">
+      {/* iOS Executive Large Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-1 border-b border-zinc-200/80 dark:border-zinc-800/80">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-black dark:text-white tracking-tight">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-[10px] font-bold text-zinc-600 dark:text-zinc-300 mb-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <span>Lakhnadon 480886 · {formatDate(todayStr)}</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-black dark:text-white tracking-tight font-sans">
             Raseed Traders
           </h1>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-            Behind Masjid, Bus Stand, Lakhnadon 480886 · Mob:{' '}
-            <a href="tel:+917440619649" className="text-black dark:text-white font-medium hover:underline">
+            Scrap Management System (कबाड़ व्यापार प्रबंधन) ·{' '}
+            <a href="tel:+917440619649" className="text-black dark:text-white font-semibold hover:underline">
               +91 744 061 9649
-            </a>{' '}
-            · {formatDate(todayStr)}
+            </a>
           </p>
         </div>
 
-        {/* Quick Action Buttons */}
+        {/* Primary Trade Actions */}
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
             type="button"
             onClick={() => openPurchase()}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-black dark:bg-white text-white dark:text-black text-xs font-semibold hover:opacity-90 btn-press shadow-xs"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-bold hover:opacity-90 active:scale-[0.96] transition-all shadow-xs btn-press"
           >
-            <Plus className="w-4 h-4" />
-            <span>Roz Ki Kharidi (Buy)</span>
+            <IconPlus size={14} />
+            <span>Kharidi (Buy)</span>
           </button>
           <button
             type="button"
             onClick={() => openSale()}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-black dark:border-white bg-white dark:bg-black text-black dark:text-white text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-900 btn-press shadow-xs"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-black dark:border-white bg-white dark:bg-black text-black dark:text-white text-xs font-bold hover:bg-zinc-100 dark:hover:bg-zinc-900 active:scale-[0.96] transition-all shadow-xs btn-press"
           >
-            <Plus className="w-4 h-4" />
-            <span>Roz Ki Bikri (Sell)</span>
+            <IconPlus size={14} />
+            <span>Bikri (Sell)</span>
           </button>
         </div>
       </div>
 
-      {/* The 3 Core Requirements in Big iOS B&W Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {/* 1. Roz Kitna Khareeda */}
-        <div
+      {/* 4 Core iOS 2x2 Widgets Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        {/* Widget 1: Roz Kitna Khareeda */}
+        <MetricWidget
+          label="Roz Kitna Khareeda"
+          hindiLabel="आज की कुल खरीदी"
+          value={formatCurrency(todayPurchasedAmount)}
+          secondaryText={`Total Weight: ${todayPurchasedWeight} KG`}
+          icon="buy"
+          actionText="Buy Log"
           onClick={() => navigate('/purchases')}
-          className="cursor-pointer rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 shadow-xs hover:border-zinc-400 dark:hover:border-zinc-600 card-press"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              Roz Kitna Khareeda (आज की खरीदी)
-            </span>
-            <span className="p-2 rounded-xl bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white icon-press">
-              <ShoppingBag className="w-5 h-5" />
-            </span>
-          </div>
+        />
 
-          <div className="mt-3">
-            <div className="text-3xl font-extrabold text-black dark:text-white">
-              {formatCurrency(todayPurchasedAmount)}
-            </div>
-            <div className="mt-2 flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-400">
-              <span className="font-medium">Total Weight: {todayPurchasedWeight} KG</span>
-              <span className="underline flex items-center gap-0.5 text-zinc-500 hover:text-black dark:hover:text-white">
-                View Purchases <ArrowRight className="w-3 h-3 inline" />
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* 2. Kitna Stock Hai */}
-        <div
+        {/* Widget 2: Kitna Stock Hai */}
+        <MetricWidget
+          label="Kitna Stock Hai"
+          hindiLabel="गोदाम कुल स्टॉक"
+          value={totalStockWeight}
+          unit="KG"
+          secondaryText={`${stockedItemsCount} materials in stock`}
+          icon="stock"
+          actionText="Stock"
           onClick={() => navigate('/inventory')}
-          className="cursor-pointer rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 shadow-xs hover:border-zinc-400 dark:hover:border-zinc-600 card-press"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              Kitna Stock Hai (वर्तमान कुल स्टॉक)
-            </span>
-            <span className="p-2 rounded-xl bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white icon-press">
-              <Package className="w-5 h-5" />
-            </span>
-          </div>
+        />
 
-          <div className="mt-3">
-            <div className="text-3xl font-extrabold text-black dark:text-white">
-              {totalStockWeight} <span className="text-lg font-bold text-zinc-500">KG</span>
-            </div>
-            <div className="mt-2 flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-400">
-              <span className="font-medium">{stockedItemsCount} materials in stock</span>
-              <span className="underline flex items-center gap-0.5 text-zinc-500 hover:text-black dark:hover:text-white">
-                View Stock <ArrowRight className="w-3 h-3 inline" />
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* 3. Kitna Becha */}
-        <div
+        {/* Widget 3: Kitna Becha */}
+        <MetricWidget
+          label="Kitna Becha"
+          hindiLabel="आज की कुल बिक्री"
+          value={formatCurrency(todaySoldAmount)}
+          secondaryText={`Total Sold: ${todaySoldWeight} KG`}
+          icon="sell"
+          actionText="Sell Log"
           onClick={() => navigate('/sales')}
-          className="cursor-pointer rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 shadow-xs hover:border-zinc-400 dark:hover:border-zinc-600 card-press"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              Kitna Becha (आज की कुल बिक्री)
-            </span>
-            <span className="p-2 rounded-xl bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white icon-press">
-              <TrendingUp className="w-5 h-5" />
-            </span>
-          </div>
+        />
 
-          <div className="mt-3">
-            <div className="text-3xl font-extrabold text-black dark:text-white">
-              {formatCurrency(todaySoldAmount)}
-            </div>
-            <div className="mt-2 flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-400">
-              <span className="font-medium">Total Sold: {todaySoldWeight} KG</span>
-              <span className="underline flex items-center gap-0.5 text-zinc-500 hover:text-black dark:hover:text-white">
-                View Sales <ArrowRight className="w-3 h-3 inline" />
-              </span>
-            </div>
-          </div>
-        </div>
+        {/* Widget 4: Net Hisab (Daily Settlement) */}
+        <MetricWidget
+          label="Daily Net Hisab"
+          hindiLabel="आज का शुद्ध संतुलन"
+          value={formatCurrency(netDailyCashFlow)}
+          secondaryText={netDailyCashFlow >= 0 ? 'Surplus (नफा)' : 'Investment (लागत)'}
+          icon="hisab"
+          actionText="Hisab"
+          onClick={() => navigate('/analytics')}
+        />
       </div>
 
-      {/* 4. Complete Scrap Materials Catalog & Rate History Matrix (All 25 + Custom Items) */}
-      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 overflow-hidden shadow-xs space-y-4 p-4 sm:p-5">
-        {/* Header & Quick Action */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-200 dark:border-zinc-800">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="p-1.5 rounded-lg bg-black dark:bg-white text-white dark:text-black">
-                <Tag className="w-4 h-4" />
-              </span>
-              <h2 className="text-base font-bold text-black dark:text-white tracking-tight">
-                All Scrap Materials & Bhaav History (सभी सामग्रियां व खरीद भाव)
-              </h2>
-            </div>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-              Touch any material to view all past purchase rates & spot price logs (दर व खरीद इतिहास देखने के लिए सामग्री पर टच करें)
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setIsItemModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-black dark:text-white text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 btn-press shadow-xs"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add Custom Material (नया सामान)</span>
-            </button>
-            <Link
-              to="/inventory"
-              className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:underline flex items-center gap-1 ml-1"
-            >
-              <span>Manage Inventory</span>
-              <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
-        </div>
-
-        {/* Search Bar & Filter Chips */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search materials (सामग्री खोजें, उदा: Loha, Teen, Tamba, Plastic...)"
-              className="w-full h-9 pl-9 pr-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/40 text-xs font-medium text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white"
-            />
-          </div>
-
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-            <button
-              type="button"
-              onClick={() => setStockFilter('ALL')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
-                stockFilter === 'ALL'
-                  ? 'bg-black dark:bg-white text-white dark:text-black'
-                  : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
-              }`}
-            >
-              All ({items.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setStockFilter('IN_STOCK')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
-                stockFilter === 'IN_STOCK'
-                  ? 'bg-black dark:bg-white text-white dark:text-black'
-                  : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
-              }`}
-            >
-              In Stock ({items.filter((i) => i.current_stock > 0).length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setStockFilter('ZERO_STOCK')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
-                stockFilter === 'ZERO_STOCK'
-                  ? 'bg-black dark:bg-white text-white dark:text-black'
-                  : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
-              }`}
-            >
-              0 Stock ({items.filter((i) => i.current_stock <= 0).length})
-            </button>
-          </div>
-        </div>
-
-        {/* Materials Grid (All 25 + Custom) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 pt-1">
-          {filteredItems.length === 0 ? (
-            <div className="col-span-full py-10 text-center text-xs text-zinc-500 dark:text-zinc-400">
-              No scrap materials matched your filter (सामग्री नहीं मिली).
-            </div>
-          ) : (
-            filteredItems.map((it, idx) => {
-              const hasStock = it.current_stock > 0;
-              return (
-                <div
-                  key={it.id}
-                  data-item-name={it.name}
-                  data-testid={`material-card-${it.id}`}
-                  onClick={() => handleOpenHistory(it)}
-                  className="group relative p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 hover:border-black dark:hover:border-white shadow-xs cursor-pointer transition-all card-press flex flex-col justify-between"
-                  title="Touch to view purchase rates & history (भाव इतिहास देखें)"
-                >
-                  <div>
-                    {/* Top Row: Unit badge & In-stock status */}
-                    <div className="flex items-center justify-between gap-1.5 mb-2">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white font-mono">
-                        {it.default_unit}
-                      </span>
-                      <span
-                        className={`text-[10px] font-semibold px-2 py-0.5 rounded ${
-                          hasStock
-                            ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-black'
-                            : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-400'
-                        }`}
-                      >
-                        {hasStock ? 'In Stock (उपलब्ध)' : '0 Stock'}
-                      </span>
-                    </div>
-
-                    {/* Material Names */}
-                    <div className="space-y-0.5">
-                      <div className="font-extrabold text-sm text-black dark:text-white tracking-tight flex items-baseline gap-1.5">
-                        <span className="text-zinc-400 text-xs font-mono font-normal">#{idx + 1}</span>
-                        <span className="truncate">{it.name}</span>
-                      </div>
-                      <div className="text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate">
-                        {it.local_name}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Stock Count & Click Action Prompt */}
-                  <div className="mt-3 pt-2.5 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between">
-                    <div>
-                      <div className="text-[10px] uppercase font-bold text-zinc-400">Stock</div>
-                      <div className="text-base font-extrabold text-black dark:text-white font-mono">
-                        {it.current_stock.toLocaleString('en-IN')}{' '}
-                        <span className="text-[10px] font-normal text-zinc-400">{it.default_unit}</span>
-                      </div>
-                    </div>
-
-                    <div className="inline-flex items-center gap-1 text-[11px] font-bold text-zinc-600 dark:text-zinc-300 group-hover:text-black dark:group-hover:text-white transition-colors">
-                      <History className="w-3.5 h-3.5" />
-                      <span>Bhaav Log →</span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-      </div>
-
-      {/* Today's Transactions Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Today's Purchases */}
-        <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-xs">
-          <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
-            <div className="flex items-center gap-2">
-              <span className="p-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white">
-                <ArrowDownLeft className="w-4 h-4" />
-              </span>
-              <h3 className="text-sm font-bold text-black dark:text-white">
-                Today's Purchases (आज की खरीदी)
-              </h3>
-            </div>
-            <Link to="/purchases" className="text-xs font-medium text-zinc-500 hover:text-black dark:hover:text-white">
-              All ({todayPurchases.length}) →
-            </Link>
-          </div>
-
-          <div className="divide-y divide-zinc-100 dark:divide-zinc-900 mt-2">
-            {todayPurchases.length === 0 ? (
-              <div className="py-6 text-center text-xs text-zinc-500 dark:text-zinc-400">
-                Aaj abhi tak koi khareedi nahi hui. (Buy par click karke add karein)
-              </div>
-            ) : (
-              todayPurchases.slice(0, 5).map((p) => (
-                <div key={p.id} className="py-2.5 flex items-center justify-between text-xs">
-                  <div>
-                    <div className="font-semibold text-black dark:text-white">
-                      {p.items?.map((it) => `${it.item_name} (${it.quantity}${it.unit})`).join(', ') || 'Purchase'}
-                    </div>
-                    <div className="text-[11px] text-zinc-500">
-                      {p.purchase_number} {p.party_name ? `· ${p.party_name}` : ''}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bold text-black dark:text-white">
-                      {formatCurrency(p.total_amount)}
-                    </div>
-                    <div className="text-[11px] text-zinc-500">
-                      {p.total_weight ?? (p.items?.reduce((s, it) => s + it.quantity, 0) || 0)} KG
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* Today's Sales */}
-        <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-xs">
-          <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
-            <div className="flex items-center gap-2">
-              <span className="p-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white">
-                <ArrowUpRight className="w-4 h-4" />
-              </span>
-              <h3 className="text-sm font-bold text-black dark:text-white">
-                Today's Sales (आज की बिक्री)
-              </h3>
-            </div>
-            <Link to="/sales" className="text-xs font-medium text-zinc-500 hover:text-black dark:hover:text-white">
-              All ({todaySales.length}) →
-            </Link>
-          </div>
-
-          <div className="divide-y divide-zinc-100 dark:divide-zinc-900 mt-2">
-            {todaySales.length === 0 ? (
-              <div className="py-6 text-center text-xs text-zinc-500 dark:text-zinc-400">
-                Aaj abhi tak koi bikri nahi hui. (Sell par click karke add karein)
-              </div>
-            ) : (
-              todaySales.slice(0, 5).map((s) => (
-                <div key={s.id} className="py-2.5 flex items-center justify-between text-xs">
-                  <div>
-                    <div className="font-semibold text-black dark:text-white">
-                      {s.items?.map((it) => `${it.item_name} (${it.quantity}${it.unit})`).join(', ') || 'Sale'}
-                    </div>
-                    <div className="text-[11px] text-zinc-500">
-                      {s.sale_number} {s.party_name ? `· ${s.party_name}` : ''}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bold text-black dark:text-white">
-                      {formatCurrency(s.total_amount)}
-                    </div>
-                    <div className="text-[11px] text-zinc-500">
-                      {s.total_weight ?? (s.items?.reduce((x, it) => x + it.quantity, 0) || 0)} KG
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Item Rate History & Complete Ledger Modal */}
-      <ItemRateHistoryModal
-        isOpen={isHistoryModalOpen}
-        onClose={() => {
-          setIsHistoryModalOpen(false);
-          setSelectedHistoryItemId(null);
-        }}
-        itemId={selectedHistoryItemId}
-        onRecordPurchase={(it) => openPurchase(it)}
-        onRecordSale={(it) => openSale(it)}
+      {/* 2x4 iOS Widget: Live Bhaav Ticker */}
+      <LiveBhaavTicker
+        items={items}
+        onSelectItem={handleOpenHistory}
+        onViewAllStock={() => navigate('/inventory')}
       />
 
-      {/* Add Custom Item Modal */}
+      {/* Inset Grouped Widget: Recent Trades Feed */}
+      <RecentActivityFeed
+        activities={recentActivities}
+        onViewAllPurchases={() => navigate('/purchases')}
+        onViewAllSales={() => navigate('/sales')}
+      />
+
+      {/* Modal: Item Rate History */}
+      {selectedHistoryItemId && (
+        <ItemRateHistoryModal
+          isOpen={isHistoryModalOpen}
+          onClose={() => {
+            setIsHistoryModalOpen(false);
+            setSelectedHistoryItemId(null);
+          }}
+          itemId={selectedHistoryItemId}
+        />
+      )}
+
+      {/* Modal: Create Custom Material */}
       <ItemModal
         isOpen={isItemModalOpen}
         onClose={() => setIsItemModalOpen(false)}
-        onSuccess={() => loadData()}
+        onSuccess={loadData}
       />
+
+      {/* Modal: Transaction Details Bottom Sheet */}
+      {selectedTx && (
+        <BottomSheet
+          isOpen={true}
+          onClose={() => setSelectedTx(null)}
+          title={
+            selectedTx.type === 'purchase'
+              ? `Purchase Invoice (${(selectedTx.data as Purchase).purchase_number})`
+              : `Sale Receipt (${(selectedTx.data as Sale).sale_number})`
+          }
+        >
+          <div className="space-y-4">
+            <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/70 dark:border-zinc-800 space-y-3">
+              <div className="flex justify-between items-center pb-2 border-b border-zinc-200 dark:border-zinc-800">
+                <span className="text-xs text-zinc-500">
+                  {selectedTx.type === 'purchase' ? 'Supplier (विक्रेता):' : 'Buyer (ग्राहक):'}
+                </span>
+                <span className="text-sm font-bold text-black dark:text-white">
+                  {selectedTx.data.party_name || 'Walk-in Customer'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-zinc-500">Date:</span>
+                <span className="text-xs font-semibold text-black dark:text-white">
+                  {formatDate(
+                    selectedTx.type === 'purchase'
+                      ? (selectedTx.data as Purchase).purchase_date
+                      : (selectedTx.data as Sale).sale_date
+                  )}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-zinc-500">Total Amount:</span>
+                <span className="text-base font-extrabold text-black dark:text-white font-mono">
+                  {formatCurrency(selectedTx.data.total_amount)}
+                </span>
+              </div>
+            </div>
+
+            {/* Item Breakdown */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+                Items Details (सामान विवरण)
+              </h4>
+              <div className="divide-y divide-zinc-100 dark:divide-zinc-800/80 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-3">
+                {selectedTx.data.items?.map((it, idx) => (
+                  <div key={idx} className="py-2 flex justify-between items-center text-xs">
+                    <div>
+                      <span className="font-bold text-black dark:text-white">{it.item_name}</span>
+                      <span className="text-[10px] text-zinc-500 block">
+                        {it.quantity} {it.unit} @ ₹{it.rate}/{it.unit}
+                      </span>
+                    </div>
+                    <span className="font-mono font-bold text-black dark:text-white">
+                      {formatCurrency(it.amount)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setTxToAdjust(selectedTx);
+                  setSelectedTx(null);
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-black dark:bg-white text-white dark:text-black text-xs font-bold hover:opacity-90 active:scale-[0.97] transition-all shadow-xs"
+              >
+                Adjust / Delete Bill (सुधार / हटाएं)
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedTx(null)}
+                className="px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs font-bold hover:bg-zinc-100 dark:hover:bg-zinc-800"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </BottomSheet>
+      )}
+
+      {/* Modal: Transaction Adjustment & Deletion */}
+      {txToAdjust && (
+        <TransactionAdjustmentModal
+          isOpen={true}
+          onClose={() => setTxToAdjust(null)}
+          type={txToAdjust.type === 'purchase' ? 'PURCHASE' : 'SALE'}
+          transaction={txToAdjust.data}
+          onSuccess={() => {
+            setTxToAdjust(null);
+            loadData();
+          }}
+        />
+      )}
     </div>
   );
 };

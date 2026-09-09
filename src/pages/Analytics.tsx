@@ -157,87 +157,87 @@ export const Analytics: React.FC = () => {
         }
       />
 
-      {/* Date-to-Date Calculator Bar */}
-      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-sm space-y-3">
+      {/* Date-to-Date Calculator iOS Widget */}
+      <div className="rounded-[26px] border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.5)] space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-black text-white dark:bg-white dark:text-black">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2.5 rounded-2xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/50 dark:border-zinc-700/50 text-black dark:text-white">
               <Calculator className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-black dark:text-white">
-                Date-to-Date Calculator (तारीख़ से तरीख़ का हिसाब)
+              <h2 className="text-sm font-extrabold text-black dark:text-white tracking-tight font-sans">
+                Date Range Calculator (तारीख़ से तरीख़ का हिसाब)
               </h2>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                Select any custom date range to calculate total buy, sell, and balance
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                Select custom dates to calculate total purchases, sales, and net balance
               </p>
             </div>
           </div>
 
-          {/* Quick Filter Buttons */}
-          <div className="flex flex-wrap items-center gap-1.5">
+          {/* iOS Segmented Filter Pill */}
+          <div className="inline-flex p-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800 flex-wrap">
             <button
               type="button"
               onClick={() => applyQuickRange('TODAY')}
-              className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+              className={`px-3 py-1 text-xs font-bold rounded-full transition-all ${
                 activeRange === 'TODAY'
-                  ? 'bg-black text-white dark:bg-white dark:text-black'
-                  : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800'
+                  ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                  : 'text-zinc-500 hover:text-black dark:hover:text-white'
               }`}
             >
-              Today (आज)
+              Today
             </button>
             <button
               type="button"
               onClick={() => applyQuickRange('YESTERDAY')}
-              className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+              className={`px-3 py-1 text-xs font-bold rounded-full transition-all ${
                 activeRange === 'YESTERDAY'
-                  ? 'bg-black text-white dark:bg-white dark:text-black'
-                  : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800'
+                  ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                  : 'text-zinc-500 hover:text-black dark:hover:text-white'
               }`}
             >
-              Yesterday (कल)
+              Yesterday
             </button>
             <button
               type="button"
               onClick={() => applyQuickRange('THIS_MONTH')}
-              className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+              className={`px-3 py-1 text-xs font-bold rounded-full transition-all ${
                 activeRange === 'THIS_MONTH'
-                  ? 'bg-black text-white dark:bg-white dark:text-black'
-                  : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800'
+                  ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                  : 'text-zinc-500 hover:text-black dark:hover:text-white'
               }`}
             >
-              This Month (इस महीने)
+              This Month
             </button>
             <button
               type="button"
               onClick={() => applyQuickRange('LAST_MONTH')}
-              className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+              className={`px-3 py-1 text-xs font-bold rounded-full transition-all ${
                 activeRange === 'LAST_MONTH'
-                  ? 'bg-black text-white dark:bg-white dark:text-black'
-                  : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800'
+                  ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                  : 'text-zinc-500 hover:text-black dark:hover:text-white'
               }`}
             >
-              Last Month (पिछला महीना)
+              Last Month
             </button>
             <button
               type="button"
               onClick={() => applyQuickRange('LAST_30_DAYS')}
-              className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+              className={`px-3 py-1 text-xs font-bold rounded-full transition-all ${
                 activeRange === 'LAST_30_DAYS'
-                  ? 'bg-black text-white dark:bg-white dark:text-black'
-                  : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800'
+                  ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                  : 'text-zinc-500 hover:text-black dark:hover:text-white'
               }`}
             >
-              Last 30 Days (30 दिन)
+              30 Days
             </button>
           </div>
         </div>
 
         {/* Date pickers */}
-        <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-zinc-100 dark:border-zinc-900">
+        <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">From (से):</span>
+            <span className="text-xs font-semibold text-zinc-500">From:</span>
             <input
               type="date"
               value={startDate}
@@ -245,12 +245,12 @@ export const Analytics: React.FC = () => {
                 setStartDate(e.target.value);
                 setActiveRange('CUSTOM');
               }}
-              className="px-2.5 py-1 text-xs font-medium rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-black dark:text-white focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-white"
+              className="px-3 py-1 text-xs font-bold rounded-full border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-black dark:text-white focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-white"
             />
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">To (तक):</span>
+            <span className="text-xs font-semibold text-zinc-500">To:</span>
             <input
               type="date"
               value={endDate}
@@ -258,81 +258,81 @@ export const Analytics: React.FC = () => {
                 setEndDate(e.target.value);
                 setActiveRange('CUSTOM');
               }}
-              className="px-2.5 py-1 text-xs font-medium rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-black dark:text-white focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-white"
+              className="px-3 py-1 text-xs font-bold rounded-full border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-black dark:text-white focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-white"
             />
           </div>
 
           <button
             type="button"
             onClick={loadAnalytics}
-            className="flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            className="flex items-center gap-1.5 px-3.5 py-1 text-xs font-bold rounded-full bg-black dark:bg-white text-white dark:text-black hover:opacity-90 btn-press shadow-xs"
           >
             <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
-            <span>Calculate (गणना करें)</span>
+            <span>Calculate</span>
           </button>
         </div>
       </div>
 
       {/* Date Range Calculated Result Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
         {/* Total Purchases Card */}
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-sm">
+        <div className="rounded-[26px] border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.5)]">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
               Total Khareeda (कुल खरीदी)
             </span>
-            <span className="p-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white">
+            <span className="p-2 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white">
               <ArrowDownLeft className="w-4 h-4" />
             </span>
           </div>
           <div className="mt-2">
-            <div className="text-2xl font-bold text-black dark:text-white">
+            <div className="text-2xl sm:text-3xl font-black text-black dark:text-white font-sans">
               {formatCurrency(rangeData.totalPurchaseAmount)}
             </div>
-            <div className="mt-1 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
-              <span>Quantity: {formatQuantity(rangeData.totalPurchaseWeight, 'KG')}</span>
-              <span>{rangeData.totalPurchasesCount} Entries</span>
+            <div className="mt-1 flex items-center justify-between text-[11px] text-zinc-500 font-medium">
+              <span>Qty: {formatQuantity(rangeData.totalPurchaseWeight, 'KG')}</span>
+              <span>{rangeData.totalPurchasesCount} Bills</span>
             </div>
           </div>
         </div>
 
         {/* Total Sales Card */}
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-sm">
+        <div className="rounded-[26px] border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.5)]">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
               Total Becha (कुल बिक्री)
             </span>
-            <span className="p-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white">
+            <span className="p-2 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white">
               <ArrowUpRight className="w-4 h-4" />
             </span>
           </div>
           <div className="mt-2">
-            <div className="text-2xl font-bold text-black dark:text-white">
+            <div className="text-2xl sm:text-3xl font-black text-black dark:text-white font-sans">
               {formatCurrency(rangeData.totalSaleAmount)}
             </div>
-            <div className="mt-1 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
-              <span>Quantity: {formatQuantity(rangeData.totalSaleWeight, 'KG')}</span>
-              <span>{rangeData.totalSalesCount} Entries</span>
+            <div className="mt-1 flex items-center justify-between text-[11px] text-zinc-500 font-medium">
+              <span>Qty: {formatQuantity(rangeData.totalSaleWeight, 'KG')}</span>
+              <span>{rangeData.totalSalesCount} Bills</span>
             </div>
           </div>
         </div>
 
         {/* Net Difference Card */}
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-sm">
+        <div className="rounded-[26px] border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.5)]">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
               Net Balance (शुद्ध अंतर / मुनाफा)
             </span>
-            <span className="p-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white">
+            <span className="p-2 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white">
               <Calculator className="w-4 h-4" />
             </span>
           </div>
           <div className="mt-2">
-            <div className={`text-2xl font-bold ${rangeData.netBalance >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+            <div className={`text-2xl sm:text-3xl font-black font-sans ${rangeData.netBalance >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
               {rangeData.netBalance >= 0 ? '+' : ''}{formatCurrency(rangeData.netBalance)}
             </div>
-            <div className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-              {rangeData.netBalance >= 0 ? 'Sales exceed Purchases' : 'Purchases exceed Sales (Inventory Built)'}
+            <div className="mt-1 text-[11px] text-zinc-500 font-medium">
+              {rangeData.netBalance >= 0 ? 'Sales exceed Purchases (Surplus)' : 'Purchases exceed Sales (Inventory)'}
             </div>
           </div>
         </div>

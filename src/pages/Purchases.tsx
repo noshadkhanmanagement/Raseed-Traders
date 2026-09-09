@@ -95,26 +95,26 @@ export const Purchases: React.FC = () => {
         }
       />
 
-      {/* Summary KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 shadow-xs">
-          <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+      {/* iOS KPI Summary Widgets */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <div className="rounded-[26px] border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.5)]">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
             Total Purchased Amount (कुल खरीदी राशि)
           </div>
-          <div className="mt-2 text-3xl font-extrabold text-black dark:text-white">
+          <div className="mt-2 text-3xl font-black text-black dark:text-white font-sans">
             {formatCurrency(totalPurchasesAmount)}
           </div>
-          <div className="mt-1 text-xs text-zinc-500">{purchases.length} total purchase transactions</div>
+          <div className="mt-1 text-[11px] text-zinc-500 font-medium">{purchases.length} total purchase transactions</div>
         </div>
 
-        <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 shadow-xs">
-          <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+        <div className="rounded-[26px] border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.5)]">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
             Total Purchased Weight (कुल खरीदा गया वज़न)
           </div>
-          <div className="mt-2 text-3xl font-extrabold text-black dark:text-white">
-            {totalPurchasesWeight} <span className="text-lg font-bold text-zinc-500">KG</span>
+          <div className="mt-2 text-3xl font-black text-black dark:text-white font-sans">
+            {totalPurchasesWeight} <span className="text-sm font-bold text-zinc-400">KG</span>
           </div>
-          <div className="mt-1 text-xs text-zinc-500">Total weight received in godown</div>
+          <div className="mt-1 text-[11px] text-zinc-500 font-medium">Total weight received in godown</div>
         </div>
       </div>
 
@@ -125,13 +125,77 @@ export const Purchases: React.FC = () => {
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search by invoice number, supplier name, or material (LOHA, TEEN, etc.)..."
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-black dark:text-white text-xs placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-colors"
+          placeholder="Search by invoice number, supplier name, or material..."
+          className="w-full pl-10 pr-4 py-2.5 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 text-black dark:text-white text-xs placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-colors"
         />
       </div>
 
-      {/* Purchases Table */}
-      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 overflow-hidden shadow-xs">
+      {/* MOBILE: iOS Inset Grouped Purchase Cards */}
+      <div className="md:hidden space-y-2.5">
+        {filteredPurchases.length === 0 ? (
+          <div className="py-12 text-center text-xs text-zinc-400">
+            No purchase records found. Click "+ Nayi Kharidi" to add entry.
+          </div>
+        ) : (
+          filteredPurchases.map((p) => {
+            const weight = p.total_weight ?? (p.items?.reduce((s, it) => s + it.quantity, 0) || 0);
+            return (
+              <div
+                key={p.id}
+                className="p-4 rounded-[22px] border border-zinc-200/80 dark:border-zinc-800/80 bg-white/90 dark:bg-zinc-900/70 shadow-xs space-y-2.5"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-black text-black dark:text-white truncate">
+                        {p.party_name || 'Walk-in Supplier'}
+                      </span>
+                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
+                        {p.purchase_number}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+                      {formatDate(p.purchase_date)}
+                    </p>
+                  </div>
+
+                  <div className="text-right shrink-0">
+                    <div className="text-base font-black text-black dark:text-white font-mono">
+                      {formatCurrency(p.total_amount)}
+                    </div>
+                    <span className="text-[10px] text-zinc-400 font-semibold">{weight} KG</span>
+                  </div>
+                </div>
+
+                <div className="text-xs text-zinc-600 dark:text-zinc-300 line-clamp-2">
+                  {p.items?.map((it) => `${it.item_name} (${it.quantity}${it.unit}@₹${it.rate})`).join(', ')}
+                </div>
+
+                <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800/70 flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPurchase(p)}
+                    className="px-3 py-1 rounded-full border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                  >
+                    Receipt
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPurchaseToAdjust(p)}
+                    className="px-3 py-1 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-bold btn-press shadow-xs flex items-center gap-1"
+                  >
+                    <SlidersHorizontal className="w-3 h-3" />
+                    <span>Adjust (सुधार)</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* DESKTOP: Purchases Table */}
+      <div className="hidden md:block rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>

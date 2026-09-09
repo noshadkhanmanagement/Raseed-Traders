@@ -88,7 +88,7 @@ export const AppShell: React.FC = () => {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col min-w-0 pb-24 md:pb-0 relative">
+      <main className="flex-1 flex flex-col min-w-0 pb-32 md:pb-8 relative">
         {/* iOS Top Ambient Fade Overlay (top above top screen like exact iPhone) */}
         <div
           className="md:hidden fixed top-0 left-0 right-0 z-40 pointer-events-none h-[max(0.75rem,env(safe-area-inset-top,0px))] bg-gradient-to-b from-white/90 to-transparent dark:from-black/90 select-none"
@@ -96,14 +96,14 @@ export const AppShell: React.FC = () => {
         />
 
         {/* Mobile Sticky Top Header */}
-        <header className="md:hidden sticky top-0 z-30 bg-white/85 dark:bg-black/85 backdrop-blur-2xl border-b border-zinc-200/80 dark:border-zinc-800/80 px-4 pt-[max(0.625rem,env(safe-area-inset-top,0px))] pb-2.5 flex items-center justify-between shadow-xs">
+        <header className="md:hidden sticky top-0 z-30 bg-white/80 dark:bg-black/80 backdrop-blur-3xl border-b border-zinc-200/80 dark:border-zinc-800/80 px-4 pt-[max(0.625rem,env(safe-area-inset-top,0px))] pb-2.5 flex items-center justify-between shadow-xs">
           <div className="flex items-center space-x-2.5">
             <img
               src={logoSrc}
               alt="Logo"
-              className="w-7 h-7 rounded-md object-contain shrink-0 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black icon-press"
+              className="w-7 h-7 rounded-lg object-contain shrink-0 border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-black icon-press shadow-2xs"
             />
-            <span className="text-sm font-bold text-black dark:text-white tracking-tight">
+            <span className="text-sm font-extrabold text-black dark:text-white tracking-tight font-sans">
               Raseed Traders
             </span>
           </div>
@@ -113,7 +113,7 @@ export const AppShell: React.FC = () => {
             <button
               type="button"
               onClick={cycleTheme}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 icon-press"
+              className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 icon-press"
               title={`Theme: ${theme}`}
             >
               {theme === 'system' ? (
@@ -127,7 +127,7 @@ export const AppShell: React.FC = () => {
             <button
               type="button"
               onClick={logout}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 icon-press"
+              className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 icon-press"
               title="Lock / Logout App (लॉग आउट)"
             >
               <Lock className="w-4 h-4" />
@@ -136,7 +136,7 @@ export const AppShell: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsSearchOpen(true)}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 icon-press"
+              className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 icon-press"
               aria-label="Search"
             >
               <Search className="w-4 h-4" />
@@ -144,19 +144,13 @@ export const AppShell: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsQuickActionOpen(true)}
-              className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-black dark:bg-white text-white dark:text-black text-xs font-semibold shadow-xs btn-press"
+              className="flex items-center space-x-1 px-3 py-1.5 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-bold shadow-xs btn-press"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>New Entry</span>
+              <span>New</span>
             </button>
           </div>
         </header>
-
-        {/* iOS Header Feather Fade Down */}
-        <div
-          className="md:hidden sticky top-[49px] z-20 h-4 -mb-4 pointer-events-none bg-gradient-to-b from-white/90 via-white/40 to-transparent dark:from-black/90 dark:via-black/40 dark:to-transparent select-none"
-          aria-hidden="true"
-        />
 
         {/* Page Inner Viewport */}
         <div className="flex-1 p-4 md:p-6 max-w-7xl w-full mx-auto">

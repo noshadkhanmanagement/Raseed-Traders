@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Download, Upload, RotateCcw, Lock, ShieldCheck } from 'lucide-react';
+import { Save, Download, Upload, RotateCcw, Lock, ShieldCheck, Building2, Sliders, Database, AlertTriangle } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { api } from '../services/api';
 import { ScrapUnit } from '../types';
@@ -45,14 +45,14 @@ export const Settings: React.FC = () => {
       });
 
       setIsSaved(true);
-      setSaveMessage('सेटिंग्स सफलतापूर्वक सहेज ली गई हैं! (Settings updated successfully)');
+      setSaveMessage('Settings updated successfully (सेटिंग्स सहेजी गईं)!');
       setTimeout(() => {
         setIsSaved(false);
         setSaveMessage('');
       }, 3000);
     } catch (err) {
       console.error(err);
-      setSaveMessage('सेटिंग्स सेव करने में त्रुटि हुई।');
+      setSaveMessage('Error updating settings.');
     }
   };
 
@@ -78,10 +78,10 @@ export const Settings: React.FC = () => {
       try {
         const json = JSON.parse(event.target?.result as string);
         api.importBackup(json);
-        alert('डेटा सफलतापूर्वक रीस्टोर हो गया! (Backup imported)');
+        alert('Backup imported successfully (डेटा रीस्टोर हो गया)!');
         window.location.reload();
       } catch (err: any) {
-        alert('बैकअप फ़ाइल लोड करने में त्रुटि: ' + err.message);
+        alert('Error importing backup: ' + err.message);
       }
     };
     reader.readAsText(file);
@@ -91,34 +91,34 @@ export const Settings: React.FC = () => {
 
   const handleResetData = async () => {
     const confirmed = window.confirm(
-      'क्या आप सभी डेटा रीसेट करके 25 मुख्य सामानों की साफ़ सूची वापस लाना चाहते हैं?\n(All transactions, stock, and rates will be reset to ₹0.00)'
+      'Are you sure you want to reset all data and restore the clean 25 default items with ₹0 counts?\n(क्या आप सभी डेटा रीसेट करके 25 मुख्य सामानों की साफ़ सूची वापस लाना चाहते हैं?)'
     );
     if (!confirmed) return;
 
     setIsResetting(true);
     try {
       await api.resetData();
-      alert('डेटा सफलतापूर्वक साफ़ कर दिया गया है। सभी सामान ₹0 दर व 0 स्टॉक के साथ रीसेट हो गए हैं।');
+      alert('All transactions reset and 25 items restored cleanly.');
       window.location.reload();
     } catch (err: any) {
-      alert(err.message || 'डेटा रीसेट करने में समस्या आई।');
+      alert(err.message || 'Error resetting data.');
     } finally {
       setIsResetting(false);
     }
   };
 
   return (
-    <div className="space-y-6 max-w-3xl page-enter">
+    <div className="space-y-5 max-w-3xl mx-auto page-enter">
       <PageHeader
-        title="Shop Settings (दुकान सेटिंग्स)"
+        title="Settings (सेटिंग्स)"
         subtitle="Shop details, business rules, and database management"
       />
 
       {saveMessage && (
         <div
-          className={`p-3 rounded-xl text-xs font-semibold ${
+          className={`p-3.5 rounded-2xl text-xs font-bold transition-all ${
             isSaved
-              ? 'bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white border border-zinc-300 dark:border-zinc-700'
+              ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
               : 'bg-red-500/10 text-red-600 border border-red-500/30'
           }`}
         >
@@ -126,78 +126,97 @@ export const Settings: React.FC = () => {
         </div>
       )}
 
-      {/* 2. Business Profile Settings */}
-      <form onSubmit={handleSave} className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 shadow-xs space-y-4">
-        <div>
-          <h2 className="text-sm font-bold text-black dark:text-white">
-            Business Details (दुकान व संपर्क विवरण)
-          </h2>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            Displayed on purchase bills, sale invoices, and reports
-          </p>
+      {/* 1. iOS Inset Group: Business Profile */}
+      <form onSubmit={handleSave} className="rounded-[26px] border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.5)] space-y-4">
+        <div className="flex items-center gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
+          <div className="w-8 h-8 rounded-xl bg-blue-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+            <Building2 className="w-4 h-4" />
+          </div>
+          <div>
+            <h2 className="text-sm font-extrabold text-black dark:text-white tracking-tight">
+              Business Profile (व्यापार विवरण)
+            </h2>
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+              Printed on bills, purchase slips, and invoices
+            </p>
+          </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-3 pt-1">
           <div>
-            <label className="block text-xs font-medium text-black dark:text-white mb-1">
-              Business Name (व्यापार का नाम)
+            <label className="block text-xs font-bold text-black dark:text-white mb-1">
+              Shop Name (व्यापार का नाम)
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full h-9 px-3 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-medium text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white"
+              className="w-full h-10 px-3.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-xs font-medium text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white"
               required
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-black dark:text-white mb-1">
-                Mobile Number (मोबाइल नंबर)
+              <label className="block text-xs font-bold text-black dark:text-white mb-1">
+                Contact Phone (मोबाइल नंबर)
               </label>
               <input
                 type="text"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full h-9 px-3 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-medium text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white"
+                className="w-full h-10 px-3.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-xs font-medium text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white"
                 required
               />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-black dark:text-white mb-1">
+                Default Unit (डिफ़ॉल्ट इकाई)
+              </label>
+              <select
+                value={defaultUnit}
+                onChange={(e) => setDefaultUnit(e.target.value as ScrapUnit)}
+                className="w-full h-10 px-3.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-xs font-medium text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white"
+              >
+                <option value="KG">KG (किलो)</option>
+                <option value="PIECE">PIECE (नग)</option>
+              </select>
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-black dark:text-white mb-1">
-              Address (पता)
+            <label className="block text-xs font-bold text-black dark:text-white mb-1">
+              Shop Address (दुकान का पता)
             </label>
             <input
               type="text"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              className="w-full h-9 px-3 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-medium text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white"
+              className="w-full h-10 px-3.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-xs font-medium text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white"
               required
             />
           </div>
 
-          <div className="pt-2">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={allowNegativeStock}
-                onChange={(e) => setAllowNegativeStock(e.target.checked)}
-                className="rounded border-zinc-300 text-black focus:ring-0 w-4 h-4"
-              />
-              <span className="text-xs text-black dark:text-white font-medium">
-                Allow Negative Stock (स्टॉक 0 होने पर भी बिक्री की अनुमति दें)
+          <div className="pt-2 flex items-center justify-between border-t border-zinc-100 dark:border-zinc-800/80">
+            <div>
+              <span className="text-xs font-bold text-black dark:text-white block">
+                Negative Stock Allowance
               </span>
-            </label>
+              <span className="text-[11px] text-zinc-500">Allow selling items even if stock is 0</span>
+            </div>
+            <input
+              type="checkbox"
+              checked={allowNegativeStock}
+              onChange={(e) => setAllowNegativeStock(e.target.checked)}
+              className="w-5 h-5 rounded-md accent-black dark:accent-white cursor-pointer"
+            />
           </div>
         </div>
 
         <div className="pt-2 flex justify-end">
           <button
             type="submit"
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-black dark:bg-white text-white dark:text-black text-xs font-bold hover:opacity-90 transition-opacity shadow-xs"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-bold hover:opacity-90 btn-press shadow-xs"
           >
             <Save className="w-3.5 h-3.5" />
             <span>Save Settings (सहेजें)</span>
@@ -205,54 +224,35 @@ export const Settings: React.FC = () => {
         </div>
       </form>
 
-      {/* 3. Security & App Lock Section */}
-      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 shadow-xs space-y-4">
-        <div className="flex items-center justify-between">
+      {/* 2. iOS Inset Group: Data Backup & Management */}
+      <div className="rounded-[26px] border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.5)] space-y-3.5">
+        <div className="flex items-center gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
+          <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+            <Database className="w-4 h-4" />
+          </div>
           <div>
-            <h2 className="text-sm font-bold text-black dark:text-white flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
-              <span>Application Security (सुरक्षा व सत्र)</span>
+            <h2 className="text-sm font-extrabold text-black dark:text-white tracking-tight">
+              Data Backup & Restore (डेटा बैकअप)
             </h2>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-              Password-protected application session (env password configured)
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+              Download complete database file or restore onto another device
             </p>
           </div>
-          <button
-            type="button"
-            onClick={logout}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-red-200 dark:border-red-900/60 bg-red-500/10 text-red-600 dark:text-red-400 text-xs font-bold hover:bg-red-500/20 transition-colors btn-press shadow-xs"
-            title="Lock application and require password"
-          >
-            <Lock className="w-3.5 h-3.5" />
-            <span>Lock Application (लॉग आउट करें)</span>
-          </button>
-        </div>
-      </div>
-
-      {/* 4. Backup & Reset Section */}
-      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 shadow-xs space-y-4">
-        <div>
-          <h2 className="text-sm font-bold text-black dark:text-white">
-            Data Backup & Restore (डेटा बैकअप व रीसेट)
-          </h2>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            Export all records to JSON file or restore from a previous backup
-          </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
           <button
             type="button"
             onClick={handleExportBackup}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-black dark:text-white text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shadow-xs"
+            className="flex items-center justify-center gap-2 p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50/70 dark:bg-zinc-900/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-black dark:text-white text-xs font-bold btn-press shadow-2xs"
           >
-            <Download className="w-3.5 h-3.5" />
-            <span>Export Backup JSON (डाउनलोड बैकअप)</span>
+            <Download className="w-4 h-4" />
+            <span>Export Backup (डाउनलोड बैकअप)</span>
           </button>
 
-          <label className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-black dark:text-white text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shadow-xs cursor-pointer">
-            <Upload className="w-3.5 h-3.5" />
-            <span>Restore Backup JSON (रीस्टोर करें)</span>
+          <label className="flex items-center justify-center gap-2 p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50/70 dark:bg-zinc-900/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-black dark:text-white text-xs font-bold btn-press shadow-2xs cursor-pointer">
+            <Upload className="w-4 h-4" />
+            <span>Restore Backup (बैकअप लोड करें)</span>
             <input
               type="file"
               accept=".json"
@@ -260,15 +260,67 @@ export const Settings: React.FC = () => {
               className="hidden"
             />
           </label>
+        </div>
+      </div>
 
+      {/* 3. iOS Inset Group: Security & Logout */}
+      <div className="rounded-[26px] border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.5)] space-y-3.5">
+        <div className="flex items-center gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
+          <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+            <Lock className="w-4 h-4" />
+          </div>
+          <div>
+            <h2 className="text-sm font-extrabold text-black dark:text-white tracking-tight">
+              App Security & Access (सुरक्षा)
+            </h2>
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+              Lock the application session on this device
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between pt-1">
+          <span className="text-xs text-zinc-600 dark:text-zinc-400">
+            Require password on next launch
+          </span>
+          <button
+            type="button"
+            onClick={logout}
+            className="px-4 py-2 rounded-full border border-red-300 dark:border-red-900/60 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 text-xs font-bold hover:bg-red-100 dark:hover:bg-red-900/50 btn-press"
+          >
+            Lock App Now (लॉग आउट)
+          </button>
+        </div>
+      </div>
+
+      {/* 4. iOS Inset Group: Danger Zone */}
+      <div className="rounded-[26px] border border-red-200/80 dark:border-red-900/40 bg-red-50/40 dark:bg-red-950/20 backdrop-blur-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.04)] space-y-3.5">
+        <div className="flex items-center gap-3 pb-3 border-b border-red-200/60 dark:border-red-900/40">
+          <div className="w-8 h-8 rounded-xl bg-red-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+            <AlertTriangle className="w-4 h-4" />
+          </div>
+          <div>
+            <h2 className="text-sm font-extrabold text-red-600 dark:text-red-400 tracking-tight">
+              Factory Data Reset (डेटा रीसेट)
+            </h2>
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+              Permanently clear all bills, zero all counts, and restore 25 clean items
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+          <span className="text-xs text-zinc-600 dark:text-zinc-400">
+            Resets all scrap items to exactly the 25 default materials with 0 stock & ₹0 rates.
+          </span>
           <button
             type="button"
             onClick={handleResetData}
             disabled={isResetting}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-red-300 dark:border-red-900/60 bg-red-500/10 text-red-600 dark:text-red-400 text-xs font-semibold hover:bg-red-500/20 transition-colors shadow-xs disabled:opacity-50"
+            className="px-4 py-2 rounded-full bg-red-600 text-white text-xs font-bold hover:bg-red-700 disabled:opacity-50 btn-press shadow-xs shrink-0 flex items-center justify-center gap-1.5"
           >
             <RotateCcw className={`w-3.5 h-3.5 ${isResetting ? 'animate-spin' : ''}`} />
-            <span>{isResetting ? 'Resetting Data (डेटा साफ़ हो रहा है...)' : 'Reset Database (डेटा रीसेट)'}</span>
+            <span>{isResetting ? 'Resetting...' : 'Reset All to 0 (रीसेट करें)'}</span>
           </button>
         </div>
       </div>
