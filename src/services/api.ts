@@ -343,7 +343,12 @@ export const api = {
         .single();
       if (!error && data) {
         try {
-          localDb.updateItem(id, updates);
+          const localItem = localDb.getItemById(id) || localDb.getItems(true).find(i => (i.name || '').toUpperCase().trim() === (data.name || '').toUpperCase().trim());
+          if (localItem) {
+            localDb.updateItem(localItem.id, updates);
+          } else {
+            localDb.updateItem(id, updates);
+          }
         } catch {}
         return data;
       }
@@ -410,8 +415,15 @@ export const api = {
           .single();
         if (!error && data) {
           try {
-            localDb.resetItemStock(id);
-          } catch {}
+            const localItem = localDb.getItemById(id) || localDb.getItems(true).find(i => (i.name || '').toUpperCase().trim() === (data.name || '').toUpperCase().trim());
+            if (localItem) {
+              localDb.resetItemStock(localItem.id);
+            } else {
+              localDb.resetItemStock(id);
+            }
+          } catch (e) {
+            console.error('Error syncing reset to localDb:', e);
+          }
           return data;
         }
       } catch (err) {

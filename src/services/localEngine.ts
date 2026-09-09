@@ -254,7 +254,11 @@ class LocalEngine {
   }
 
   public getItemById(id: string): ScrapItem | undefined {
-    return this.data.items.find((item) => item.id === id);
+    return (
+      this.data.items.find((item) => item.id === id) ||
+      this.data.items.find((item) => item.id.toLowerCase() === id.toLowerCase()) ||
+      this.data.items.find((item) => item.name.toUpperCase().trim() === id.toUpperCase().trim())
+    );
   }
 
   public createItem(itemData: Partial<ScrapItem> & { name: string; local_name: string; default_unit: ScrapUnit }): ScrapItem {
@@ -283,7 +287,14 @@ class LocalEngine {
   }
 
   public updateItem(id: string, updates: Partial<ScrapItem>): ScrapItem {
-    const idx = this.data.items.findIndex((item) => item.id === id);
+    let idx = this.data.items.findIndex((item) => item.id === id);
+    if (idx === -1) {
+      idx = this.data.items.findIndex(
+        (item) =>
+          item.id.toLowerCase() === id.toLowerCase() ||
+          (updates.name && item.name.toUpperCase().trim() === updates.name.toUpperCase().trim())
+      );
+    }
     if (idx === -1) {
       const fallbackItem: ScrapItem = {
         id,
@@ -387,10 +398,11 @@ class LocalEngine {
     item.average_cost = 0;
     item.updated_at = new Date().toISOString();
 
+    const actualId = item.id;
     // Reset ledger history and adjustment history for this item
-    this.data.inventory_ledger = this.data.inventory_ledger.filter((l) => l.item_id !== id);
-    this.data.stock_cost_history = this.data.stock_cost_history.filter((h) => h.item_id !== id);
-    this.data.stock_adjustments = this.data.stock_adjustments.filter((a) => a.item_id !== id);
+    this.data.inventory_ledger = this.data.inventory_ledger.filter((l) => l.item_id !== actualId && l.item_id !== id);
+    this.data.stock_cost_history = this.data.stock_cost_history.filter((h) => h.item_id !== actualId && h.item_id !== id);
+    this.data.stock_adjustments = this.data.stock_adjustments.filter((a) => a.item_id !== actualId && a.item_id !== id);
 
     this.saveToStorage();
     return item;
