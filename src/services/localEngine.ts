@@ -34,7 +34,7 @@ try {
       localStorage.removeItem(k);
     }
   });
-} catch (e) {
+} catch {
   // ignore in non-browser environments
 }
 

@@ -2,13 +2,10 @@ import React, { useState, useEffect } from 'react';
 import {
   Tag,
   History,
-  ArrowUpRight,
-  ArrowDownRight,
   Plus,
   Minus,
   Clock,
   User,
-  CreditCard,
   Layers,
   ArrowDownLeft,
   TrendingUp,
@@ -115,15 +112,6 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
     };
   } | null>(null);
 
-  useEffect(() => {
-    if (isOpen && itemId) {
-      loadHistory(itemId);
-    } else {
-      setHistoryData(null);
-      setActiveTab('ALL');
-    }
-  }, [isOpen, itemId]);
-
   const loadHistory = async (id: string) => {
     setLoading(true);
     try {
@@ -135,6 +123,15 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isOpen && itemId) {
+      loadHistory(itemId);
+    } else {
+      setHistoryData(null);
+      setActiveTab('ALL');
+    }
+  }, [isOpen, itemId]);
 
   const item = historyData?.item;
   const stats = historyData?.stats;

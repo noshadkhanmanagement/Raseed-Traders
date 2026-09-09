@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { BottomSheet } from '../common/BottomSheet';
 import { api } from '../../services/api';
 import { ScrapItem, StockAdjustmentType } from '../../types';
@@ -29,13 +29,7 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
 
   const targetId = preselectedItemId || initialItemId;
 
-  useEffect(() => {
-    if (isOpen) {
-      loadItems();
-    }
-  }, [isOpen, targetId]);
-
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const allItems = await api.getItems();
       setItems(allItems);
@@ -47,7 +41,13 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
     } catch (err) {
       console.error(err);
     }
-  };
+  }, [targetId, selectedItemId]);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadItems();
+    }
+  }, [isOpen, loadItems]);
 
   const selectedItem = items.find((it) => it.id === selectedItemId);
 

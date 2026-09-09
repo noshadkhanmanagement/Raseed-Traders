@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Trash2, Calendar } from 'lucide-react';
 import { BottomSheet } from '../common/BottomSheet';
 import { api } from '../../services/api';
@@ -38,19 +38,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  useEffect(() => {
-    if (isOpen) {
-      // Full form reset on every open to prevent stale data bleed-through
-      setPaidAmount('');
-      setCustomPartyName('');
-      setPurchaseDate(new Date().toISOString().split('T')[0]);
-      setErrorMessage('');
-      setIsSubmitting(false);
-      loadDependencies();
-    }
-  }, [isOpen, initialItem]);
-
-  const loadDependencies = async () => {
+  const loadDependencies = useCallback(async () => {
     try {
       const [allParties, allItems] = await Promise.all([
         api.getParties(),
@@ -83,7 +71,19 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
     } catch (err) {
       console.error(err);
     }
-  };
+  }, [initialPartyId, initialItem]);
+
+  useEffect(() => {
+    if (isOpen) {
+      // Full form reset on every open to prevent stale data bleed-through
+      setPaidAmount('');
+      setCustomPartyName('');
+      setPurchaseDate(new Date().toISOString().split('T')[0]);
+      setErrorMessage('');
+      setIsSubmitting(false);
+      loadDependencies();
+    }
+  }, [isOpen, loadDependencies]);
 
 
   const handleItemChange = (index: number, itemId: string) => {

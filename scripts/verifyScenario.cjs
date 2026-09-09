@@ -1,6 +1,5 @@
 // Automated Verification Script for Scrap Management System Core Business Scenarios
 
-const fs = require('fs');
 
 // We simulate the local transactional engine in node
 class EngineTest {

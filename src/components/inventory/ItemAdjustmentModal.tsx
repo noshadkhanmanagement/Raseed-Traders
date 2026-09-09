@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   NavStock as IconStock,
   IconAdjust,
@@ -28,7 +28,6 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
 }) => {
   const [items, setItems] = useState<ScrapItem[]>([]);
   const [selectedItemId, setSelectedItemId] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -52,18 +51,20 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      loadItems();
-      setIsConfirmingResetCounts(false);
-      setIsConfirmingDelete(false);
-      setErrorMessage('');
-      setSuccessMessage('');
+  const initItemFields = useCallback((itemId: string, itemList?: ScrapItem[]) => {
+    const list = itemList || items;
+    const it = list.find((x) => x.id === itemId);
+    if (it) {
+      setDirectStockInput(String(it.current_stock ?? 0));
+      setDeltaQuantityInput('');
+      setDeltaDirection('ADD');
+      setPurchaseRateInput(it.default_purchase_rate ? String(it.default_purchase_rate) : '');
+      setSaleRateInput(it.default_sale_rate ? String(it.default_sale_rate) : '');
+      setReason('');
     }
-  }, [isOpen, preselectedItemId]);
+  }, [items]);
 
-  const loadItems = async () => {
-    setIsLoading(true);
+  const loadItems = useCallback(async () => {
     try {
       const allItems = await api.getItems();
       setItems(allItems);
@@ -74,22 +75,18 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
       }
     } catch (err) {
       console.error(err);
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [preselectedItemId, initItemFields]);
 
-  const initItemFields = (itemId: string, itemList = items) => {
-    const it = itemList.find((x) => x.id === itemId);
-    if (it) {
-      setDirectStockInput(String(it.current_stock ?? 0));
-      setDeltaQuantityInput('');
-      setDeltaDirection('ADD');
-      setPurchaseRateInput(it.default_purchase_rate ? String(it.default_purchase_rate) : '');
-      setSaleRateInput(it.default_sale_rate ? String(it.default_sale_rate) : '');
-      setReason('');
+  useEffect(() => {
+    if (isOpen) {
+      loadItems();
+      setIsConfirmingResetCounts(false);
+      setIsConfirmingDelete(false);
+      setErrorMessage('');
+      setSuccessMessage('');
     }
-  };
+  }, [isOpen, loadItems]);
 
   const handleItemChange = (itemId: string) => {
     setSelectedItemId(itemId);

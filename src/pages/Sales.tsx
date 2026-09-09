@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { Plus, Download, Search, Printer, SlidersHorizontal } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
@@ -19,23 +19,19 @@ export const Sales: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [saleToAdjust, setSaleToAdjust] = useState<Sale | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadSales();
-  }, [refreshCounter]);
-
-  const loadSales = async () => {
-    setIsLoading(true);
+  const loadSales = useCallback(async () => {
     try {
       const data = await api.getSales();
       setSales(data);
     } catch (err) {
       console.error(err);
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadSales();
+  }, [loadSales, refreshCounter]);
 
   const [periodFilter, setPeriodFilter] = useState<'ALL' | 'TODAY' | 'THIS_MONTH'>('ALL');
   const [paymentFilter, setPaymentFilter] = useState<'ALL' | 'CASH' | 'CREDIT'>('ALL');

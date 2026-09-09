@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Save, Download, Upload, RotateCcw, Lock, ShieldCheck, Building2, Sliders, Database, AlertTriangle } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Save, Download, Upload, RotateCcw, Lock, Building2, Database, AlertTriangle } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { api } from '../services/api';
 import { ScrapUnit } from '../types';
@@ -18,11 +18,7 @@ export const Settings: React.FC = () => {
   const [isSaved, setIsSaved] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
 
-  useEffect(() => {
-    loadSettings();
-  }, []);
-
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     try {
       const biz = await api.getBusiness();
       setName(biz.name || 'Raseed Traders');
@@ -33,7 +29,11 @@ export const Settings: React.FC = () => {
     } catch (err) {
       console.error(err);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();

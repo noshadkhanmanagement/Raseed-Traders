@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Download, Printer, ArrowDownLeft, ArrowUpRight, Calculator, RefreshCw } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { api } from '../services/api';
@@ -93,7 +93,7 @@ export const Analytics: React.FC = () => {
     setActiveRange(range);
   };
 
-  const loadAnalytics = async () => {
+  const loadAnalytics = useCallback(async () => {
     setIsLoading(true);
     try {
       const [rangeRes, monthRes] = await Promise.all([
@@ -107,11 +107,11 @@ export const Analytics: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [startDate, endDate]);
 
   useEffect(() => {
     loadAnalytics();
-  }, [startDate, endDate]);
+  }, [loadAnalytics]);
 
   const handleExportCSV = () => {
     const headers = ['Material Name (सामग्री)', 'Buy Quantity (खरीदा)', 'Buy Amount (₹)', 'Sell Quantity (बेचा)', 'Sell Amount (₹)', 'Net Balance (₹)'];

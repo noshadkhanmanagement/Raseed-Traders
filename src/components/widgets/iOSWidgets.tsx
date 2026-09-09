@@ -5,11 +5,9 @@ import {
   NavStock,
   NavAnalytics,
   IconChevron,
-  IconHistory,
-  IconPlus,
 } from '../common/Icons';
 import { formatCurrency, formatDate } from '../../utils/formatters';
-import { ScrapItem, Purchase, Sale } from '../../types';
+import { ScrapItem } from '../../types';
 
 interface WidgetCardProps {
   children: React.ReactNode;
@@ -58,7 +56,6 @@ export const MetricWidget: React.FC<MetricWidgetProps> = ({
   unit,
   secondaryText,
   icon,
-  badgeColor,
   onClick,
   actionText,
 }) => {

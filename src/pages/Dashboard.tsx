@@ -1,20 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { useOutletContext, useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useOutletContext, useNavigate } from 'react-router-dom';
 import {
   MetricWidget,
   LiveBhaavTicker,
   RecentActivityFeed,
-  WidgetCard,
 } from '../components/widgets/iOSWidgets';
-import {
-  IconPlus,
-  IconHistory,
-  NavBuy,
-  NavSell,
-  NavStock,
-  NavAnalytics,
-  IconChevron,
-} from '../components/common/Icons';
+import { IconPlus } from '../components/common/Icons';
 import { api } from '../services/api';
 import { ScrapItem, Purchase, Sale } from '../types';
 import { formatCurrency, formatDate } from '../utils/formatters';
@@ -36,7 +27,6 @@ export const Dashboard: React.FC = () => {
   const [items, setItems] = useState<ScrapItem[]>([]);
   const [todayPurchases, setTodayPurchases] = useState<Purchase[]>([]);
   const [todaySales, setTodaySales] = useState<Sale[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   // Modal states
   const [selectedHistoryItemId, setSelectedHistoryItemId] = useState<string | null>(null);
@@ -55,8 +45,7 @@ export const Dashboard: React.FC = () => {
 
   const todayStr = new Date().toISOString().split('T')[0];
 
-  const loadData = async () => {
-    setIsLoading(true);
+  const loadData = useCallback(async () => {
     try {
       const [allItems, purchasesData, salesData] = await Promise.all([
         api.getItems(),
@@ -69,14 +58,12 @@ export const Dashboard: React.FC = () => {
       setTodaySales(salesData.filter((s) => s.sale_date === todayStr && s.status === 'FINAL'));
     } catch (err) {
       console.error('Failed to load dashboard data', err);
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [todayStr]);
 
   useEffect(() => {
     loadData();
-  }, [refreshCounter]);
+  }, [loadData, refreshCounter]);
 
   // 1. Roz Kitna Khareeda
   const todayPurchasedAmount = todayPurchases.reduce((sum, p) => sum + p.total_amount, 0);

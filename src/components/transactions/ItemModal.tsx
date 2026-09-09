@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Tag, TrendingUp, PackagePlus, AlertCircle } from 'lucide-react';
+import { Tag, PackagePlus, AlertCircle } from 'lucide-react';
 import { BottomSheet } from '../common/BottomSheet';
 import { api } from '../../services/api';
 import { ScrapItem, ScrapUnit } from '../../types';

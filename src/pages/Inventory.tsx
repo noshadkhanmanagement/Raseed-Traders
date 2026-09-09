@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import {
   IconSearch,
@@ -49,11 +49,7 @@ export const Inventory: React.FC = () => {
     setIsHistoryModalOpen(true);
   };
 
-  useEffect(() => {
-    loadInventory();
-  }, [refreshCounter]);
-
-  const loadInventory = async () => {
+  const loadInventory = useCallback(async () => {
     setIsLoading(true);
     try {
       const allItems = await api.getItems();
@@ -63,7 +59,11 @@ export const Inventory: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadInventory();
+  }, [loadInventory, refreshCounter]);
 
   const [unitFilter, setUnitFilter] = useState<'ALL' | 'KG' | 'PIECE'>('ALL');
   const [sortBy, setSortBy] = useState<'name_asc' | 'name_desc' | 'stock_desc' | 'rate_desc'>('name_asc');
@@ -98,11 +98,6 @@ export const Inventory: React.FC = () => {
   const handleAdjustClick = (item?: ScrapItem) => {
     setSelectedItemToAdjust(item || null);
     setIsAdjustModalOpen(true);
-  };
-
-  const handleEditClick = (item: ScrapItem) => {
-    setSelectedItemToEdit(item);
-    setIsItemModalOpen(true);
   };
 
   const handleAddNewClick = () => {

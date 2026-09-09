@@ -765,7 +765,7 @@ export const api = {
         adjustment_type: payload.adjustment_type,
         reason: payload.reason,
       };
-      const { data, error } = await supabase.rpc('rpc_create_stock_adjustment', { p_payload: rpcPayload });
+      const { error } = await supabase.rpc('rpc_create_stock_adjustment', { p_payload: rpcPayload });
       if (error) throw new Error(error.message);
       // Supabase succeeded — sync local and return
       try { localDb.createStockAdjustment(payload); } catch {}
