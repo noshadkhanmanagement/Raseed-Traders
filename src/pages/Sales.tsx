@@ -13,7 +13,7 @@ import { BottomSheet } from '../components/common/BottomSheet';
 import { TransactionAdjustmentModal } from '../components/transactions/TransactionAdjustmentModal';
 import { api } from '../services/api';
 import { Sale } from '../types';
-import { formatCurrency, formatDate, downloadCSV, getLocalDateString } from '../utils/formatters';
+import { formatCurrency, formatDate, formatDateTime12Hr, downloadCSV, getLocalDateString } from '../utils/formatters';
 
 interface ContextType {
   openSale: () => void;
@@ -307,7 +307,7 @@ export const Sales: React.FC = () => {
                       </span>
                     </div>
                     <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
-                      {formatDate(s.sale_date)}
+                      {formatDateTime12Hr(s.sale_date, s.created_at)}
                     </p>
                   </div>
 
@@ -375,7 +375,7 @@ export const Sales: React.FC = () => {
                       {s.sale_number}
                     </td>
                     <td className="px-5 py-3.5 font-medium text-zinc-600 dark:text-zinc-400">
-                      {formatDate(s.sale_date)}
+                      {formatDateTime12Hr(s.sale_date, s.created_at)}
                     </td>
                     <td className="px-5 py-3.5 font-semibold text-black dark:text-white">
                       {s.party_name || 'Walk-in Cash'}
@@ -448,7 +448,7 @@ export const Sales: React.FC = () => {
               </div>
               <div>
                 <span className="text-zinc-400">Date:</span>{' '}
-                <span className="font-bold">{formatDate(selectedSale.sale_date)}</span>
+                <span className="font-bold">{formatDateTime12Hr(selectedSale.sale_date, selectedSale.created_at)}</span>
               </div>
               <div>
                 <span className="text-zinc-400">Customer:</span>{' '}

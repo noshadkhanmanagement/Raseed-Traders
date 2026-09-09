@@ -539,6 +539,7 @@ export const api = {
 
   async createPurchase(payload: {
     party_id: string;
+    party_name?: string;
     purchase_date: string;
     items: { item_id: string; quantity: number; unit: any; rate: number; amount: number }[];
     paid_amount: number;
@@ -658,6 +659,7 @@ export const api = {
 
   async createSale(payload: {
     party_id: string;
+    party_name?: string;
     sale_date: string;
     items: { item_id: string; quantity: number; unit: any; rate: number; amount: number }[];
     received_amount: number;

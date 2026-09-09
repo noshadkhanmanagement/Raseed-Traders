@@ -495,18 +495,20 @@ class LocalEngine {
   // --- TRANSACTIONAL PURCHASES ---
   public createPurchase(payload: {
     party_id: string;
+    party_name?: string;
     purchase_date: string;
     items: { item_id: string; quantity: number; unit: any; rate: number; amount: number }[];
     paid_amount: number;
   }): Purchase {
-    let party: Party | undefined = this.getPartyById(payload.party_id);
-    if (!party) {
-      party = this.data.parties.find((p) => p.name.includes('Walk-in') || p.name.includes('नकदी'));
+    let party: Party | undefined;
+    if (payload.party_name && payload.party_name.trim()) {
+      const trimmed = payload.party_name.trim();
+      party = this.data.parties.find((p) => p.name.toLowerCase() === trimmed.toLowerCase());
       if (!party) {
         party = {
-          id: `party-walkin-${Date.now()}`,
+          id: `party-${Date.now()}`,
           business_id: this.data.business.id,
-          name: 'Walk-in Party (नकदी पार्टी)',
+          name: trimmed,
           party_type: 'BOTH',
           opening_balance: 0,
           opening_balance_type: 'RECEIVABLE',
@@ -516,6 +518,26 @@ class LocalEngine {
           updated_at: new Date().toISOString(),
         };
         this.data.parties.push(party);
+      }
+    } else {
+      party = this.getPartyById(payload.party_id);
+      if (!party) {
+        party = this.data.parties.find((p) => p.name.includes('Walk-in') || p.name.includes('नकदी'));
+        if (!party) {
+          party = {
+            id: `party-walkin-${Date.now()}`,
+            business_id: this.data.business.id,
+            name: 'Walk-in Party (नकदी पार्टी)',
+            party_type: 'BOTH',
+            opening_balance: 0,
+            opening_balance_type: 'RECEIVABLE',
+            current_balance: 0,
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+          this.data.parties.push(party);
+        }
       }
     }
     const safeParty: Party = party;
@@ -645,18 +667,20 @@ class LocalEngine {
   // --- TRANSACTIONAL SALES ---
   public createSale(payload: {
     party_id: string;
+    party_name?: string;
     sale_date: string;
     items: { item_id: string; quantity: number; unit: any; rate: number; amount: number }[];
     received_amount: number;
   }): Sale {
-    let party: Party | undefined = this.getPartyById(payload.party_id);
-    if (!party) {
-      party = this.data.parties.find((p) => p.name.includes('Walk-in') || p.name.includes('नकदी'));
+    let party: Party | undefined;
+    if (payload.party_name && payload.party_name.trim()) {
+      const trimmed = payload.party_name.trim();
+      party = this.data.parties.find((p) => p.name.toLowerCase() === trimmed.toLowerCase());
       if (!party) {
         party = {
-          id: `party-walkin-${Date.now()}`,
+          id: `party-${Date.now()}`,
           business_id: this.data.business.id,
-          name: 'Walk-in Party (नकदी पार्टी)',
+          name: trimmed,
           party_type: 'BOTH',
           opening_balance: 0,
           opening_balance_type: 'RECEIVABLE',
@@ -666,6 +690,26 @@ class LocalEngine {
           updated_at: new Date().toISOString(),
         };
         this.data.parties.push(party);
+      }
+    } else {
+      party = this.getPartyById(payload.party_id);
+      if (!party) {
+        party = this.data.parties.find((p) => p.name.includes('Walk-in') || p.name.includes('नकदी'));
+        if (!party) {
+          party = {
+            id: `party-walkin-${Date.now()}`,
+            business_id: this.data.business.id,
+            name: 'Walk-in Party (नकदी पार्टी)',
+            party_type: 'BOTH',
+            opening_balance: 0,
+            opening_balance_type: 'RECEIVABLE',
+            current_balance: 0,
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+          this.data.parties.push(party);
+        }
       }
     }
     const safeParty: Party = party;

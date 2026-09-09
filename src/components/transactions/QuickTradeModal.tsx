@@ -24,6 +24,7 @@ export const QuickTradeModal: React.FC<QuickTradeModalProps> = ({
   const [selectedItemId, setSelectedItemId] = useState<string>('');
   const [quantity, setQuantity] = useState<string>('');
   const [rate, setRate] = useState<string>('');
+  const [partyName, setPartyName] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
 
@@ -37,6 +38,7 @@ export const QuickTradeModal: React.FC<QuickTradeModalProps> = ({
       setSelectedItemId(defaultId);
       setRate('');
       setQuantity('');
+      setPartyName('');
     }
   }, [isOpen, initialItemId, items]);
 
@@ -74,9 +76,11 @@ export const QuickTradeModal: React.FC<QuickTradeModalProps> = ({
 
     try {
       const today = getLocalDateString();
+      const customParty = partyName.trim() || undefined;
       if (isBuy) {
         await api.createPurchase({
           party_id: 'party-walkin',
+          party_name: customParty,
           purchase_date: today,
           items: [
             {
@@ -92,6 +96,7 @@ export const QuickTradeModal: React.FC<QuickTradeModalProps> = ({
       } else {
         await api.createSale({
           party_id: 'party-walkin',
+          party_name: customParty,
           sale_date: today,
           items: [
             {
@@ -153,7 +158,30 @@ export const QuickTradeModal: React.FC<QuickTradeModalProps> = ({
           </select>
         </div>
 
-        {/* 2. Item Count & Rate Row */}
+        {/* 2. Other Person / Vyapari Name Field */}
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300">
+              {isBuy
+                ? 'Vyapari / Bechnewala (विक्रेता / जिससे खरीद रहे हैं)'
+                : 'Grahak / Khareednewala (क्रेता / जिसको बेच रहे हैं)'}
+            </label>
+            <span className="text-[10px] font-medium text-zinc-400">वैकल्पिक (Optional)</span>
+          </div>
+          <input
+            type="text"
+            value={partyName}
+            onChange={(e) => setPartyName(e.target.value)}
+            placeholder={
+              isBuy
+                ? 'उदा: Ramesh, सुरेश, नकदी पार्टी (Cash)...'
+                : 'उदा: Gupta Traders, नकदी पार्टी (Cash)...'
+            }
+            className="w-full px-3.5 py-2.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-black dark:text-white text-xs font-semibold placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-all"
+          />
+        </div>
+
+        {/* 3. Item Count & Rate Row */}
         <div className="grid grid-cols-2 gap-3">
           {/* Count / Quantity */}
           <div>

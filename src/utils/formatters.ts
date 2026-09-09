@@ -51,6 +51,46 @@ export function formatDate(dateString?: string): string {
 }
 
 /**
+ * Format timestamp into Indian 12-hour time format: 08:35 PM or 01:15 AM
+ */
+export function formatTime12Hr(dateString?: string): string {
+  if (!dateString) return '';
+  const trimmed = dateString.trim();
+  // If it's a pure YYYY-MM-DD date without time, no time is available
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return '';
+
+  const d = new Date(trimmed);
+  if (isNaN(d.getTime())) return '';
+
+  return new Intl.DateTimeFormat('en-IN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  }).format(d).toUpperCase();
+}
+
+/**
+ * Format date and exact 12-hour Indian time: 10 Sep 2026 · 01:15 AM
+ */
+export function formatDateTime12Hr(dateString?: string, createdAtString?: string): string {
+  if (!dateString && !createdAtString) return '—';
+
+  const datePart = formatDate(dateString || createdAtString);
+
+  const timeSource =
+    createdAtString && !/^\d{4}-\d{2}-\d{2}$/.test(createdAtString.trim())
+      ? createdAtString
+      : dateString && !/^\d{4}-\d{2}-\d{2}$/.test(dateString.trim())
+        ? dateString
+        : createdAtString;
+
+  const timePart = formatTime12Hr(timeSource);
+
+  if (!timePart) return datePart;
+  return `${datePart} · ${timePart}`;
+}
+
+/**
  * Format Date object into local YYYY-MM-DD string without UTC offset shifts
  */
 export function getLocalDateString(d: Date = new Date()): string {

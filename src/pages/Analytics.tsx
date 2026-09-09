@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   IconDownload,
   IconPrinter,
@@ -7,11 +7,38 @@ import {
   IconCalculator,
   IconRefresh,
 } from '../components/common/Icons';
-import { PageHeader } from '../components/layout/PageHeader';
 import { api } from '../services/api';
-import { formatCurrency, formatQuantity, formatDate, downloadCSV, getLocalDateString, getDateRangePreset } from '../utils/formatters';
+import {
+  formatCurrency,
+  formatQuantity,
+  formatDate,
+  formatDateTime12Hr,
+  downloadCSV,
+  getLocalDateString,
+  getDateRangePreset,
+} from '../utils/formatters';
 
 type QuickRange = 'TODAY' | 'YESTERDAY' | 'THIS_MONTH' | 'LAST_MONTH' | 'LAST_30_DAYS';
+type TxFilter = 'ALL' | 'PURCHASE' | 'SALE';
+
+interface UnifiedTx {
+  id: string;
+  type: 'PURCHASE' | 'SALE';
+  date: string;
+  created_at?: string;
+  reference_number: string;
+  party_name: string;
+  total_amount: number;
+  total_weight?: number;
+  items: Array<{
+    item_name: string;
+    item_local_name?: string;
+    quantity: number;
+    unit: string;
+    rate: number;
+    amount: number;
+  }>;
+}
 
 export const Analytics: React.FC = () => {
   const today = getLocalDateString();
@@ -20,6 +47,7 @@ export const Analytics: React.FC = () => {
   const [endDate, setEndDate] = useState<string>(today);
   const [activeRange, setActiveRange] = useState<QuickRange | 'CUSTOM'>('TODAY');
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [txFilter, setTxFilter] = useState<TxFilter>('ALL');
 
   const [rangeData, setRangeData] = useState<{
     totalPurchasesCount: number;
@@ -54,21 +82,6 @@ export const Analytics: React.FC = () => {
     itemBreakdown: [],
   });
 
-  const [monthlyData, setMonthlyData] = useState<
-    Array<{
-      monthKey: string;
-      monthName: string;
-      monthHindi: string;
-      purchaseAmount: number;
-      purchaseWeight: number;
-      purchaseCount: number;
-      saleAmount: number;
-      saleWeight: number;
-      saleCount: number;
-      netDifference: number;
-    }>
-  >([]);
-
   const applyQuickRange = (range: QuickRange) => {
     const { startDate: s, endDate: e } = getDateRangePreset(range);
     setStartDate(s);
@@ -79,12 +92,8 @@ export const Analytics: React.FC = () => {
   const loadAnalytics = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [rangeRes, monthRes] = await Promise.all([
-        api.getDateRangeAnalytics(startDate, endDate),
-        api.getMonthlyAnalytics(new Date().getFullYear()),
-      ]);
+      const rangeRes = await api.getDateRangeAnalytics(startDate, endDate);
       setRangeData(rangeRes);
-      setMonthlyData(monthRes);
     } catch (err) {
       console.error('Failed to load analytics', err);
     } finally {
@@ -96,17 +105,82 @@ export const Analytics: React.FC = () => {
     loadAnalytics();
   }, [loadAnalytics]);
 
+  // Merge purchases and sales into chronological transaction feed (newest first)
+  const unifiedTransactions = useMemo<UnifiedTx[]>(() => {
+    const list: UnifiedTx[] = [];
+
+    rangeData.purchases.forEach((p) => {
+      list.push({
+        id: p.id,
+        type: 'PURCHASE',
+        date: p.purchase_date,
+        created_at: p.created_at || p.purchase_date,
+        reference_number: p.purchase_number || p.id,
+        party_name: p.party_name || 'Walk-in Party (नकदी पार्टी)',
+        total_amount: Number(p.total_amount || 0),
+        total_weight: Number(p.total_weight || 0),
+        items: (p.items || []).map((it: any) => ({
+          item_name: it.item_name || 'Item',
+          item_local_name: it.item_local_name,
+          quantity: Number(it.quantity || 0),
+          unit: it.unit || 'KG',
+          rate: Number(it.rate || 0),
+          amount: Number(it.amount || 0),
+        })),
+      });
+    });
+
+    rangeData.sales.forEach((s) => {
+      list.push({
+        id: s.id,
+        type: 'SALE',
+        date: s.sale_date,
+        created_at: s.created_at || s.sale_date,
+        reference_number: s.sale_number || s.id,
+        party_name: s.party_name || 'Buyer Party (क्रेता पार्टी)',
+        total_amount: Number(s.total_amount || 0),
+        total_weight: Number(s.total_weight || 0),
+        items: (s.items || []).map((it: any) => ({
+          item_name: it.item_name || 'Item',
+          item_local_name: it.item_local_name,
+          quantity: Number(it.quantity || 0),
+          unit: it.unit || 'KG',
+          rate: Number(it.rate || 0),
+          amount: Number(it.amount || 0),
+        })),
+      });
+    });
+
+    return list.sort((a, b) => {
+      const timeA = new Date(a.created_at || a.date).getTime();
+      const timeB = new Date(b.created_at || b.date).getTime();
+      return timeB - timeA;
+    });
+  }, [rangeData.purchases, rangeData.sales]);
+
+  const filteredTransactions = useMemo(() => {
+    if (txFilter === 'ALL') return unifiedTransactions;
+    return unifiedTransactions.filter((t) => t.type === txFilter);
+  }, [unifiedTransactions, txFilter]);
+
   const handleExportCSV = () => {
-    const headers = ['Material Name (सामग्री)', 'Buy Quantity (खरीदा)', 'Buy Amount (₹)', 'Sell Quantity (बेचा)', 'Sell Amount (₹)', 'Net Balance (₹)'];
-    const rows = rangeData.itemBreakdown.map((it) => [
-      `${it.itemName} (${it.localName})`,
-      `${it.buyQty} ${it.unit}`,
-      it.buyAmount,
-      `${it.sellQty} ${it.unit}`,
-      it.sellAmount,
-      it.sellAmount - it.buyAmount,
+    const headers = [
+      'Type',
+      'Date & Time',
+      'Party Name',
+      'Items',
+      'Total Weight (KG)',
+      'Total Amount (₹)',
+    ];
+    const rows = unifiedTransactions.map((tx) => [
+      tx.type === 'PURCHASE' ? 'Kharidi (Buy)' : 'Bikri (Sell)',
+      formatDateTime12Hr(tx.date, tx.created_at),
+      tx.party_name,
+      tx.items.map((it) => `${it.item_name}: ${it.quantity} ${it.unit} @ ₹${it.rate}`).join('; '),
+      tx.total_weight || '',
+      tx.type === 'PURCHASE' ? -tx.total_amount : tx.total_amount,
     ]);
-    downloadCSV(`Date_Calculator_${startDate}_to_${endDate}`, headers, rows);
+    downloadCSV(`Hisaab_${startDate}_to_${endDate}`, headers, rows);
   };
 
   const handlePrint = () => {
@@ -114,59 +188,70 @@ export const Analytics: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 page-enter">
-      <PageHeader
-        title="Analytics & Calculator (हिसाब-किताब)"
-        subtitle="Date to date total kharida, total becha and monthly calculations"
-        actions={
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handlePrint}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 btn-press"
-            >
-              <IconPrinter size={14} />
-              <span>Print (प्रिंट)</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleExportCSV}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-black dark:border-white bg-black dark:bg-white text-white dark:text-black hover:opacity-90 btn-press"
-            >
-              <IconDownload size={14} />
-              <span>Export CSV (डाउनलोड)</span>
-            </button>
+    <div className="space-y-5 page-enter max-w-4xl mx-auto font-[-apple-system,BlinkMacSystemFont,'SF_Pro_Text','SF_Pro_Display',sans-serif]">
+      {/* 1. Header - Apple iOS Large Title */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-black/5 dark:border-white/10">
+        <div>
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-zinc-100/90 dark:bg-zinc-800/80 text-[11px] font-semibold text-zinc-600 dark:text-zinc-300 mb-1.5 border border-black/5 dark:border-white/5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)]" />
+            <span>Exact 12-Hour Indian Timing Enabled</span>
           </div>
-        }
-      />
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-black dark:text-white tracking-tight">
+            Hisaab & Calculator (हिसाब)
+          </h1>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 font-medium">
+            Date-to-date calculation of purchases, sales, and profit with exact timestamps
+          </p>
+        </div>
 
-      {/* Date-to-Date Calculator iOS Widget */}
-      <div className="rounded-[26px] border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.5)] space-y-4">
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handlePrint}
+            className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-full border border-black/10 dark:border-white/15 bg-white/90 dark:bg-zinc-900/90 text-black dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800 active:scale-95 transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
+          >
+            <IconPrinter size={14} />
+            <span>Print</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleExportCSV}
+            className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-full bg-black dark:bg-white text-white dark:text-black hover:opacity-90 active:scale-95 transition-all shadow-[0_2px_8px_rgba(0,0,0,0.12)]"
+          >
+            <IconDownload size={14} />
+            <span>Export CSV</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 2. Apple iOS Inset Date Range Calculator Card */}
+      <div className="rounded-[24px] border border-black/5 dark:border-white/10 bg-white/85 dark:bg-[#1c1c1e]/85 backdrop-blur-2xl p-5 shadow-[0_4px_24px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.4)] space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="p-2.5 rounded-2xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/50 dark:border-zinc-700/50 text-black dark:text-white">
+            <div className="w-8 h-8 rounded-[10px] bg-zinc-100 dark:bg-zinc-800 border border-black/5 dark:border-white/10 text-black dark:text-white flex items-center justify-center shrink-0">
               <IconCalculator size={16} />
             </div>
             <div>
-              <h2 className="text-sm font-extrabold text-black dark:text-white tracking-tight font-sans">
-                Date Range Calculator (तारीख़ से तारीख़ का हिसाब)
+              <h2 className="text-sm font-bold text-black dark:text-white tracking-tight">
+                Date Range Calculator (तारीख़ से तारीख़)
               </h2>
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                Select custom dates to calculate total purchases, sales, and net balance
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">
+                Select custom period to calculate exact buying, selling & net balance
               </p>
             </div>
           </div>
 
-          {/* iOS Segmented Filter: Line 1 (Today / Yesterday) & Line 2 (This Month / Last Month / 30 Days) on Mobile */}
+          {/* 2-Tier iOS Segmented Control */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
             {/* Switch Line 1: Today & Yesterday */}
-            <div className="inline-flex items-center p-1 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200/60 dark:border-zinc-700/60 shrink-0">
+            <div className="inline-flex items-center p-1 rounded-[14px] bg-zinc-100/90 dark:bg-zinc-800/70 border border-black/5 dark:border-white/10 shrink-0">
               <button
                 type="button"
                 onClick={() => applyQuickRange('TODAY')}
-                className={`flex-1 sm:flex-initial px-3.5 py-1.5 text-xs rounded-full transition-all duration-150 text-center ${
+                className={`flex-1 sm:flex-initial px-3.5 py-1.5 text-xs rounded-[11px] transition-all duration-150 text-center ${
                   activeRange === 'TODAY'
-                    ? 'bg-white dark:bg-zinc-900 text-black dark:text-white font-extrabold shadow-xs'
+                    ? 'bg-white dark:bg-zinc-900 text-black dark:text-white font-bold shadow-[0_2px_8px_rgba(0,0,0,0.08)]'
                     : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white font-medium'
                 }`}
               >
@@ -175,9 +260,9 @@ export const Analytics: React.FC = () => {
               <button
                 type="button"
                 onClick={() => applyQuickRange('YESTERDAY')}
-                className={`flex-1 sm:flex-initial px-3.5 py-1.5 text-xs rounded-full transition-all duration-150 text-center ${
+                className={`flex-1 sm:flex-initial px-3.5 py-1.5 text-xs rounded-[11px] transition-all duration-150 text-center ${
                   activeRange === 'YESTERDAY'
-                    ? 'bg-white dark:bg-zinc-900 text-black dark:text-white font-extrabold shadow-xs'
+                    ? 'bg-white dark:bg-zinc-900 text-black dark:text-white font-bold shadow-[0_2px_8px_rgba(0,0,0,0.08)]'
                     : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white font-medium'
                 }`}
               >
@@ -186,13 +271,13 @@ export const Analytics: React.FC = () => {
             </div>
 
             {/* Switch Line 2: This Month, Last Month & 30 Days */}
-            <div className="inline-flex items-center p-1 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200/60 dark:border-zinc-700/60 shrink-0">
+            <div className="inline-flex items-center p-1 rounded-[14px] bg-zinc-100/90 dark:bg-zinc-800/70 border border-black/5 dark:border-white/10 shrink-0">
               <button
                 type="button"
                 onClick={() => applyQuickRange('THIS_MONTH')}
-                className={`flex-1 sm:flex-initial px-3.5 py-1.5 text-xs rounded-full transition-all duration-150 text-center ${
+                className={`flex-1 sm:flex-initial px-3.5 py-1.5 text-xs rounded-[11px] transition-all duration-150 text-center ${
                   activeRange === 'THIS_MONTH'
-                    ? 'bg-white dark:bg-zinc-900 text-black dark:text-white font-extrabold shadow-xs'
+                    ? 'bg-white dark:bg-zinc-900 text-black dark:text-white font-bold shadow-[0_2px_8px_rgba(0,0,0,0.08)]'
                     : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white font-medium'
                 }`}
               >
@@ -201,34 +286,34 @@ export const Analytics: React.FC = () => {
               <button
                 type="button"
                 onClick={() => applyQuickRange('LAST_MONTH')}
-                className={`flex-1 sm:flex-initial px-3.5 py-1.5 text-xs rounded-full transition-all duration-150 text-center ${
+                className={`flex-1 sm:flex-initial px-3.5 py-1.5 text-xs rounded-[11px] transition-all duration-150 text-center ${
                   activeRange === 'LAST_MONTH'
-                    ? 'bg-white dark:bg-zinc-900 text-black dark:text-white font-extrabold shadow-xs'
+                    ? 'bg-white dark:bg-zinc-900 text-black dark:text-white font-bold shadow-[0_2px_8px_rgba(0,0,0,0.08)]'
                     : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white font-medium'
                 }`}
               >
-                Last Month (पिछले महीने)
+                Last Month (पिछले)
               </button>
               <button
                 type="button"
                 onClick={() => applyQuickRange('LAST_30_DAYS')}
-                className={`flex-1 sm:flex-initial px-3.5 py-1.5 text-xs rounded-full transition-all duration-150 text-center ${
+                className={`flex-1 sm:flex-initial px-3.5 py-1.5 text-xs rounded-[11px] transition-all duration-150 text-center ${
                   activeRange === 'LAST_30_DAYS'
-                    ? 'bg-white dark:bg-zinc-900 text-black dark:text-white font-extrabold shadow-xs'
+                    ? 'bg-white dark:bg-zinc-900 text-black dark:text-white font-bold shadow-[0_2px_8px_rgba(0,0,0,0.08)]'
                     : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white font-medium'
                 }`}
               >
-                30 Days (30 दिन)
+                30 Days
               </button>
             </div>
           </div>
         </div>
 
         {/* Date pickers & Action Bar */}
-        <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          <div className="grid grid-cols-2 gap-2.5 flex-1 max-w-lg">
+        <div className="pt-3 border-t border-black/5 dark:border-white/10 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <div className="grid grid-cols-2 gap-2.5 flex-1 max-w-md">
             {/* From Date Cell */}
-            <div className="flex flex-col px-3.5 py-1.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/60 dark:border-zinc-700/60 focus-within:border-black dark:focus-within:border-white transition-colors">
+            <div className="flex flex-col px-3.5 py-1.5 rounded-[14px] bg-zinc-100/70 dark:bg-zinc-800/40 border border-black/5 dark:border-white/10">
               <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
                 From (शुरुआत)
               </label>
@@ -244,7 +329,7 @@ export const Analytics: React.FC = () => {
             </div>
 
             {/* To Date Cell */}
-            <div className="flex flex-col px-3.5 py-1.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/60 dark:border-zinc-700/60 focus-within:border-black dark:focus-within:border-white transition-colors">
+            <div className="flex flex-col px-3.5 py-1.5 rounded-[14px] bg-zinc-100/70 dark:bg-zinc-800/40 border border-black/5 dark:border-white/10">
               <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
                 To (अंतिम)
               </label>
@@ -263,7 +348,7 @@ export const Analytics: React.FC = () => {
           <button
             type="button"
             onClick={loadAnalytics}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-bold rounded-2xl bg-black dark:bg-white text-white dark:text-black hover:opacity-90 active:scale-[0.97] transition-all shadow-xs shrink-0"
+            className="flex items-center justify-center gap-2 px-6 py-2.5 text-xs font-bold rounded-full bg-black dark:bg-white text-white dark:text-black hover:opacity-90 active:scale-95 transition-all shadow-[0_2px_8px_rgba(0,0,0,0.12)] shrink-0"
           >
             <IconRefresh size={14} className={isLoading ? 'animate-spin' : ''} />
             <span>Calculate (हिसाब निकालें)</span>
@@ -271,20 +356,20 @@ export const Analytics: React.FC = () => {
         </div>
       </div>
 
-      {/* Date Range Calculated Result Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+      {/* 3. Apple Health / Wallet Style KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {/* Total Purchases Card */}
-        <div className="rounded-[26px] border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.5)]">
+        <div className="rounded-[22px] border border-black/5 dark:border-white/10 bg-white/85 dark:bg-[#1c1c1e]/85 backdrop-blur-2xl p-4 sm:p-5 shadow-[0_4px_24px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.4)]">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
               Total Khareeda (कुल खरीदी)
             </span>
-            <span className="p-2 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white">
-              <IconArrowDownLeft size={16} />
+            <span className="w-7 h-7 rounded-full bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white flex items-center justify-center">
+              <IconArrowDownLeft size={15} />
             </span>
           </div>
-          <div className="mt-2">
-            <div className="text-2xl sm:text-3xl font-black text-black dark:text-white font-sans">
+          <div className="mt-2.5">
+            <div className="text-2xl sm:text-3xl font-extrabold text-black dark:text-white tabular-nums tracking-tight">
               {formatCurrency(rangeData.totalPurchaseAmount)}
             </div>
             <div className="mt-1 flex items-center justify-between text-[11px] text-zinc-500 font-medium">
@@ -295,17 +380,17 @@ export const Analytics: React.FC = () => {
         </div>
 
         {/* Total Sales Card */}
-        <div className="rounded-[26px] border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.5)]">
+        <div className="rounded-[22px] border border-black/5 dark:border-white/10 bg-white/85 dark:bg-[#1c1c1e]/85 backdrop-blur-2xl p-4 sm:p-5 shadow-[0_4px_24px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.4)]">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
               Total Becha (कुल बिक्री)
             </span>
-            <span className="p-2 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white">
-              <IconArrowUpRight size={16} />
+            <span className="w-7 h-7 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+              <IconArrowUpRight size={15} />
             </span>
           </div>
-          <div className="mt-2">
-            <div className="text-2xl sm:text-3xl font-black text-black dark:text-white font-sans">
+          <div className="mt-2.5">
+            <div className="text-2xl sm:text-3xl font-extrabold text-black dark:text-white tabular-nums tracking-tight">
               {formatCurrency(rangeData.totalSaleAmount)}
             </div>
             <div className="mt-1 flex items-center justify-between text-[11px] text-zinc-500 font-medium">
@@ -315,39 +400,178 @@ export const Analytics: React.FC = () => {
           </div>
         </div>
 
-        {/* Net Difference Card */}
-        <div className="rounded-[26px] border border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.5)]">
+        {/* Net Balance Card */}
+        <div className="rounded-[22px] border border-black/5 dark:border-white/10 bg-white/85 dark:bg-[#1c1c1e]/85 backdrop-blur-2xl p-4 sm:p-5 shadow-[0_4px_24px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.4)]">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              Net Balance (शुद्ध अंतर / मुनाफा)
+              Net Balance (शुद्ध अंतर)
             </span>
-            <span className="p-2 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white">
-              <IconCalculator size={16} />
+            <span className="w-7 h-7 rounded-full bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white flex items-center justify-center">
+              <IconCalculator size={15} />
             </span>
           </div>
-          <div className="mt-2">
-            <div className={`text-2xl sm:text-3xl font-black font-sans ${rangeData.netBalance >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-              {rangeData.netBalance >= 0 ? '+' : ''}{formatCurrency(rangeData.netBalance)}
+          <div className="mt-2.5">
+            <div
+              className={`text-2xl sm:text-3xl font-extrabold tabular-nums tracking-tight ${
+                rangeData.netBalance >= 0
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : 'text-rose-600 dark:text-rose-400'
+              }`}
+            >
+              {rangeData.netBalance >= 0 ? '+' : ''}
+              {formatCurrency(rangeData.netBalance)}
             </div>
             <div className="mt-1 text-[11px] text-zinc-500 font-medium">
-              {rangeData.netBalance >= 0 ? 'Sales exceed Purchases (Surplus)' : 'Purchases exceed Sales (Inventory)'}
+              {rangeData.netBalance >= 0
+                ? 'Sales exceed Purchases (Surplus)'
+                : 'Purchases exceed Sales (Deficit)'}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Material-wise Breakdown */}
-      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 overflow-hidden shadow-xs">
-        <div className="px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/70 dark:bg-zinc-900/50">
+      {/* 4. EXACT 12-HOUR INDIAN TIMING TRANSACTION ACTIVITY FEED */}
+      <div className="rounded-[24px] border border-black/5 dark:border-white/10 bg-white/85 dark:bg-[#1c1c1e]/85 backdrop-blur-2xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.4)] overflow-hidden">
+        {/* Header with Segmented Filter */}
+        <div className="px-5 py-4 border-b border-black/5 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h3 className="text-xs sm:text-sm font-bold text-black dark:text-white">
-              Material-wise Breakdown ({formatDate(startDate)} to {formatDate(endDate)})
+            <h3 className="text-sm font-bold text-black dark:text-white tracking-tight">
+              Transaction Activity Feed (लेन-देन समय विवरण)
             </h3>
-            <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-              Total bought & sold during this period
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">
+              Every buy & sell entry with exact 12-hour Indian timing
             </p>
           </div>
-          <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+
+          {/* Segmented Filter Pills */}
+          <div className="inline-flex p-1 rounded-[14px] bg-zinc-100/90 dark:bg-zinc-800/70 border border-black/5 dark:border-white/10 shrink-0 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => setTxFilter('ALL')}
+              className={`px-3 py-1 rounded-[11px] text-xs font-semibold transition-all ${
+                txFilter === 'ALL'
+                  ? 'bg-white dark:bg-zinc-900 text-black dark:text-white font-bold shadow-[0_2px_8px_rgba(0,0,0,0.08)]'
+                  : 'text-zinc-500 hover:text-black dark:hover:text-white'
+              }`}
+            >
+              All ({unifiedTransactions.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setTxFilter('PURCHASE')}
+              className={`px-3 py-1 rounded-[11px] text-xs font-semibold transition-all ${
+                txFilter === 'PURCHASE'
+                  ? 'bg-white dark:bg-zinc-900 text-black dark:text-white font-bold shadow-[0_2px_8px_rgba(0,0,0,0.08)]'
+                  : 'text-zinc-500 hover:text-black dark:hover:text-white'
+              }`}
+            >
+              Kharidi ({rangeData.purchases.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setTxFilter('SALE')}
+              className={`px-3 py-1 rounded-[11px] text-xs font-semibold transition-all ${
+                txFilter === 'SALE'
+                  ? 'bg-white dark:bg-zinc-900 text-black dark:text-white font-bold shadow-[0_2px_8px_rgba(0,0,0,0.08)]'
+                  : 'text-zinc-500 hover:text-black dark:hover:text-white'
+              }`}
+            >
+              Bikri ({rangeData.sales.length})
+            </button>
+          </div>
+        </div>
+
+        {/* Transactions List */}
+        <div className="divide-y divide-zinc-100 dark:divide-zinc-800/80 max-h-[55vh] overflow-y-auto overscroll-contain">
+          {filteredTransactions.length === 0 ? (
+            <div className="py-16 text-center text-xs text-zinc-400 font-medium">
+              No transactions recorded in this date range.
+            </div>
+          ) : (
+            filteredTransactions.map((tx) => {
+              const isPurchase = tx.type === 'PURCHASE';
+              return (
+                <div
+                  key={tx.id}
+                  className="px-4 sm:px-5 py-3.5 flex items-start justify-between gap-3 hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-colors"
+                >
+                  {/* Left: Badge + Date & Time + Items */}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-md shrink-0 ${
+                          isPurchase
+                            ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
+                            : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400'
+                        }`}
+                      >
+                        {isPurchase ? 'BUY (खरीदी)' : 'SELL (बिक्री)'}
+                      </span>
+                      <span className="text-xs font-bold text-black dark:text-white tracking-tight">
+                        {formatDateTime12Hr(tx.date, tx.created_at)}
+                      </span>
+                      {tx.party_name && (
+                        <span className="text-[11px] text-zinc-400 dark:text-zinc-500 truncate">
+                          · {tx.party_name}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Material line items */}
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {tx.items.map((it, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-zinc-100/80 dark:bg-zinc-800/60 border border-black/5 dark:border-white/5 text-zinc-700 dark:text-zinc-300"
+                        >
+                          <strong className="text-black dark:text-white font-bold">{it.item_name}</strong>
+                          {it.item_local_name && (
+                            <span className="text-zinc-400 font-normal">({it.item_local_name})</span>
+                          )}
+                          <span>· {it.quantity} {it.unit}</span>
+                          <span className="font-semibold text-zinc-500">@{formatCurrency(it.rate)}</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Right: Total Amount */}
+                  <div className="text-right shrink-0">
+                    <div
+                      className={`text-sm sm:text-base font-extrabold tabular-nums tracking-tight ${
+                        isPurchase
+                          ? 'text-black dark:text-white'
+                          : 'text-emerald-600 dark:text-emerald-400'
+                      }`}
+                    >
+                      {isPurchase ? '-' : '+'}
+                      {formatCurrency(tx.total_amount)}
+                    </div>
+                    {tx.total_weight ? (
+                      <div className="text-[11px] text-zinc-400 font-medium mt-0.5">
+                        {tx.total_weight} KG
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      {/* 5. Apple Inset Grouped Material-wise Breakdown */}
+      <div className="rounded-[24px] border border-black/5 dark:border-white/10 bg-white/85 dark:bg-[#1c1c1e]/85 backdrop-blur-2xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.4)] overflow-hidden">
+        <div className="px-5 py-4 border-b border-black/5 dark:border-white/10 flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-bold text-black dark:text-white tracking-tight">
+              Material-wise Aggregate ({formatDate(startDate)} to {formatDate(endDate)})
+            </h3>
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">
+              Total quantity and amount summary per scrap material
+            </p>
+          </div>
+          <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
             {rangeData.itemBreakdown.length} Items
           </span>
         </div>
@@ -355,19 +579,19 @@ export const Analytics: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100/60 dark:bg-zinc-900/80 text-[11px] text-zinc-500 dark:text-zinc-400 uppercase tracking-wider font-bold">
-                <th className="px-4 py-2.5">Material (सामग्री)</th>
-                <th className="px-4 py-2.5 text-right">Khareeda Qty</th>
-                <th className="px-4 py-2.5 text-right">Khareeda (₹)</th>
-                <th className="px-4 py-2.5 text-right">Becha Qty</th>
-                <th className="px-4 py-2.5 text-right">Becha (₹)</th>
-                <th className="px-4 py-2.5 text-right">Net Balance (₹)</th>
+              <tr className="border-b border-black/5 dark:border-white/10 bg-zinc-50/70 dark:bg-zinc-900/50 text-[11px] text-zinc-500 dark:text-zinc-400 uppercase tracking-wider font-bold">
+                <th className="px-5 py-3">Material (सामग्री)</th>
+                <th className="px-5 py-3 text-right">Khareeda Qty</th>
+                <th className="px-5 py-3 text-right">Khareeda (₹)</th>
+                <th className="px-5 py-3 text-right">Becha Qty</th>
+                <th className="px-5 py-3 text-right">Becha (₹)</th>
+                <th className="px-5 py-3 text-right">Net Balance (₹)</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800/80 text-black dark:text-white">
+            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/80 text-black dark:text-white">
               {rangeData.itemBreakdown.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-xs text-zinc-400">
+                  <td colSpan={6} className="px-5 py-12 text-center text-xs text-zinc-400 font-medium">
                     No transactions found in this date range.
                   </td>
                 </tr>
@@ -375,28 +599,35 @@ export const Analytics: React.FC = () => {
                 rangeData.itemBreakdown.map((row) => {
                   const diff = row.sellAmount - row.buyAmount;
                   return (
-                    <tr key={row.itemId} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition-colors">
-                      <td className="px-4 py-2.5 font-bold">
+                    <tr key={row.itemId} className="hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-colors">
+                      <td className="px-5 py-3.5 font-bold">
                         <span>{row.itemName}</span>
                         {row.localName && (
                           <span className="ml-1.5 text-zinc-400 font-normal">({row.localName})</span>
                         )}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-medium tabular-nums font-sans">
+                      <td className="px-5 py-3.5 text-right font-medium tabular-nums font-sans">
                         {row.buyQty > 0 ? `${row.buyQty} ${row.unit}` : '—'}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-medium tabular-nums font-sans">
+                      <td className="px-5 py-3.5 text-right font-medium tabular-nums font-sans">
                         {row.buyAmount > 0 ? formatCurrency(row.buyAmount) : '—'}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-medium tabular-nums font-sans">
+                      <td className="px-5 py-3.5 text-right font-medium tabular-nums font-sans">
                         {row.sellQty > 0 ? `${row.sellQty} ${row.unit}` : '—'}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-medium tabular-nums font-sans">
+                      <td className="px-5 py-3.5 text-right font-medium tabular-nums font-sans">
                         {row.sellAmount > 0 ? formatCurrency(row.sellAmount) : '—'}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-extrabold tabular-nums font-sans">
-                        <span className={diff >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}>
-                          {diff >= 0 ? '+' : ''}{formatCurrency(diff)}
+                      <td className="px-5 py-3.5 text-right font-extrabold tabular-nums font-sans">
+                        <span
+                          className={
+                            diff >= 0
+                              ? 'text-emerald-600 dark:text-emerald-400'
+                              : 'text-rose-600 dark:text-rose-400'
+                          }
+                        >
+                          {diff >= 0 ? '+' : ''}
+                          {formatCurrency(diff)}
                         </span>
                       </td>
                     </tr>

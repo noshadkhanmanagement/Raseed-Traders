@@ -11,7 +11,7 @@ import {
 import { BottomSheet } from '../common/BottomSheet';
 import { api } from '../../services/api';
 import { Purchase, Sale } from '../../types';
-import { formatCurrency, formatDate } from '../../utils/formatters';
+import { formatCurrency, formatDate, formatDateTime12Hr } from '../../utils/formatters';
 
 interface TransactionAdjustmentModalProps {
   isOpen: boolean;
@@ -188,7 +188,7 @@ export const TransactionAdjustmentModal: React.FC<TransactionAdjustmentModalProp
           <div className="flex items-center gap-3 text-zinc-500 text-[11px]">
             <span className="flex items-center gap-1">
               <IconCalendar size={14} />
-              {formatDate(docDate)}
+              {formatDateTime12Hr(docDate, transaction?.created_at)}
             </span>
             <span className="flex items-center gap-1">
               <IconUser size={14} />
