@@ -123,7 +123,7 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                     No purchase records found for {item.name}.
                   </div>
                 ) : (
-                  <div className="divide-y divide-zinc-100 dark:divide-zinc-800/80 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl overflow-hidden bg-white dark:bg-zinc-900/60">
+                  <div className="divide-y divide-zinc-100 dark:divide-zinc-800/80 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl overflow-hidden max-h-[48vh] overflow-y-auto overscroll-contain bg-white dark:bg-zinc-900/60">
                     {purchases.map((p, idx) => (
                       <div
                         key={p.purchase_id || idx}
@@ -161,7 +161,7 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                     No sale records found for {item.name}.
                   </div>
                 ) : (
-                  <div className="divide-y divide-zinc-100 dark:divide-zinc-800/80 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl overflow-hidden bg-white dark:bg-zinc-900/60">
+                  <div className="divide-y divide-zinc-100 dark:divide-zinc-800/80 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl overflow-hidden max-h-[48vh] overflow-y-auto overscroll-contain bg-white dark:bg-zinc-900/60">
                     {sales.map((s, idx) => (
                       <div
                         key={s.sale_id || idx}

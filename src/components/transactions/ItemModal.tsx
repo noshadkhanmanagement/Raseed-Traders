@@ -102,21 +102,12 @@ export const ItemModal: React.FC<ItemModalProps> = ({
       subtitle="Enter details, spot purchase rate, and unit"
       maxWidth="max-w-lg"
     >
-      <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+      <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
         {errorMessage && (
           <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 font-semibold">
             {errorMessage}
           </div>
         )}
-
-        {/* Dynamic Rate Guidance Banner */}
-        <div className="p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 flex items-start gap-2.5">
-          <IconAlert size={16} className="text-zinc-600 dark:text-zinc-300 shrink-0 mt-0.5" />
-          <div className="text-[11px] leading-relaxed text-zinc-600 dark:text-zinc-400">
-            <span className="font-bold text-black dark:text-white">फ्लोटिंग रेट (Spot Pricing): </span>
-            स्क्रैप के दाम हर दिन व गाड़ी के अनुसार बदलते हैं। इस समय की सटीक खरीद दर (Spot Purchase Rate) यहाँ सेट करें ताकि खरीद बिल में यह अपने आप आ जाए।
-          </div>
-        </div>
 
         {/* Names Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

@@ -207,36 +207,36 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
     <BottomSheet
       isOpen={isOpen}
       onClose={onClose}
-      title="Adjustment & Deletion (सुधार व विलोपन)"
-      subtitle="एक ही स्थान से वजन, भाव व सामग्री का पूर्ण प्रबंधन करें"
-      maxWidth="max-w-xl"
+      title={selectedItem ? `Edit: ${selectedItem.name} (${selectedItem.local_name})` : 'Edit Material (सामग्री सुधार)'}
+      subtitle={selectedItem ? `Current Stock: ${currentStock.toLocaleString('en-IN')} ${unit} · Unit: ${unit}` : 'Update stock and spot rates'}
+      maxWidth="max-w-md"
     >
-      <div className="space-y-4">
+      <div className="space-y-3.5">
         {/* Status Messages */}
         {errorMessage && (
-          <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs font-semibold flex items-center gap-2">
-            <IconAlert size={16} className="shrink-0" />
+          <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs font-semibold flex items-center gap-2">
+            <IconAlert size={15} className="shrink-0" />
             <span>{errorMessage}</span>
           </div>
         )}
 
         {successMessage && (
-          <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2">
-            <IconCheck size={16} className="shrink-0" />
+          <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2">
+            <IconCheck size={15} className="shrink-0" />
             <span>{successMessage}</span>
           </div>
         )}
 
-        {/* 1. Material Selector & Summary Banner */}
-        <div className="p-3.5 rounded-2xl bg-zinc-100/80 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-3">
+        {/* Material Selector (only if multiple items and no preselected item or user wants to switch) */}
+        {!preselectedItemId && (
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-500 mb-1.5">
+            <label className="block text-[11px] font-bold text-zinc-500 mb-1">
               Select Material (सामग्री चुनें)
             </label>
             <select
               value={selectedItemId}
               onChange={(e) => handleItemChange(e.target.value)}
-              className="w-full h-10 px-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-xs font-bold text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-all"
+              className="w-full h-9 px-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-xs font-bold text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-all"
             >
               {items.map((it) => (
                 <option key={it.id} value={it.id}>
@@ -245,338 +245,126 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
               ))}
             </select>
           </div>
+        )}
 
-          {selectedItem && (
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-xs">
-              <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded-md bg-black dark:bg-white text-white dark:text-black tabular-nums font-sans font-extrabold text-[10px]">
-                  {selectedItem.default_unit}
-                </span>
-                <span className="font-extrabold text-black dark:text-white">
-                  {selectedItem.name}{' '}
-                  <span className="text-zinc-500 font-normal">({selectedItem.local_name})</span>
-                </span>
-              </div>
-              <div className="flex items-center gap-1 tabular-nums font-sans">
-                <span className="text-zinc-500 text-[11px]">Current Available:</span>
-                <span className="font-extrabold text-sm text-black dark:text-white">
-                  {currentStock.toLocaleString('en-IN')} {unit}
-                </span>
-              </div>
+        <form onSubmit={handleSave} className="space-y-3.5">
+          {/* Stock Count Field */}
+          <div className="p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-bold text-zinc-700 dark:text-zinc-300">
+                Physical Stock (वास्तविक स्टॉक)
+              </span>
+              <span className="text-zinc-500 text-[11px]">
+                Current: <strong className="text-black dark:text-white tabular-nums">{currentStock.toLocaleString('en-IN')}</strong> {unit}
+              </span>
             </div>
-          )}
-        </div>
-
-        <form onSubmit={handleSave} className="space-y-4">
-          {/* 2. SECTION: WEIGHT & STOCK ADJUSTMENT */}
-          <div className="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 space-y-3 shadow-xs">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 font-extrabold text-xs text-black dark:text-white">
-                <IconStock size={16} className="text-zinc-500" />
-                <span>1. Weight / Stock Adjustment (वज़न व स्टॉक सुधार)</span>
-              </div>
-              <div className="flex rounded-lg border border-zinc-200 dark:border-zinc-800 p-0.5 bg-zinc-100 dark:bg-zinc-900 text-[11px]">
-                <button
-                  type="button"
-                  onClick={() => setStockMode('DIRECT')}
-                  className={`px-2.5 py-1 rounded-md font-bold transition-colors ${
-                    stockMode === 'DIRECT'
-                      ? 'bg-white dark:bg-black text-black dark:text-white shadow-xs'
-                      : 'text-zinc-500 hover:text-black dark:hover:text-white'
+            <div className="relative">
+              <input
+                type="number"
+                step="any"
+                min="0"
+                value={directStockInput}
+                onChange={(e) => setDirectStockInput(e.target.value)}
+                placeholder="Enter new stock count..."
+                className="w-full h-10 px-3 pr-14 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm font-extrabold tabular-nums font-sans text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-all"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 tabular-nums font-sans text-xs font-bold text-zinc-400 pointer-events-none">
+                {unit}
+              </span>
+            </div>
+            {Math.abs(calculatedStockChange) > 0.0001 && (
+              <div className="text-[10px] font-medium text-zinc-500 flex items-center justify-between px-1">
+                <span>Difference (अंतर):</span>
+                <span
+                  className={`tabular-nums font-sans font-bold ${
+                    calculatedStockChange > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
                   }`}
                 >
-                  Direct Set (सीधा वज़न)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setStockMode('DELTA')}
-                  className={`px-2.5 py-1 rounded-md font-bold transition-colors ${
-                    stockMode === 'DELTA'
-                      ? 'bg-white dark:bg-black text-black dark:text-white shadow-xs'
-                      : 'text-zinc-500 hover:text-black dark:hover:text-white'
-                  }`}
-                >
-                  +/- Quick (जोड़ें/घटाएं)
-                </button>
-              </div>
-            </div>
-
-            {stockMode === 'DIRECT' ? (
-              <div className="space-y-2">
-                <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                  Total Current Physical Stock ({unit}) — नया वास्तविक स्टॉक दर्ज करें
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    step="any"
-                    min="0"
-                    value={directStockInput}
-                    onChange={(e) => setDirectStockInput(e.target.value)}
-                    placeholder="0.00"
-                    className="w-full h-10 px-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm font-extrabold tabular-nums font-sans text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-all"
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 tabular-nums font-sans text-xs font-bold text-zinc-400">
-                    {unit}
-                  </span>
-                </div>
-                {Math.abs(calculatedStockChange) > 0.0001 && (
-                  <div className="text-[11px] font-medium text-zinc-500 flex items-center justify-between px-1">
-                    <span>अंतर (Stock Adjustment Difference):</span>
-                    <span
-                      className={`tabular-nums font-sans font-bold ${
-                        calculatedStockChange > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
-                      }`}
-                    >
-                      {calculatedStockChange > 0 ? `+${calculatedStockChange.toLocaleString('en-IN')}` : calculatedStockChange.toLocaleString('en-IN')} {unit}
-                    </span>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setDeltaDirection('ADD')}
-                    className={`py-2 px-3 rounded-xl border text-xs font-bold transition-colors ${
-                      deltaDirection === 'ADD'
-                        ? 'border-black dark:border-white bg-black dark:bg-white text-white dark:text-black'
-                        : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400'
-                    }`}
-                  >
-                    + Add to Stock (माल जोड़ें)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDeltaDirection('DEDUCT')}
-                    className={`py-2 px-3 rounded-xl border text-xs font-bold transition-colors ${
-                      deltaDirection === 'DEDUCT'
-                        ? 'border-black dark:border-white bg-black dark:bg-white text-white dark:text-black'
-                        : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400'
-                    }`}
-                  >
-                    - Deduct Stock (माल घटाएं)
-                  </button>
-                </div>
-                <div className="relative">
-                  <input
-                    type="number"
-                    step="any"
-                    min="0"
-                    value={deltaQuantityInput}
-                    onChange={(e) => setDeltaQuantityInput(e.target.value)}
-                    placeholder={`Quantity to ${deltaDirection === 'ADD' ? 'add' : 'deduct'}...`}
-                    className="w-full h-10 px-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm font-extrabold tabular-nums font-sans text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-all"
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 tabular-nums font-sans text-xs font-bold text-zinc-400">
-                    {unit}
-                  </span>
-                </div>
-                {deltaQuantityInput && (
-                  <div className="text-[11px] font-medium text-zinc-500 flex items-center justify-between px-1">
-                    <span>अंतिम स्टॉक (Resulting New Stock):</span>
-                    <span className="tabular-nums font-sans font-bold text-black dark:text-white">
-                      {computedNewStock.toLocaleString('en-IN')} {unit}
-                    </span>
-                  </div>
-                )}
+                  {calculatedStockChange > 0 ? `+${calculatedStockChange.toLocaleString('en-IN')}` : calculatedStockChange.toLocaleString('en-IN')} {unit}
+                </span>
               </div>
             )}
+          </div>
 
-            {/* Optional Reason */}
+          {/* Spot Rates Field (Purchase & Sale Rates side-by-side) */}
+          <div className="grid grid-cols-2 gap-2.5">
             <div>
-              <label className="block text-[11px] font-medium text-zinc-500 mb-1">
-                Reason / Remark (कारण / टिप्पणी)
+              <label className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 mb-1">
+                Spot Buy Rate (खरीद भाव)
               </label>
-              <input
-                type="text"
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                placeholder="उदा. कांटा चेकिंग, गोदाम मिलान, नमी/छंटाई..."
-                className="w-full h-9 px-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 text-xs text-black dark:text-white outline-none focus:border-zinc-400 dark:focus:border-zinc-600 transition-colors"
-              />
-            </div>
-          </div>
-
-          {/* 3. SECTION: PRICE & PIECE RATE ADJUSTMENT */}
-          <div className="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 space-y-3 shadow-xs">
-            <div className="flex items-center gap-1.5 font-extrabold text-xs text-black dark:text-white">
-              <IconAdjust size={16} className="text-zinc-500" />
-              <span>2. Price & Piece Rate Adjustment (दर / भाव सुधार)</span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                  Spot Purchase Rate (चालू खरीद भाव ₹/{unit})
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 tabular-nums font-sans text-xs font-bold text-zinc-400">
-                    ₹
-                  </span>
-                  <input
-                    type="number"
-                    step="any"
-                    min="0"
-                    value={purchaseRateInput}
-                    onChange={(e) => setPurchaseRateInput(e.target.value)}
-                    placeholder="0.00"
-                    className="w-full h-10 pl-7 pr-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm font-extrabold tabular-nums font-sans text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-all"
-                  />
-                </div>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-zinc-400 pointer-events-none">
+                  ₹
+                </span>
+                <input
+                  type="number"
+                  step="any"
+                  min="0"
+                  value={purchaseRateInput}
+                  onChange={(e) => setPurchaseRateInput(e.target.value)}
+                  placeholder="0"
+                  className="w-full h-10 pl-6 pr-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-bold tabular-nums font-sans text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white"
+                />
               </div>
+            </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                  Spot Sale Rate (चालू बिक्री भाव ₹/{unit})
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 tabular-nums font-sans text-xs font-bold text-zinc-400">
-                    ₹
-                  </span>
-                  <input
-                    type="number"
-                    step="any"
-                    min="0"
-                    value={saleRateInput}
-                    onChange={(e) => setSaleRateInput(e.target.value)}
-                    placeholder="0.00"
-                    className="w-full h-10 pl-7 pr-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm font-extrabold tabular-nums font-sans text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-all"
-                  />
-                </div>
+            <div>
+              <label className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 mb-1">
+                Spot Sale Rate (बिक्री भाव)
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-zinc-400 pointer-events-none">
+                  ₹
+                </span>
+                <input
+                  type="number"
+                  step="any"
+                  min="0"
+                  value={saleRateInput}
+                  onChange={(e) => setSaleRateInput(e.target.value)}
+                  placeholder="0"
+                  className="w-full h-10 pl-6 pr-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-bold tabular-nums font-sans text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white"
+                />
               </div>
             </div>
           </div>
 
-          {/* Action Buttons: Cancel & Save */}
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white rounded-xl transition-colors"
-            >
-              Cancel (रद्द करें)
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-5 py-2.5 rounded-xl bg-black dark:bg-white text-white dark:text-black text-xs font-bold hover:opacity-90 disabled:opacity-50 btn-press shadow-xs"
-            >
-              {isSubmitting ? 'Saving Adjustments...' : 'Save Adjustments (सुधार सुरक्षित करें)'}
-            </button>
-          </div>
+          {/* Save Button */}
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full py-3 px-4 rounded-2xl bg-black dark:bg-white text-white dark:text-black text-xs font-extrabold hover:opacity-90 disabled:opacity-50 transition-all btn-press shadow-xs"
+          >
+            {isSubmitting ? 'Saving...' : 'Save Adjustments (सुधार सुरक्षित करें)'}
+          </button>
         </form>
 
-        {/* 3. SECTION: DELETION & COUNT RESET OPTIONS (2 Distinct Options) */}
-        <div className="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/30 space-y-3">
-          <div className="flex items-center gap-1.5 font-bold text-xs text-black dark:text-white">
-            <IconDelete size={16} className="text-zinc-500" />
-            <span>3. Deletion & Count Reset Options (विलोपन व गिनती रीसेट विकल्प)</span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-            {/* OPTION 1: Delete Counts Only / Reset Stock to 0 */}
-            <div className="p-3.5 rounded-xl border border-amber-300/70 dark:border-amber-900/50 bg-amber-50/60 dark:bg-amber-950/20 flex flex-col justify-between space-y-3">
-              <div>
-                <div className="flex items-center gap-1.5 text-xs font-extrabold text-amber-900 dark:text-amber-200">
-                  <IconReset size={14} className="text-amber-600 dark:text-amber-400 shrink-0" />
-                  <span>1. Delete Counts (स्टॉक 0 करें)</span>
-                </div>
-                <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-1.5 leading-snug">
-                  सामग्री लिस्ट में सुरक्षित रहेगी, केवल इसका गोदाम स्टॉक शून्य (<span className="font-bold tabular-nums font-sans">0 {unit}</span>) हो जाएगा।
-                </p>
-              </div>
-
-              {!isConfirmingResetCounts ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsConfirmingResetCounts(true);
-                    setIsConfirmingDelete(false);
-                  }}
-                  className="w-full py-2 px-3 rounded-xl border border-amber-400 dark:border-amber-700 bg-white dark:bg-zinc-900 text-amber-800 dark:text-amber-300 text-xs font-bold hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors flex items-center justify-center gap-1.5 shadow-xs"
-                >
-                  <IconReset size={14} />
-                  <span>Reset Count to 0 (गिनती 0 करें)</span>
-                </button>
-              ) : (
-                <div className="p-2.5 rounded-lg bg-amber-100/70 dark:bg-amber-900/40 border border-amber-300 dark:border-amber-700 space-y-2">
-                  <p className="text-[11px] font-bold text-amber-900 dark:text-amber-200 leading-tight">
-                    क्या आप "{selectedItem?.name}" का स्टॉक 0 करना चाहते हैं?
-                  </p>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => setIsConfirmingResetCounts(false)}
-                      className="flex-1 py-1 px-2 rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-[10px] font-semibold text-zinc-700 dark:text-zinc-200"
-                    >
-                      रद्द करें
-                    </button>
-                    <button
-                      type="button"
-                      disabled={isResettingCounts}
-                      onClick={handleResetCounts}
-                      className="flex-1 py-1 px-2 rounded-md bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-bold disabled:opacity-50 btn-press"
-                    >
-                      {isResettingCounts ? 'Resetting...' : 'हाँ, 0 करें'}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* OPTION 2: Delete Item Permanently from List */}
-            <div className="p-3.5 rounded-xl border border-red-300/70 dark:border-red-900/50 bg-red-50/60 dark:bg-red-950/20 flex flex-col justify-between space-y-3">
-              <div>
-                <div className="flex items-center gap-1.5 text-xs font-extrabold text-red-900 dark:text-red-200">
-                  <IconDelete size={14} className="text-red-600 dark:text-red-400 shrink-0" />
-                  <span>2. Delete from List (लिस्ट से हटाएं)</span>
-                </div>
-                <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-1.5 leading-snug">
-                  सावधानी: यह सामग्री और इसके सभी पुराने रिकॉर्ड्स हमेशा के लिए हटा दिए जाएंगे।
-                </p>
-              </div>
-
-              {!isConfirmingDelete ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsConfirmingDelete(true);
-                    setIsConfirmingResetCounts(false);
-                  }}
-                  className="w-full py-2 px-3 rounded-xl border border-red-400 dark:border-red-700 bg-white dark:bg-zinc-900 text-red-700 dark:text-red-400 text-xs font-bold hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors flex items-center justify-center gap-1.5 shadow-xs"
-                >
-                  <IconDelete size={14} />
-                  <span>Delete from List (लिस्ट से हटाएं)</span>
-                </button>
-              ) : (
-                <div className="p-2.5 rounded-lg bg-red-100/70 dark:bg-red-900/40 border border-red-300 dark:border-red-700 space-y-2">
-                  <p className="text-[11px] font-bold text-red-900 dark:text-red-200 leading-tight">
-                    क्या आप वाकई "{selectedItem?.name}" को लिस्ट से हमेशा के लिए हटाना चाहते हैं?
-                  </p>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => setIsConfirmingDelete(false)}
-                      className="flex-1 py-1 px-2 rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-[10px] font-semibold text-zinc-700 dark:text-zinc-200"
-                    >
-                      रद्द करें
-                    </button>
-                    <button
-                      type="button"
-                      disabled={isDeleting}
-                      onClick={handleDeleteItem}
-                      className="flex-1 py-1 px-2 rounded-md bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold disabled:opacity-50 btn-press"
-                    >
-                      {isDeleting ? 'Deleting...' : 'हाँ, हमेशा हटाएं'}
-                    </button>
-                  </div>
-                </div>
-              )}
+        {/* Collapsible More Options: Reset or Delete */}
+        <details className="text-xs group pt-1">
+          <summary className="text-[11px] font-bold text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer select-none py-1">
+            + More options (0 करें या लिस्ट से हटाएं)
+          </summary>
+          <div className="pt-2 space-y-2">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={isResettingCounts}
+                onClick={handleResetCounts}
+                className="flex-1 py-2 px-3 rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 text-[11px] font-bold hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors"
+              >
+                {isResettingCounts ? 'Resetting...' : 'Reset Count to 0 (स्टॉक 0 करें)'}
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={handleDeleteItem}
+                className="flex-1 py-2 px-3 rounded-xl border border-red-300 dark:border-red-800 bg-red-50/50 dark:bg-red-950/20 text-red-700 dark:text-red-400 text-[11px] font-bold hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete from List (हटाएं)'}
+              </button>
             </div>
           </div>
-        </div>
+        </details>
       </div>
     </BottomSheet>
   );

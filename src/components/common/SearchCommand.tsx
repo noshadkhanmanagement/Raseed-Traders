@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   IconSearch,
   IconClose,
@@ -63,15 +64,15 @@ export const SearchCommand: React.FC<SearchCommandProps> = ({
     results.purchases.length > 0 ||
     results.sales.length > 0;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4">
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 pointer-events-auto">
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-xs" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/65 backdrop-blur-xs cursor-pointer" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative w-full max-w-xl bg-white dark:bg-zinc-950 rounded-2xl shadow-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden z-10 flex flex-col max-h-[80vh]">
+      <div className="relative w-full max-w-xl bg-white dark:bg-zinc-950 rounded-3xl shadow-[0_24px_64px_rgba(0,0,0,0.32)] border border-zinc-200 dark:border-zinc-800 overflow-hidden z-10 flex flex-col max-h-[85dvh] my-auto">
         {/* Search Input Bar */}
-        <div className="flex items-center px-4 py-3 border-b border-zinc-200 dark:border-zinc-800">
+        <div className="flex items-center px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 shrink-0">
           <IconSearch size={16} className="text-zinc-400 mr-2.5 shrink-0" />
           <input
             type="text"
@@ -205,6 +206,7 @@ export const SearchCommand: React.FC<SearchCommandProps> = ({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
