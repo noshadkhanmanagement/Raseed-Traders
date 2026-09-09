@@ -41,7 +41,7 @@ export const Purchases: React.FC = () => {
   }, [loadPurchases, refreshCounter]);
 
   const [periodFilter, setPeriodFilter] = useState<'ALL' | 'TODAY' | 'THIS_MONTH'>('ALL');
-  const [paymentFilter, setPaymentFilter] = useState<'ALL' | 'CASH' | 'CREDIT'>('ALL');
+  const [paymentFilter, setPaymentFilter] = useState<'ALL' | 'CASH'>('ALL');
   const [sortBy, setSortBy] = useState<'newest' | 'amount_desc' | 'weight_desc'>('newest');
 
   const todayStr = getLocalDateString();
@@ -62,8 +62,6 @@ export const Purchases: React.FC = () => {
       }
       if (periodFilter === 'TODAY' && (!p.purchase_date || !p.purchase_date.startsWith(todayStr))) return false;
       if (periodFilter === 'THIS_MONTH' && (!p.purchase_date || !p.purchase_date.startsWith(currentMonthStr))) return false;
-      if (paymentFilter === 'CASH' && (p.due_amount || 0) > 0) return false;
-      if (paymentFilter === 'CREDIT' && (p.due_amount || 0) <= 0) return false;
       return true;
     })
     .sort((a, b) => {
@@ -81,15 +79,14 @@ export const Purchases: React.FC = () => {
   const totalPurchasesWeight = purchases.reduce((sum, p) => sum + (p.total_weight ?? (p.items?.reduce((s, it) => s + it.quantity, 0) || 0)), 0);
 
   const handleExportCSV = () => {
-    const headers = ['Purchase Number', 'Date', 'Supplier', 'Items Details', 'Total Amount', 'Paid Amount', 'Due Amount', 'Payment Method'];
+    const headers = ['Purchase Number', 'Date', 'Supplier', 'Items Details', 'Total Amount', 'Payment Status'];
     const rows = filteredPurchases.map((p) => [
       p.purchase_number,
       p.purchase_date,
       p.party_name || 'Walk-in',
       p.items?.map((it) => `${it.item_name} (${it.quantity}${it.unit}@₹${it.rate})`).join('; ') || '',
       p.total_amount,
-      p.paid_amount,
-      p.due_amount,
+      'Paid in Full',
     ]);
     downloadCSV('Purchases_Register', headers, rows);
   };
@@ -217,7 +214,7 @@ export const Purchases: React.FC = () => {
                     : 'text-zinc-500 hover:text-black dark:hover:text-white'
                 }`}
               >
-                All Modes
+                All (सभी)
               </button>
               <button
                 type="button"
@@ -228,18 +225,7 @@ export const Purchases: React.FC = () => {
                     : 'text-zinc-500 hover:text-black dark:hover:text-white'
                 }`}
               >
-                Cash (नकद)
-              </button>
-              <button
-                type="button"
-                onClick={() => setPaymentFilter('CREDIT')}
-                className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all ${
-                  paymentFilter === 'CREDIT'
-                    ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
-                    : 'text-zinc-500 hover:text-black dark:hover:text-white'
-                }`}
-              >
-                Udhaar (उधार)
+                Full Cash (नकद)
               </button>
             </div>
           </div>
@@ -486,18 +472,12 @@ export const Purchases: React.FC = () => {
             <div className="space-y-1 text-xs pt-2 border-t border-zinc-200 dark:border-zinc-800">
               <div className="flex justify-between font-extrabold text-sm">
                 <span>Total Amount:</span>
-                <span>{formatCurrency(selectedPurchase.total_amount)}</span>
+                <span className="tabular-nums font-sans">{formatCurrency(selectedPurchase.total_amount)}</span>
               </div>
-              <div className="flex justify-between text-zinc-500">
-                <span>Paid Amount:</span>
-                <span>{formatCurrency(selectedPurchase.paid_amount)}</span>
+              <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
+                <span>Payment Status:</span>
+                <span>Paid in Full (पूर्ण भुगतान)</span>
               </div>
-              {selectedPurchase.due_amount > 0 && (
-                <div className="flex justify-between font-bold text-amber-600 dark:text-amber-400">
-                  <span>Balance Due:</span>
-                  <span>{formatCurrency(selectedPurchase.due_amount)}</span>
-                </div>
-              )}
             </div>
 
             {/* Footer Buttons */}

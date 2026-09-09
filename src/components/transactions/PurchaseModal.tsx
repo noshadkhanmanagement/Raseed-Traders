@@ -34,7 +34,6 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
   const [customPartyName, setCustomPartyName] = useState('');
   const [purchaseDate, setPurchaseDate] = useState(() => getLocalDateString());
   const [lines, setLines] = useState<PurchaseLine[]>([]);
-  const [paidAmount, setPaidAmount] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -76,7 +75,6 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       // Full form reset on every open to prevent stale data bleed-through
-      setPaidAmount('');
       setCustomPartyName('');
       setPurchaseDate(getLocalDateString());
       setErrorMessage('');
@@ -153,8 +151,6 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
   };
 
   const subtotal = lines.reduce((sum, l) => sum + (l.amount || 0), 0);
-  const paid = paidAmount === '' ? subtotal : parseFloat(paidAmount) || 0;
-  const due = Math.max(0, subtotal - paid);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -190,7 +186,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
           rate: parseFloat(l.rate),
           amount: l.amount,
         })),
-        paid_amount: paid,
+        paid_amount: subtotal,
       });
 
       onSuccess();
@@ -368,31 +364,14 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
         <div className="border-t border-zinc-200 dark:border-zinc-800 pt-3 space-y-3">
           <div className="flex items-center justify-between text-base font-extrabold text-black dark:text-white">
             <span>Total Amount (कुल रुपये):</span>
-            <span>{formatCurrency(subtotal)}</span>
+            <span className="tabular-nums font-sans">{formatCurrency(subtotal)}</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-black dark:text-white mb-1">
-                Amount Paid (कितना नकद/ऑनलाइन दिया)
-              </label>
-              <input
-                type="number"
-                step="any"
-                min="0"
-                placeholder={String(subtotal)}
-                value={paidAmount}
-                onChange={(e) => setPaidAmount(e.target.value)}
-                className="w-full h-9 px-2.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-bold text-black dark:text-white outline-none"
-              />
-              <span className="text-[10px] text-zinc-500">Leave blank for full cash payment</span>
-            </div>
-            {due > 0 && (
-              <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-xs flex items-center justify-between mt-auto h-9">
-                <span>Remaining Due (बाकी उधारी):</span>
-                <span className="font-bold">{formatCurrency(due)}</span>
-              </div>
-            )}
+          <div className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200/70 dark:border-zinc-800 text-xs">
+            <span className="text-zinc-500 font-medium">Payment Settlement:</span>
+            <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold">
+              100% Full Payment (पूर्ण भुगतान)
+            </span>
           </div>
         </div>
 

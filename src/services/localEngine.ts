@@ -317,7 +317,8 @@ class LocalEngine {
           p.total_amount = p.items.reduce((sum, it) => sum + it.amount, 0);
           p.subtotal = p.total_amount;
           p.total_weight = p.items.reduce((sum, it) => sum + it.quantity, 0);
-          p.due_amount = Math.max(0, p.total_amount - p.paid_amount);
+          p.paid_amount = p.total_amount;
+          p.due_amount = 0;
         }
       }
     });
@@ -339,7 +340,8 @@ class LocalEngine {
           s.total_weight = s.items.reduce((sum, it) => sum + it.quantity, 0);
           s.total_cost = s.items.reduce((sum, it) => sum + (it.cost_amount || 0), 0);
           s.total_profit = s.total_amount - s.total_cost;
-          s.due_amount = Math.max(0, s.total_amount - s.received_amount);
+          s.received_amount = s.total_amount;
+          s.due_amount = 0;
         }
       }
     });
@@ -486,8 +488,8 @@ class LocalEngine {
 
     const totalAmount = payload.items.reduce((sum, it) => sum + it.amount, 0);
     const totalWeight = payload.items.reduce((sum, it) => sum + (Number(it.quantity) || 0), 0);
-    const paidAmount = Math.min(totalAmount, Math.max(0, payload.paid_amount || 0));
-    const dueAmount = totalAmount - paidAmount;
+    const paidAmount = totalAmount;
+    const dueAmount = 0;
     const now = new Date().toISOString();
     const purchaseNumber = this.generateDocNumber('PUR', payload.purchase_date, this.data.purchases);
     const purchaseId = `pur-${Date.now()}`;
@@ -581,8 +583,7 @@ class LocalEngine {
     };
     this.data.purchases.unshift(purchase);
 
-    // 3. Update Party Balance (we owe supplier due amount -> decreases balance)
-    safeParty.current_balance -= dueAmount;
+    // 3. No Udhaari: 100% full payment, party balance untouched
     safeParty.updated_at = now;
 
     // 4. Create Payment entry if paid > 0
@@ -651,8 +652,8 @@ class LocalEngine {
 
     const totalAmount = payload.items.reduce((sum, it) => sum + it.amount, 0);
     const totalWeight = payload.items.reduce((sum, it) => sum + (Number(it.quantity) || 0), 0);
-    const receivedAmount = Math.min(totalAmount, Math.max(0, payload.received_amount || 0));
-    const dueAmount = totalAmount - receivedAmount;
+    const receivedAmount = totalAmount;
+    const dueAmount = 0;
     const now = new Date().toISOString();
     const saleNumber = this.generateDocNumber('SALE', payload.sale_date, this.data.sales);
     const saleId = `sale-${Date.now()}`;
@@ -735,8 +736,7 @@ class LocalEngine {
     };
     this.data.sales.unshift(sale);
 
-    // 4. Update Party Balance (customer owes due amount -> increases balance)
-    safeParty.current_balance += dueAmount;
+    // 4. No Udhaari: 100% full payment, party balance untouched
     safeParty.updated_at = now;
 
     // 5. Create Payment record if received > 0
@@ -870,10 +870,8 @@ class LocalEngine {
     purchase.total_amount = updates.items.reduce((s, it) => s + it.amount, 0);
     purchase.subtotal = purchase.total_amount;
     purchase.total_weight = updates.items.reduce((s, it) => s + it.quantity, 0);
-    if (updates.paid_amount !== undefined) {
-      purchase.paid_amount = updates.paid_amount;
-    }
-    purchase.due_amount = Math.max(0, purchase.total_amount - purchase.paid_amount);
+    purchase.paid_amount = purchase.total_amount;
+    purchase.due_amount = 0;
     purchase.updated_at = now;
 
     this.saveToStorage();
@@ -913,10 +911,8 @@ class LocalEngine {
     sale.total_amount = updates.items.reduce((s, it) => s + it.amount, 0);
     sale.subtotal = sale.total_amount;
     sale.total_weight = updates.items.reduce((s, it) => s + it.quantity, 0);
-    if (updates.received_amount !== undefined) {
-      sale.received_amount = updates.received_amount;
-    }
-    sale.due_amount = Math.max(0, sale.total_amount - sale.received_amount);
+    sale.received_amount = sale.total_amount;
+    sale.due_amount = 0;
     sale.updated_at = now;
 
     this.saveToStorage();

@@ -6,10 +6,7 @@ import {
   IconMinus,
   IconClock,
   IconUser,
-  IconLayers,
-  IconArrowDownLeft,
   IconTrendingUp,
-  IconPackage,
   IconSliders,
 } from '../common/Icons';
 import { BottomSheet } from '../common/BottomSheet';
@@ -152,7 +149,7 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
       }
       maxWidth="max-w-3xl"
     >
-      <div className="p-4 sm:p-5 space-y-4 overflow-y-auto max-h-[80vh]">
+      <div className="space-y-3">
         {loading ? (
           <div className="py-14 text-center text-xs text-zinc-500 dark:text-zinc-400 space-y-2">
             <div className="w-7 h-7 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin mx-auto" />
@@ -164,28 +161,9 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
           </div>
         ) : (
           <>
-            {/* Quick Header Bar with Stock & Instant Buy/Sell Actions */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-              <div className="flex items-center gap-3">
-                <span className="p-2.5 rounded-xl bg-black dark:bg-white text-white dark:text-black tabular-nums font-sans font-extrabold text-xs">
-                  {item.default_unit}
-                </span>
-                <div>
-                  <div className="font-extrabold text-sm sm:text-base text-black dark:text-white tracking-tight flex items-center gap-2">
-                    <span>{item.name}</span>
-                    <span className="text-zinc-500 font-medium text-xs sm:text-sm">({item.local_name})</span>
-                  </div>
-                  <div className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-2 mt-0.5">
-                    <span>Current Stock (वर्तमान स्टॉक):</span>
-                    <span className="font-bold text-black dark:text-white tabular-nums font-sans">
-                      {item.current_stock.toLocaleString('en-IN')} {item.default_unit}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-wrap items-center gap-2 self-end sm:self-center">
+            {/* Quick Action & Stock Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-2 p-2 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/80">
+              <div className="flex items-center gap-1.5">
                 {onRecordPurchase && (
                   <button
                     type="button"
@@ -193,10 +171,10 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                       onClose();
                       onRecordPurchase(item);
                     }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black dark:bg-white text-white dark:text-black text-xs font-semibold hover:opacity-90 btn-press shadow-xs"
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-bold hover:opacity-90 btn-press shadow-xs"
                   >
-                    <IconPlus size={14} />
-                    <span>Buy (खरीदें)</span>
+                    <IconPlus size={12} />
+                    <span>Buy (खरीद)</span>
                   </button>
                 )}
 
@@ -207,168 +185,90 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                       onClose();
                       onRecordSale(item);
                     }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-black dark:text-white text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 btn-press shadow-xs"
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-black dark:text-white text-xs font-bold hover:bg-zinc-100 dark:hover:bg-zinc-700 btn-press shadow-xs"
                   >
-                    <IconMinus size={14} />
-                    <span>Sell (बेचें)</span>
+                    <IconMinus size={12} />
+                    <span>Sell (बिक्री)</span>
                   </button>
                 )}
 
                 <button
                   type="button"
                   onClick={() => setIsItemAdjustOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-black dark:border-white bg-black dark:bg-white text-white dark:text-black text-xs font-bold hover:opacity-90 btn-press shadow-xs"
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-700 btn-press shadow-xs"
                   title="Adjust Weight, Price & Delete Material"
                 >
-                  <IconSliders size={14} />
-                  <span>Adjust (सुधार)</span>
+                  <IconSliders size={12} />
+                  <span>Adjust</span>
                 </button>
               </div>
-            </div>
 
-            {/* Comprehensive KPI Stat Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-              {/* 1. Live Current Stock */}
-              <div className="p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-xs">
-                <div className="text-[10px] uppercase font-bold text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
-                  <IconPackage size={12} className="text-zinc-400" />
-                  <span>Current Stock</span>
-                </div>
-                <div className="mt-1 font-extrabold text-sm sm:text-base text-black dark:text-white tabular-nums font-sans">
-                  {item.current_stock.toLocaleString('en-IN')}{' '}
-                  <span className="text-[10px] font-normal text-zinc-400">{item.default_unit}</span>
-                </div>
-                <div className="text-[10px] text-zinc-400 mt-0.5">गोदाम में उपलब्ध</div>
-              </div>
-
-              {/* 2. Total Bought (Qty & ₹) */}
-              <div className="p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-xs">
-                <div className="text-[10px] uppercase font-bold text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
-                  <IconArrowDownLeft size={12} className="text-zinc-400" />
-                  <span>Total Bought</span>
-                </div>
-                <div className="mt-1 font-extrabold text-sm sm:text-base text-black dark:text-white tabular-nums font-sans">
-                  {stats?.totalQuantityPurchased.toLocaleString('en-IN') || 0}{' '}
-                  <span className="text-[10px] font-normal text-zinc-400">{item.default_unit}</span>
-                </div>
-                <div className="text-[10px] text-zinc-400 mt-0.5 tabular-nums font-sans font-medium">
-                  {formatCurrency(stats?.totalAmountPurchased || 0)}
-                </div>
-              </div>
-
-              {/* 3. Weighted Average Buy Rate */}
-              <div className="p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-xs">
-                <div className="text-[10px] uppercase font-bold text-zinc-500 dark:text-zinc-400">
-                  Avg Buy Rate
-                </div>
-                <div className="mt-1 font-extrabold text-sm sm:text-base text-black dark:text-white tabular-nums font-sans">
-                  {stats?.averagePurchaseRate ? formatCurrency(stats.averagePurchaseRate) : '₹0.00'}
-                  <span className="text-[10px] font-normal text-zinc-400">/{item.default_unit}</span>
-                </div>
-                <div className="text-[10px] text-zinc-400 mt-0.5">औसत खरीद भाव</div>
-              </div>
-
-              {/* 4. Total Sold (Qty & ₹) */}
-              <div className="p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-xs">
-                <div className="text-[10px] uppercase font-bold text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
-                  <IconTrendingUp size={12} className="text-zinc-400" />
-                  <span>Total Sold</span>
-                </div>
-                <div className="mt-1 font-extrabold text-sm sm:text-base text-black dark:text-white tabular-nums font-sans">
-                  {stats?.totalQuantitySold.toLocaleString('en-IN') || 0}{' '}
-                  <span className="text-[10px] font-normal text-zinc-400">{item.default_unit}</span>
-                </div>
-                <div className="text-[10px] text-zinc-400 mt-0.5 tabular-nums font-sans font-medium">
-                  {formatCurrency(stats?.totalAmountSold || 0)}
-                </div>
-              </div>
-
-              {/* 5. Weighted Average Sale Rate */}
-              <div className="p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-xs col-span-2 sm:col-span-1">
-                <div className="text-[10px] uppercase font-bold text-zinc-500 dark:text-zinc-400">
-                  Avg Sell Rate
-                </div>
-                <div className="mt-1 font-extrabold text-sm sm:text-base text-black dark:text-white tabular-nums font-sans">
-                  {stats?.averageSaleRate ? formatCurrency(stats.averageSaleRate) : '₹0.00'}
-                  <span className="text-[10px] font-normal text-zinc-400">/{item.default_unit}</span>
-                </div>
-                <div className="text-[10px] text-zinc-400 mt-0.5">औसत बिक्री भाव</div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700/60 text-xs">
+                <span className="text-zinc-400 font-medium">Stock:</span>
+                <span className="font-extrabold text-black dark:text-white tabular-nums font-sans">
+                  {item.current_stock.toLocaleString('en-IN')} {item.default_unit}
+                </span>
               </div>
             </div>
 
-            {/* Distinct Spot Rates Summary Chips (shows each purchase rate without overwriting) */}
-            {stats && stats.distinctPurchaseRates.length > 0 && (
-              <div className="p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/30 space-y-2">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-black dark:text-white">
-                  <IconTag size={14} />
-                  <span>Purchases by Rate (विभिन्न दरों पर खरीद का विवरण):</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {stats.distinctPurchaseRates.map((rg) => (
-                    <div
-                      key={rg.rate}
-                      className="px-2.5 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs shadow-xs"
-                    >
-                      <span className="font-extrabold text-black dark:text-white tabular-nums font-sans">
-                        {formatCurrency(rg.rate)}/{item.default_unit}
-                      </span>
-                      <span className="ml-1.5 text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">
-                        ({rg.totalQty.toLocaleString('en-IN')} {item.default_unit} · {rg.count} bill{rg.count > 1 ? 's' : ''})
-                      </span>
-                    </div>
-                  ))}
+            {/* iOS Segmented Stat Capsule */}
+            <div className="grid grid-cols-3 gap-2 p-2.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/70 dark:border-zinc-800/70 text-center">
+              <div>
+                <div className="text-[10px] uppercase font-bold text-zinc-400">Avg Buy Rate</div>
+                <div className="font-extrabold text-xs sm:text-sm text-black dark:text-white tabular-nums font-sans">
+                  {stats?.averagePurchaseRate ? formatCurrency(stats.averagePurchaseRate) : '₹0'}/{item.default_unit}
                 </div>
               </div>
-            )}
+              <div>
+                <div className="text-[10px] uppercase font-bold text-zinc-400">Avg Sell Rate</div>
+                <div className="font-extrabold text-xs sm:text-sm text-black dark:text-white tabular-nums font-sans">
+                  {stats?.averageSaleRate ? formatCurrency(stats.averageSaleRate) : '₹0'}/{item.default_unit}
+                </div>
+              </div>
+              <div>
+                <div className="text-[10px] uppercase font-bold text-zinc-400">Total Volume</div>
+                <div className="font-extrabold text-xs sm:text-sm text-black dark:text-white tabular-nums font-sans">
+                  {((stats?.totalQuantityPurchased || 0) + (stats?.totalQuantitySold || 0)).toLocaleString('en-IN')} {item.default_unit}
+                </div>
+              </div>
+            </div>
 
-            {/* Interactive Tab Switcher */}
-            <div className="flex items-center gap-1 border-b border-zinc-200 dark:border-zinc-800 pt-1">
+            {/* iOS Segmented Tab Switcher */}
+            <div className="inline-flex p-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800 w-full">
               <button
                 type="button"
                 onClick={() => setActiveTab('ALL')}
-                className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold transition-colors border-b-2 ${
+                className={`flex-1 py-1 rounded-full text-xs font-bold transition-all text-center ${
                   activeTab === 'ALL'
-                    ? 'border-black dark:border-white text-black dark:text-white'
-                    : 'border-transparent text-zinc-500 hover:text-black dark:hover:text-white'
+                    ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                    : 'text-zinc-500 hover:text-black dark:hover:text-white'
                 }`}
               >
-                <IconLayers size={14} />
-                <span>All Movements (सम्पूर्ण खाता लेज़र)</span>
-                <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] bg-zinc-100 dark:bg-zinc-800 tabular-nums font-sans">
-                  {movements.length}
-                </span>
+                All ({movements.length})
               </button>
 
               <button
                 type="button"
                 onClick={() => setActiveTab('PURCHASES')}
-                className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold transition-colors border-b-2 ${
+                className={`flex-1 py-1 rounded-full text-xs font-bold transition-all text-center ${
                   activeTab === 'PURCHASES'
-                    ? 'border-black dark:border-white text-black dark:text-white'
-                    : 'border-transparent text-zinc-500 hover:text-black dark:hover:text-white'
+                    ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                    : 'text-zinc-500 hover:text-black dark:hover:text-white'
                 }`}
               >
-                <IconArrowDownLeft size={14} />
-                <span>Purchases (खरीद)</span>
-                <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] bg-zinc-100 dark:bg-zinc-800 tabular-nums font-sans">
-                  {purchases.length}
-                </span>
+                Purchases ({purchases.length})
               </button>
 
               <button
                 type="button"
                 onClick={() => setActiveTab('SALES')}
-                className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold transition-colors border-b-2 ${
+                className={`flex-1 py-1 rounded-full text-xs font-bold transition-all text-center ${
                   activeTab === 'SALES'
-                    ? 'border-black dark:border-white text-black dark:text-white'
-                    : 'border-transparent text-zinc-500 hover:text-black dark:hover:text-white'
+                    ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-xs'
+                    : 'text-zinc-500 hover:text-black dark:hover:text-white'
                 }`}
               >
-                <IconTrendingUp size={14} />
-                <span>Sales (बिक्री)</span>
-                <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] bg-zinc-100 dark:bg-zinc-800 tabular-nums font-sans">
-                  {sales.length}
-                </span>
+                Sales ({sales.length})
               </button>
             </div>
 

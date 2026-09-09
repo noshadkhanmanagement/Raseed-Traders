@@ -39,7 +39,6 @@ export const TransactionAdjustmentModal: React.FC<TransactionAdjustmentModalProp
 }) => {
   const isPurchase = type === 'PURCHASE';
   const [items, setItems] = useState<EditableItem[]>([]);
-  const [paidOrReceived, setPaidOrReceived] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
@@ -61,14 +60,8 @@ export const TransactionAdjustmentModal: React.FC<TransactionAdjustmentModalProp
         amount: Number(it.amount || 0),
       }));
       setItems(rawItems);
-
-      if (isPurchase) {
-        setPaidOrReceived(Number((transaction as Purchase).paid_amount || 0));
-      } else {
-        setPaidOrReceived(Number((transaction as Sale).received_amount || 0));
-      }
     }
-  }, [isOpen, transaction, isPurchase]);
+  }, [isOpen, transaction]);
 
   if (!transaction) return null;
 
@@ -114,7 +107,7 @@ export const TransactionAdjustmentModal: React.FC<TransactionAdjustmentModalProp
             rate: it.rate,
             amount: it.amount,
           })),
-          paid_amount: paidOrReceived,
+          paid_amount: calculatedTotalAmount,
         });
       } else {
         await api.updateSaleTransaction(transaction.id, {
@@ -124,7 +117,7 @@ export const TransactionAdjustmentModal: React.FC<TransactionAdjustmentModalProp
             rate: it.rate,
             amount: it.amount,
           })),
-          received_amount: paidOrReceived,
+          received_amount: calculatedTotalAmount,
         });
       }
 

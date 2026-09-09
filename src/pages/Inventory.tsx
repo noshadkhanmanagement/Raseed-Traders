@@ -8,6 +8,7 @@ import {
   IconReset,
   IconHistory,
   IconClose,
+  IconChevron,
 } from '../components/common/Icons';
 import { PageHeader } from '../components/layout/PageHeader';
 import { BottomSheet } from '../components/common/BottomSheet';
@@ -363,8 +364,8 @@ export const Inventory: React.FC = () => {
         </div>
       </div>
 
-      {/* MOBILE: iOS Inset Grouped Card List */}
-      <div className="md:hidden space-y-2.5">
+      {/* MOBILE & TABLET: iOS Segmented Inset Grouped List (Compact & Instant Access) */}
+      <div className="md:hidden rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/80 divide-y divide-zinc-100 dark:divide-zinc-800/70 overflow-hidden shadow-xs">
         {isLoading ? (
           <div className="py-12 text-center text-xs text-zinc-400">Loading inventory materials...</div>
         ) : filteredItems.length === 0 ? (
@@ -376,64 +377,61 @@ export const Inventory: React.FC = () => {
             return (
               <div
                 key={it.id}
-                className="p-4 rounded-[22px] border border-zinc-200/80 dark:border-zinc-800/80 bg-white/90 dark:bg-zinc-900/70 shadow-xs space-y-3"
+                onClick={() => handleOpenHistory(it)}
+                className="p-3.5 flex items-center justify-between gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/40 active:bg-zinc-100 dark:active:bg-zinc-800 transition-colors cursor-pointer"
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white tabular-nums font-sans text-[11px] font-extrabold flex items-center justify-center shrink-0 border border-zinc-200/60 dark:border-zinc-700/60">
-                      {it.default_unit}
-                    </span>
-                    <div className="min-w-0" onClick={() => handleOpenHistory(it)}>
-                      <h4 className="text-sm font-black text-black dark:text-white tracking-tight truncate flex items-center gap-1">
-                        <span>{it.name}</span>
-                        <IconHistory size={12} className="text-zinc-400" />
-                      </h4>
-                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
-                        {it.local_name}
-                      </p>
+                {/* Left: Unit Badge + Material Names + Rate */}
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  <span className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white tabular-nums font-sans text-[11px] font-extrabold flex items-center justify-center shrink-0 border border-zinc-200/60 dark:border-zinc-700/60">
+                    {it.default_unit}
+                  </span>
+                  <div className="min-w-0">
+                    <h4 className="text-xs sm:text-sm font-bold text-black dark:text-white tracking-tight truncate flex items-center gap-1">
+                      <span>{it.name}</span>
+                      <span className="text-[11px] text-zinc-400 font-normal">({it.local_name})</span>
+                    </h4>
+                    <div className="flex items-center gap-2 text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+                      <span>Kharidi: <b className="text-black dark:text-white tabular-nums font-sans">{spotRate > 0 ? `₹${spotRate}` : '₹0'}</b>/{it.default_unit}</span>
                     </div>
                   </div>
+                </div>
 
-                  <div className="text-right shrink-0">
-                    <div className="text-base font-black text-black dark:text-white tabular-nums font-sans">
+                {/* Right: Stock + Status + Quick Actions + Chevron */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="text-right">
+                    <div className="text-xs sm:text-sm font-extrabold text-black dark:text-white tabular-nums font-sans">
                       {it.current_stock.toLocaleString('en-IN')}{' '}
                       <span className="text-[10px] text-zinc-400 font-sans">{it.default_unit}</span>
                     </div>
                     <span
                       className={`text-[9px] font-bold px-1.5 py-0.2 rounded inline-block ${
-                        hasStock ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400'
+                        hasStock ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400'
                       }`}
                     >
                       {hasStock ? 'In Stock' : '0 Stock'}
                     </span>
                   </div>
-                </div>
 
-                <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800/70 flex items-center justify-between text-xs">
-                  <div className="text-zinc-500 text-[11px]">
-                    Kharidi:{' '}
-                    <span className="font-bold text-black dark:text-white tabular-nums font-sans">
-                      {spotRate > 0 ? `₹${spotRate}/${it.default_unit}` : '₹0'}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5">
+                  {/* Actions & Chevron */}
+                  <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                     <button
                       type="button"
                       onClick={() => handleAdjustClick(it)}
-                      className="px-3 py-1 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-bold btn-press shadow-xs"
+                      className="px-2.5 py-1 rounded-full bg-black dark:bg-white text-white dark:text-black text-[11px] font-bold btn-press shadow-xs"
+                      title="Adjust Weight, Price & Delete"
                     >
-                      Adjust (सुधार)
+                      Adjust
                     </button>
                     <button
                       type="button"
                       onClick={() => handleDeleteClick(it)}
-                      className="p-1.5 rounded-full border border-zinc-200 dark:border-zinc-800 text-zinc-400 hover:text-red-600 icon-press"
+                      className="p-1 rounded-full text-zinc-400 hover:text-red-600 icon-press"
                       title="Delete / Reset Counts"
                     >
-                      <IconDelete size={14} />
+                      <IconDelete size={13} />
                     </button>
                   </div>
+                  <IconChevron size={14} className="text-zinc-300 dark:text-zinc-600 rotate-270 shrink-0" />
                 </div>
               </div>
             );

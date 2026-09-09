@@ -605,8 +605,8 @@ export const api = {
         await supabase.from('purchases').update({
           total_amount: totalAmount,
           subtotal: totalAmount,
-          paid_amount: updates.paid_amount ?? 0,
-          due_amount: Math.max(0, totalAmount - (updates.paid_amount ?? 0)),
+          paid_amount: totalAmount,
+          due_amount: 0,
         }).eq('id', purchaseId);
       } catch (e) {
         console.warn('Supabase updatePurchaseTransaction fallback:', e);
@@ -724,8 +724,8 @@ export const api = {
         await supabase.from('sales').update({
           total_amount: totalAmount,
           subtotal: totalAmount,
-          received_amount: updates.received_amount ?? 0,
-          due_amount: Math.max(0, totalAmount - (updates.received_amount ?? 0)),
+          received_amount: totalAmount,
+          due_amount: 0,
         }).eq('id', saleId);
       } catch (e) {
         console.warn('Supabase updateSaleTransaction fallback:', e);

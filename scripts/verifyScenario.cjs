@@ -37,15 +37,16 @@ class EngineTest {
     item.current_stock = newStock;
     item.average_cost = newWac;
 
-    const due = lineAmount - paid;
-    party.current_balance -= due;
+    // Zero udhaari model: 100% full cash settlement, no party due accumulation
+    const due = 0;
+    const paidAmount = lineAmount;
 
     this.purchases.push({
       purchase_number: `PUR-20260908-${String(this.purchases.length + 1).padStart(3, '0')}`,
       party_name: party.name,
       total_amount: lineAmount,
-      paid_amount: paid,
-      due_amount: due,
+      paid_amount: paidAmount,
+      due_amount: 0,
     });
 
     this.ledger.push({
@@ -56,15 +57,13 @@ class EngineTest {
       running_quantity: newStock,
     });
 
-    if (paid > 0) {
-      this.payments.push({ party_name: party.name, type: 'PAYMENT_TO_SUPPLIER', amount: paid });
-    }
+    this.payments.push({ party_name: party.name, type: 'PAYMENT_TO_SUPPLIER', amount: paidAmount });
 
     return { newStock, newWac, lineAmount, due };
   }
 
   // 2. Sale
-  sale(partyId, itemId, qty, rate, received = 0) {
+  sale(partyId, itemId, qty, rate) {
     const item = this.items.find(i => i.id === itemId);
     const party = this.parties.find(p => p.id === partyId);
 
@@ -79,8 +78,9 @@ class EngineTest {
 
     item.current_stock = newStock;
 
-    const due = revenue - received;
-    party.current_balance += due;
+    // Zero udhaari model: 100% full cash settlement, no party due accumulation
+    const due = 0;
+    const received = revenue;
 
     this.sales.push({
       sale_number: `SALE-20260908-${String(this.sales.length + 1).padStart(3, '0')}`,
@@ -89,7 +89,7 @@ class EngineTest {
       total_cost: cogs,
       total_profit: grossProfit,
       received_amount: received,
-      due_amount: due,
+      due_amount: 0,
     });
 
     this.ledger.push({
@@ -100,9 +100,7 @@ class EngineTest {
       running_quantity: newStock,
     });
 
-    if (received > 0) {
-      this.payments.push({ party_name: party.name, type: 'PAYMENT_RECEIVED_FROM_CUSTOMER', amount: received });
-    }
+    this.payments.push({ party_name: party.name, type: 'PAYMENT_RECEIVED_FROM_CUSTOMER', amount: received });
 
     return { newStock, revenue, cogs, grossProfit, due };
   }
@@ -136,33 +134,33 @@ function runVerification() {
 
   // Step 1: Add 100 KG LOHA at ₹38/kg
   console.log('Step 1: Adding 100 KG LOHA at ₹38/kg...');
-  const step1 = engine.purchase('party-001', 'item-001', 100, 38, 0);
+  const step1 = engine.purchase('party-001', 'item-001', 100, 38);
   console.log(` -> Stock: ${step1.newStock} KG, WAC: ₹${step1.newWac}/kg, Total: ₹${step1.lineAmount}`);
   if (step1.newStock !== 100 || step1.newWac !== 38) throw new Error('Step 1 Failed!');
 
   // Step 2: Add 50 KG LOHA at ₹40/kg
   console.log('\nStep 2: Adding 50 KG LOHA at ₹40/kg...');
-  const step2 = engine.purchase('party-001', 'item-001', 50, 40, 0);
+  const step2 = engine.purchase('party-001', 'item-001', 50, 40);
   console.log(` -> Stock: ${step2.newStock} KG, WAC: ₹${step2.newWac}/kg, Total: ₹${step2.lineAmount}`);
   // (100 * 38 + 50 * 40) / 150 = 5800 / 150 = 38.6666... -> 38.67
   console.log('Step 3: Verifying weighted average cost...');
   console.log(` -> Expected WAC: 38.67, Actual WAC: ${step2.newWac}`);
   if (step2.newStock !== 150 || step2.newWac !== 38.67) throw new Error('Step 2 & 3 WAC Failed!');
 
-  // Step 4: Sell 80 KG at ₹50/kg with partial payment ₹2,500
-  console.log('\nStep 4: Selling 80 KG LOHA at ₹50/kg with ₹2,500 payment...');
-  const step4 = engine.sale('party-002', 'item-001', 80, 50, 2500);
+  // Step 4: Sell 80 KG at ₹50/kg with full cash settlement
+  console.log('\nStep 4: Selling 80 KG LOHA at ₹50/kg with 100% full cash settlement...');
+  const step4 = engine.sale('party-002', 'item-001', 80, 50);
   console.log(` -> Remaining Stock: ${step4.newStock} KG (Expected: 70 KG)`);
   console.log(` -> Revenue: ₹${step4.revenue}`);
   console.log(` -> COGS: ₹${step4.cogs} (Expected: 80 * 38.67 = 3093.60 or ~3093.33)`);
   console.log(` -> Gross Profit: ₹${step4.grossProfit} (Expected: ~906.40 to 906.67)`);
-  console.log(` -> Outstanding Customer Due: ₹${step4.due} (Expected: 1500)`);
-  if (step4.newStock !== 70 || step4.due !== 1500) throw new Error('Step 4 Sale Failed!');
+  console.log(` -> Outstanding Customer Due: ₹${step4.due} (Expected: 0 - No Udhaari)`);
+  if (step4.newStock !== 70 || step4.due !== 0) throw new Error('Step 4 Sale Failed!');
 
   // Step 5: Test negative stock restriction
   console.log('\nStep 5: Testing negative stock prevention (Attempting to sell 100 KG when only 70 KG available)...');
   try {
-    engine.sale('party-002', 'item-001', 100, 50, 0);
+    engine.sale('party-002', 'item-001', 100, 50);
     throw new Error('Should have thrown error for insufficient stock!');
   } catch (err) {
     console.log(` -> Success! Blocked with expected message: "${err.message}"`);
@@ -180,13 +178,13 @@ function runVerification() {
     console.log(`   [${idx + 1}] ${entry.transaction_type}: ${entry.quantity_change > 0 ? '+' : ''}${entry.quantity_change} KG @ ₹${entry.rate} -> Running Balance: ${entry.running_quantity} KG`);
   });
 
-  // Step 8: Customer & Supplier Balance Verification
-  console.log('\nStep 8: Verifying Customer & Supplier Balances:');
+  // Step 8: Customer & Supplier Balance Verification (Zero udhaari: balances remain 0)
+  console.log('\nStep 8: Verifying Customer & Supplier Balances (Zero Udhaari):');
   const ramesh = engine.parties.find(p => p.id === 'party-001');
   const rahul = engine.parties.find(p => p.id === 'party-002');
-  console.log(` -> Ramesh (Supplier) Balance: ${ramesh.current_balance} (We owe: ₹${Math.abs(ramesh.current_balance)})`);
-  console.log(` -> Rahul (Customer) Balance: ${rahul.current_balance} (Customer owes: ₹${rahul.current_balance})`);
-  if (rahul.current_balance !== 1500 || ramesh.current_balance !== -5800) {
+  console.log(` -> Ramesh (Supplier) Balance: ${ramesh.current_balance} (Settled in full)`);
+  console.log(` -> Rahul (Customer) Balance: ${rahul.current_balance} (Settled in full)`);
+  if (rahul.current_balance !== 0 || ramesh.current_balance !== 0) {
     throw new Error('Step 8 Balance Verification Failed!');
   }
 

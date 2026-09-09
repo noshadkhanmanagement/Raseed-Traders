@@ -53,7 +53,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-start justify-center p-2.5 pt-3 sm:p-4 sm:pt-6 overflow-y-auto">
       {/* Dimmed Clean Backdrop */}
       <div
         ref={backdropRef}
@@ -64,7 +64,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
       {/* Sheet Content Container */}
       <div
         ref={modalRef}
-        className={`relative w-full ${maxWidth} bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-[0_24px_64px_rgba(0,0,0,0.24)] overflow-hidden z-10 max-h-[90dvh] md:max-h-[88vh] flex flex-col`}
+        className={`relative w-full ${maxWidth} bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-[0_24px_64px_rgba(0,0,0,0.24)] overflow-hidden z-10 max-h-[92dvh] md:max-h-[88vh] flex flex-col`}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl">
