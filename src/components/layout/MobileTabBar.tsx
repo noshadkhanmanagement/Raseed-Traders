@@ -372,10 +372,16 @@ export const MobileTabBar: React.FC = () => {
 
   return (
     <>
+      {/* iOS Top Ambient Fade */}
+      <div
+        aria-hidden="true"
+        className="md:hidden fixed top-0 left-0 right-0 h-10 pointer-events-none z-30 bg-gradient-to-b from-white/90 dark:from-black/90 to-transparent backdrop-blur-[2px]"
+      />
+
       {/* iOS Bottom Ambient Fade Up */}
       <div
-        className="md:hidden fixed bottom-0 left-0 right-0 z-30 pointer-events-none h-28 bg-gradient-to-t from-white via-white/85 to-transparent dark:from-black dark:via-black/85 dark:to-transparent select-none"
         aria-hidden="true"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-30 pointer-events-none h-28 bg-gradient-to-t from-white via-white/85 to-transparent dark:from-black dark:via-black/85 dark:to-transparent select-none"
       />
 
       <nav
@@ -388,18 +394,54 @@ export const MobileTabBar: React.FC = () => {
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
-          className="relative flex items-center p-1.5 rounded-full bg-white/70 dark:bg-black/70 backdrop-blur-3xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.7)] w-full max-w-sm h-14 touch-none select-none"
+          className="relative pointer-events-auto flex items-center p-1.5 rounded-full bg-white/75 dark:bg-zinc-900/80 backdrop-blur-3xl border border-zinc-200/85 dark:border-zinc-800 shadow-[0_12px_40px_rgba(0,0,0,0.12),0_2px_10px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.6)] ring-1 ring-black/[0.03] dark:ring-white/[0.04] w-full max-w-sm h-14 touch-none select-none"
           style={{ willChange: 'transform' }}
         >
-          {/* Active Liquid Capsule */}
+          {/* LIQUID FROSTED GLASS ACTIVE PILL (With Specular Optical Highlights) */}
           <div
             ref={pillRef}
-            className="absolute top-1.5 bottom-1.5 rounded-full pointer-events-none z-0 bg-black dark:bg-white shadow-[0_3px_12px_rgba(0,0,0,0.18)] dark:shadow-[0_3px_14px_rgba(255,255,255,0.22)]"
+            className="absolute top-1.5 bottom-1.5 rounded-full pointer-events-none z-0 backdrop-blur-2xl bg-zinc-900/[0.08] dark:bg-zinc-700/35 border border-black/[0.12] dark:border-white/[0.12] shadow-[0_4px_18px_rgba(0,0,0,0.1),inset_0_1.5px_2px_rgba(255,255,255,1),inset_0_-1.5px_2px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.5),inset_0_1px_1.5px_rgba(255,255,255,0.18)] overflow-hidden will-change-transform"
             style={{
               transformOrigin: '50% 50%',
               willChange: 'transform, width',
             }}
-          />
+          >
+            {/* 1. Meniscus Top Dome Flare Reflection */}
+            <div
+              className="absolute inset-x-1 top-0 h-[48%] rounded-t-full pointer-events-none opacity-90 dark:opacity-15"
+              style={{
+                background:
+                  'radial-gradient(ellipse 75% 85% at 50% 0%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.35) 45%, transparent 80%)',
+              }}
+            />
+
+            {/* 2. Angled Diagonal Light Sheen */}
+            <div
+              className="absolute inset-0 pointer-events-none opacity-80 dark:opacity-10"
+              style={{
+                background:
+                  'linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.15) 35%, transparent 65%)',
+              }}
+            />
+
+            {/* 3. Top Arc Specular Highlight Rim Line */}
+            <div
+              className="absolute inset-x-2 top-0 h-[1.5px] pointer-events-none opacity-95 dark:opacity-20"
+              style={{
+                background:
+                  'linear-gradient(to right, transparent, rgba(255,255,255,1) 35%, rgba(255,255,255,1) 65%, transparent)',
+              }}
+            />
+
+            {/* 4. Bottom Refractive Caustic Rim */}
+            <div
+              className="absolute inset-x-2.5 bottom-0 h-[1px] pointer-events-none opacity-75 dark:opacity-10"
+              style={{
+                background:
+                  'linear-gradient(to right, transparent, rgba(255,255,255,0.8), transparent)',
+              }}
+            />
+          </div>
 
           {/* Tab Options */}
           {TABS.map((tab, idx) => {
@@ -418,12 +460,24 @@ export const MobileTabBar: React.FC = () => {
                 aria-current={isSelected ? 'page' : undefined}
                 className={`relative z-10 flex-1 h-full flex flex-col items-center justify-center gap-0.5 rounded-full outline-none transition-colors duration-200 cursor-pointer ${
                   isSelected
-                    ? 'text-white dark:text-black font-extrabold'
+                    ? 'text-black dark:text-white font-extrabold'
                     : 'text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white font-medium'
                 }`}
               >
-                <Icon size={18} strokeWidth={isSelected ? 2.3 : 1.8} />
-                <span className="text-[10px] tracking-tight leading-none font-sans font-bold">
+                <Icon
+                  size={19}
+                  strokeWidth={isSelected ? 2.4 : 1.8}
+                  className={`transition-all duration-200 ${
+                    isSelected
+                      ? 'scale-110 -translate-y-0.5'
+                      : 'scale-100 opacity-80 group-hover:opacity-100'
+                  }`}
+                />
+                <span
+                  className={`text-[10px] tracking-tight leading-none font-sans transition-all duration-200 ${
+                    isSelected ? 'font-black' : 'font-semibold'
+                  }`}
+                >
                   {tab.label}
                 </span>
               </button>
