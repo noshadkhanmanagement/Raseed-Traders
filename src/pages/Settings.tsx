@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   IconBuilding,
   IconSave,
@@ -13,6 +13,8 @@ import {
   IconDelete,
   IconLayers,
   IconCheck,
+  IconSearch,
+  IconClose,
 } from '../components/common/Icons';
 import { PageHeader } from '../components/layout/PageHeader';
 import { ItemModal } from '../components/transactions/ItemModal';
@@ -49,6 +51,9 @@ export const Settings: React.FC = () => {
   // Inline Stock Edit State
   const [stockEdits, setStockEdits] = useState<Record<string, string>>({});
   const [savingStockId, setSavingStockId] = useState<string | null>(null);
+
+  // Catalog Search State
+  const [catalogSearch, setCatalogSearch] = useState('');
 
   const loadSettings = useCallback(async () => {
     try {
@@ -390,13 +395,42 @@ export const Settings: React.FC = () => {
         </form>
 
         {/* HORIZONTALLY SCROLLABLE ITEMS & STOCK TABLE */}
-        <div className="space-y-1.5">
+        <div className="space-y-2.5">
           <div className="flex items-center justify-between text-[11px] text-zinc-400 font-medium px-1">
             <span>Material Catalog & Current Stock</span>
             <span className="sm:hidden text-[10px] text-zinc-400 flex items-center gap-1">
               <span>← Swipe horizontally →</span>
             </span>
           </div>
+
+          {/* Instant Search Bar */}
+          <div className="relative">
+            <IconSearch size={14} className="text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={catalogSearch}
+              onChange={(e) => setCatalogSearch(e.target.value)}
+              placeholder="Search materials (LOHA, लोहा, BATTERY...)"
+              className="w-full pl-10 pr-9 py-2 rounded-[14px] border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900 text-black dark:text-white text-xs placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-black/20 dark:focus:ring-white/20 transition-all"
+            />
+            {catalogSearch && (
+              <button
+                type="button"
+                onClick={() => setCatalogSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-zinc-400 hover:text-black dark:hover:text-white"
+              >
+                <IconClose size={12} />
+              </button>
+            )}
+          </div>
+          {catalogSearch.trim() && (
+            <div className="text-[11px] text-zinc-400 font-medium px-1">
+              Showing {items.filter((it) => {
+                const q = catalogSearch.trim().toLowerCase();
+                return it.name.toLowerCase().includes(q) || (it.local_name && it.local_name.toLowerCase().includes(q));
+              }).length} of {items.length} materials
+            </div>
+          )}
 
           <div className="overflow-x-auto rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 shadow-xs">
             <table className="w-full text-left border-collapse min-w-[660px]">
@@ -410,7 +444,13 @@ export const Settings: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60 text-xs">
-                {items.map((it, idx) => {
+                {items
+                  .filter((it) => {
+                    if (!catalogSearch.trim()) return true;
+                    const q = catalogSearch.trim().toLowerCase();
+                    return it.name.toLowerCase().includes(q) || (it.local_name && it.local_name.toLowerCase().includes(q));
+                  })
+                  .map((it, idx) => {
                   const isPermanent = isDefaultScrapItem(it.name);
                   const currentEditVal = stockEdits[it.id] ?? String(it.current_stock);
                   const isModified = currentEditVal !== String(it.current_stock);

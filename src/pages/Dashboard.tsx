@@ -20,7 +20,7 @@ export const Dashboard: React.FC = () => {
   const [items, setItems] = useState<ScrapItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [stockFilter, setStockFilter] = useState<'ALL' | 'IN_STOCK' | 'ZERO_STOCK'>('ALL');
-  const [sortBy, setSortBy] = useState<'name' | 'stock_desc' | 'rate_desc'>('stock_desc');
+  const [sortBy, setSortBy] = useState<'name' | 'stock_desc' | 'rate_desc' | 'recently_traded'>('stock_desc');
   const [isLoading, setIsLoading] = useState(true);
 
   // Trade Modal State
@@ -82,6 +82,11 @@ export const Dashboard: React.FC = () => {
         if (sortBy === 'name') return a.name.localeCompare(b.name);
         if (sortBy === 'stock_desc') return b.current_stock - a.current_stock;
         if (sortBy === 'rate_desc') return (b.default_purchase_rate || 0) - (a.default_purchase_rate || 0);
+        if (sortBy === 'recently_traded') {
+          const tA = new Date(a.updated_at || a.created_at || 0).getTime();
+          const tB = new Date(b.updated_at || b.created_at || 0).getTime();
+          return tB - tA;
+        }
         return 0;
       });
   }, [items, searchQuery, stockFilter, sortBy]);
@@ -280,7 +285,7 @@ export const Dashboard: React.FC = () => {
             <button
               type="button"
               onClick={() => setSortBy('stock_desc')}
-              className={`px-3 py-1 rounded-[10px] text-[11px] font-semibold transition-all ${
+              className={`px-2.5 py-1 rounded-[10px] text-[11px] font-semibold transition-all ${
                 sortBy === 'stock_desc'
                   ? 'bg-white dark:bg-[#2c2c2e] text-black dark:text-white shadow-[0_1px_4px_rgba(0,0,0,0.06)] font-bold'
                   : 'text-zinc-500 hover:text-black dark:hover:text-white'
@@ -290,25 +295,25 @@ export const Dashboard: React.FC = () => {
             </button>
             <button
               type="button"
-              onClick={() => setSortBy('rate_desc')}
-              className={`px-3 py-1 rounded-[10px] text-[11px] font-semibold transition-all ${
-                sortBy === 'rate_desc'
-                  ? 'bg-white dark:bg-[#2c2c2e] text-black dark:text-white shadow-[0_1px_4px_rgba(0,0,0,0.06)] font-bold'
-                  : 'text-zinc-500 hover:text-black dark:hover:text-white'
-              }`}
-            >
-              Rate ↓
-            </button>
-            <button
-              type="button"
               onClick={() => setSortBy('name')}
-              className={`px-3 py-1 rounded-[10px] text-[11px] font-semibold transition-all ${
+              className={`px-2.5 py-1 rounded-[10px] text-[11px] font-semibold transition-all ${
                 sortBy === 'name'
                   ? 'bg-white dark:bg-[#2c2c2e] text-black dark:text-white shadow-[0_1px_4px_rgba(0,0,0,0.06)] font-bold'
                   : 'text-zinc-500 hover:text-black dark:hover:text-white'
               }`}
             >
               A-Z
+            </button>
+            <button
+              type="button"
+              onClick={() => setSortBy('recently_traded')}
+              className={`px-2.5 py-1 rounded-[10px] text-[11px] font-semibold transition-all ${
+                sortBy === 'recently_traded'
+                  ? 'bg-white dark:bg-[#2c2c2e] text-black dark:text-white shadow-[0_1px_4px_rgba(0,0,0,0.06)] font-bold'
+                  : 'text-zinc-500 hover:text-black dark:hover:text-white'
+              }`}
+            >
+              Recent
             </button>
           </div>
         </div>
@@ -330,11 +335,19 @@ export const Dashboard: React.FC = () => {
                 className="px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3 hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 active:bg-zinc-100/80 dark:active:bg-zinc-800/80 transition-colors cursor-pointer group"
                 title="Touch to view Buy & Sell rate & time history"
               >
-                {/* Left: Unit Badge + Material Names */}
+                {/* Left: Unit Badge + Stock Dot + Material Names */}
                 <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <span className="w-10 h-10 rounded-[12px] bg-zinc-100 dark:bg-zinc-800/80 text-black dark:text-white text-xs font-bold flex items-center justify-center shrink-0 border border-black/5 dark:border-white/10 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-                    {it.default_unit}
-                  </span>
+                  <div className="relative shrink-0">
+                    <span className="w-10 h-10 rounded-[12px] bg-zinc-100 dark:bg-zinc-800/80 text-black dark:text-white text-xs font-bold flex items-center justify-center border border-black/5 dark:border-white/10 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+                      {it.default_unit}
+                    </span>
+                    {/* Stock Status Visual Dot */}
+                    <span className={`absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-[#1c1c1e] ${
+                      hasStock
+                        ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]'
+                        : 'bg-zinc-300 dark:bg-zinc-600'
+                    }`} />
+                  </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <h3 className="text-sm sm:text-[15px] font-bold text-black dark:text-white tracking-tight">

@@ -163,6 +163,31 @@ export const Analytics: React.FC = () => {
     return unifiedTransactions.filter((t) => t.type === txFilter);
   }, [unifiedTransactions, txFilter]);
 
+  // Compute KG vs PIECE breakdowns for purchases and sales
+  const purchaseWeightBreakdown = useMemo(() => {
+    let kg = 0;
+    let piece = 0;
+    unifiedTransactions.filter(t => t.type === 'PURCHASE').forEach(tx => {
+      tx.items.forEach(it => {
+        if (it.unit === 'PIECE') piece += it.quantity;
+        else kg += it.quantity;
+      });
+    });
+    return { kg, piece };
+  }, [unifiedTransactions]);
+
+  const saleWeightBreakdown = useMemo(() => {
+    let kg = 0;
+    let piece = 0;
+    unifiedTransactions.filter(t => t.type === 'SALE').forEach(tx => {
+      tx.items.forEach(it => {
+        if (it.unit === 'PIECE') piece += it.quantity;
+        else kg += it.quantity;
+      });
+    });
+    return { kg, piece };
+  }, [unifiedTransactions]);
+
   const handleExportCSV = () => {
     const headers = [
       'Type',
@@ -373,7 +398,20 @@ export const Analytics: React.FC = () => {
               {formatCurrency(rangeData.totalPurchaseAmount)}
             </div>
             <div className="mt-1 flex items-center justify-between text-[11px] text-zinc-500 font-medium">
-              <span>Qty: {formatQuantity(rangeData.totalPurchaseWeight, 'KG')}</span>
+              <span className="flex items-center gap-1.5 flex-wrap">
+                {purchaseWeightBreakdown.kg > 0 && (
+                  <span className="tabular-nums font-sans"><strong className="text-black dark:text-white">{purchaseWeightBreakdown.kg.toLocaleString('en-IN')}</strong> KG</span>
+                )}
+                {purchaseWeightBreakdown.kg > 0 && purchaseWeightBreakdown.piece > 0 && (
+                  <span className="text-zinc-300 dark:text-zinc-700">·</span>
+                )}
+                {purchaseWeightBreakdown.piece > 0 && (
+                  <span className="tabular-nums font-sans"><strong className="text-black dark:text-white">{purchaseWeightBreakdown.piece.toLocaleString('en-IN')}</strong> PIECE</span>
+                )}
+                {purchaseWeightBreakdown.kg === 0 && purchaseWeightBreakdown.piece === 0 && (
+                  <span>Qty: {formatQuantity(rangeData.totalPurchaseWeight, 'KG')}</span>
+                )}
+              </span>
               <span>{rangeData.totalPurchasesCount} Bills</span>
             </div>
           </div>
@@ -394,7 +432,20 @@ export const Analytics: React.FC = () => {
               {formatCurrency(rangeData.totalSaleAmount)}
             </div>
             <div className="mt-1 flex items-center justify-between text-[11px] text-zinc-500 font-medium">
-              <span>Qty: {formatQuantity(rangeData.totalSaleWeight, 'KG')}</span>
+              <span className="flex items-center gap-1.5 flex-wrap">
+                {saleWeightBreakdown.kg > 0 && (
+                  <span className="tabular-nums font-sans"><strong className="text-black dark:text-white">{saleWeightBreakdown.kg.toLocaleString('en-IN')}</strong> KG</span>
+                )}
+                {saleWeightBreakdown.kg > 0 && saleWeightBreakdown.piece > 0 && (
+                  <span className="text-zinc-300 dark:text-zinc-700">·</span>
+                )}
+                {saleWeightBreakdown.piece > 0 && (
+                  <span className="tabular-nums font-sans"><strong className="text-black dark:text-white">{saleWeightBreakdown.piece.toLocaleString('en-IN')}</strong> PIECE</span>
+                )}
+                {saleWeightBreakdown.kg === 0 && saleWeightBreakdown.piece === 0 && (
+                  <span>Qty: {formatQuantity(rangeData.totalSaleWeight, 'KG')}</span>
+                )}
+              </span>
               <span>{rangeData.totalSalesCount} Bills</span>
             </div>
           </div>

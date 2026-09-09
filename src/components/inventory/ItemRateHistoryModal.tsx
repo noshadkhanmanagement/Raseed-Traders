@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { BottomSheet } from '../common/BottomSheet';
 import { api } from '../../services/api';
 import { ScrapItem } from '../../types';
@@ -116,6 +116,33 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                 Sell (बिक्री) · {sales.length}
               </button>
             </div>
+
+            {/* Min / Max / Avg Rate Metric Tiles */}
+            {(() => {
+              const records = activeTab === 'BUY' ? purchases : sales;
+              if (records.length === 0) return null;
+              const rates = records.map((r) => Number(r.rate || 0)).filter((r) => r > 0);
+              if (rates.length === 0) return null;
+              const minRate = Math.min(...rates);
+              const maxRate = Math.max(...rates);
+              const avgRate = Number((rates.reduce((a, b) => a + b, 0) / rates.length).toFixed(2));
+              return (
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="px-3 py-2.5 rounded-[14px] bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200/50 dark:border-emerald-900/50 text-center">
+                    <div className="text-[9px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Sabse Sasta</div>
+                    <div className="text-sm font-extrabold text-emerald-700 dark:text-emerald-300 tabular-nums font-sans mt-0.5">{formatCurrency(minRate)}</div>
+                  </div>
+                  <div className="px-3 py-2.5 rounded-[14px] bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-900/50 text-center">
+                    <div className="text-[9px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Average (औसत)</div>
+                    <div className="text-sm font-extrabold text-amber-700 dark:text-amber-300 tabular-nums font-sans mt-0.5">{formatCurrency(avgRate)}</div>
+                  </div>
+                  <div className="px-3 py-2.5 rounded-[14px] bg-rose-50/80 dark:bg-rose-950/30 border border-rose-200/50 dark:border-rose-900/50 text-center">
+                    <div className="text-[9px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Sabse Mehenga</div>
+                    <div className="text-sm font-extrabold text-rose-700 dark:text-rose-300 tabular-nums font-sans mt-0.5">{formatCurrency(maxRate)}</div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* TAB CONTENT: BUY LIST */}
             {activeTab === 'BUY' && (
