@@ -8,11 +8,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview",
-    "test:screens": "node scripts/testAllScreens.cjs",
-    "test:e2e": "node scripts/testEverything.cjs",
-    "test:scenario": "node scripts/verifyScenario.cjs",
-    "test:audit": "node scripts/auditUIUX.cjs"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

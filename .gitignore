@@ -29,3 +29,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local development archives and testing tools (removed from repo)
+dev_archive/
+artifacts/
+scripts/
+supabase/
