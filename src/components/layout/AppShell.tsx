@@ -84,26 +84,20 @@ export const AppShell: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 pb-32 md:pb-8 relative">
-        {/* iOS Top Ambient Fade Overlay (top above top screen like exact iPhone) */}
-        <div
-          className="md:hidden fixed top-0 left-0 right-0 z-40 pointer-events-none h-[max(0.75rem,env(safe-area-inset-top,0px))] bg-gradient-to-b from-white/90 to-transparent dark:from-black/90 select-none"
-          aria-hidden="true"
-        />
-
-        {/* Mobile Sticky Top Header */}
-        <header className="md:hidden sticky top-0 z-30 bg-white/80 dark:bg-black/80 backdrop-blur-3xl border-b border-zinc-200/80 dark:border-zinc-800/80 px-4 pt-[max(0.625rem,env(safe-area-inset-top,0px))] pb-2.5 flex items-center justify-between shadow-xs">
+        {/* Mobile Sticky Top Header (Authentic iOS Liquid Glass Header) */}
+        <header className="md:hidden sticky top-0 z-40 bg-white/75 dark:bg-black/75 backdrop-blur-2xl border-b border-black/[0.06] dark:border-white/[0.08] px-4 pt-[max(0.75rem,env(safe-area-inset-top,0px))] pb-2.5 flex items-center justify-between shadow-xs select-none">
           <div className="flex items-center space-x-2.5">
             <img
               src={logoSrc}
               alt="Logo"
               className="w-7 h-7 object-contain shrink-0 icon-press"
             />
-            <span className="text-sm font-extrabold text-black dark:text-white tracking-tight font-sans">
+            <span className="text-sm font-black text-black dark:text-white tracking-tight font-sans">
               Raseed Traders
             </span>
           </div>
 
-          <div className="flex items-center space-x-1.5">
+          <div className="flex items-center space-x-1">
             {/* Quick theme cycle button for mobile */}
             <button
               type="button"
@@ -128,16 +122,14 @@ export const AppShell: React.FC = () => {
             >
               <IconSearch size={16} />
             </button>
-            <button
-              type="button"
-              onClick={() => setIsQuickActionOpen(true)}
-              className="flex items-center space-x-1 px-3 py-1.5 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-bold shadow-xs btn-press"
-            >
-              <IconPlus size={14} />
-              <span>New</span>
-            </button>
           </div>
         </header>
+
+        {/* iOS Top Dissolution Gradient below sticky header */}
+        <div
+          className="md:hidden sticky top-[48px] z-30 pointer-events-none h-3 bg-gradient-to-b from-black/[0.04] dark:from-white/[0.02] to-transparent -mb-3 select-none"
+          aria-hidden="true"
+        />
 
         {/* Page Inner Viewport */}
         <div className="flex-1 p-4 md:p-6 max-w-7xl w-full mx-auto">
