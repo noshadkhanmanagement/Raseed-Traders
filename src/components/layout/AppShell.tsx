@@ -14,18 +14,15 @@ import {
   Sun,
   Moon,
   Laptop,
-  Lock,
 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTheme } from '../../context/ThemeContext';
-import { useAuth } from '../../context/AuthContext';
 import { ScrapItem } from '../../types';
 
 export const AppShell: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { theme, resolvedTheme, setTheme, logoSrc } = useTheme();
-  const { logout } = useAuth();
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isQuickActionOpen, setIsQuickActionOpen] = useState(false);
@@ -101,7 +98,7 @@ export const AppShell: React.FC = () => {
             <img
               src={logoSrc}
               alt="Logo"
-              className="w-7 h-7 rounded-lg object-contain shrink-0 border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-black icon-press shadow-2xs"
+              className="w-7 h-7 object-contain shrink-0 icon-press"
             />
             <span className="text-sm font-extrabold text-black dark:text-white tracking-tight font-sans">
               Raseed Traders
@@ -123,14 +120,6 @@ export const AppShell: React.FC = () => {
               ) : (
                 <Sun className="w-4 h-4" />
               )}
-            </button>
-            <button
-              type="button"
-              onClick={logout}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 icon-press"
-              title="Lock / Logout App (लॉग आउट)"
-            >
-              <Lock className="w-4 h-4" />
             </button>
 
             <button
@@ -171,58 +160,29 @@ export const AppShell: React.FC = () => {
           />
         </div>
 
-        {/* Proper Functional Page Footer */}
+        {/* Proper Minimal Functional Page Footer (No Nav Links) */}
         <footer className="mt-auto border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 py-4 px-4 md:px-6 text-xs text-zinc-600 dark:text-zinc-400">
-          <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 text-center md:text-left">
-            <div className="space-y-0.5">
-              <div className="flex items-center justify-center md:justify-start space-x-2">
-                <img src={logoSrc} alt="Logo" className="w-4 h-4 rounded-xs object-contain icon-press" />
-                <span className="font-bold text-black dark:text-white">Raseed Traders</span>
-                <span className="text-zinc-300 dark:text-zinc-700 hidden sm:inline">·</span>
-                <span className="text-zinc-600 dark:text-zinc-400 hidden sm:inline">
-                  Behind Masjid, Bus Stand, Lakhnadon 480886
-                </span>
-              </div>
-              <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex flex-wrap items-center justify-center md:justify-start gap-x-2">
-                <span className="sm:hidden">Behind Masjid, Bus Stand, Lakhnadon 480886</span>
-                <span>
-                  Mob:{' '}
-                  <a
-                    href="tel:+917440619649"
-                    className="text-black dark:text-white hover:underline font-semibold"
-                  >
-                    +91 744 061 9649
-                  </a>
-                </span>
-                <span className="text-zinc-300 dark:text-zinc-700">·</span>
-                <span>All data saved locally</span>
-              </div>
+          <div className="max-w-7xl mx-auto flex flex-col items-center justify-center gap-1.5 text-center">
+            <div className="flex items-center justify-center space-x-2">
+              <img src={logoSrc} alt="Logo" className="w-4 h-4 object-contain icon-press" />
+              <span className="font-bold text-black dark:text-white">Raseed Traders</span>
+              <span className="text-zinc-300 dark:text-zinc-700">·</span>
+              <span className="text-zinc-600 dark:text-zinc-400">
+                Behind Masjid, Bus Stand, Lakhnadon 480886
+              </span>
             </div>
-
-            <div className="flex items-center space-x-4 text-[11px]">
-              <button
-                type="button"
-                onClick={() => setIsPurchaseOpen(true)}
-                className="text-black dark:text-white hover:underline font-semibold btn-press"
-              >
-                Buy (खरीदी)
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsSaleOpen(true)}
-                className="text-black dark:text-white hover:underline font-semibold btn-press"
-              >
-                Sell (बिक्री)
-              </button>
-              <Link to="/inventory" className="hover:text-black dark:hover:text-white transition-colors">
-                Stock (स्टॉक)
-              </Link>
-              <Link to="/analytics" className="hover:text-black dark:hover:text-white transition-colors">
-                Analytics (हिसाब)
-              </Link>
-              <Link to="/settings" className="hover:text-black dark:hover:text-white transition-colors font-medium">
-                Settings (सेटिंग्स)
-              </Link>
+            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex flex-wrap items-center justify-center gap-x-2">
+              <span>
+                Mob:{' '}
+                <a
+                  href="tel:+917440619649"
+                  className="text-black dark:text-white hover:underline font-semibold"
+                >
+                  +91 744 061 9649
+                </a>
+              </span>
+              <span className="text-zinc-300 dark:text-zinc-700">·</span>
+              <span>All data saved locally</span>
             </div>
           </div>
         </footer>

@@ -32,12 +32,17 @@ export default {
         sans: [
           '-apple-system',
           'BlinkMacSystemFont',
+          '"SF Pro"',
           '"SF Pro Display"',
           '"SF Pro Text"',
-          'Inter',
-          'ui-sans-serif',
           'system-ui',
           'sans-serif',
+        ],
+        mono: [
+          '"SF Mono"',
+          'SFMono-Regular',
+          'ui-monospace',
+          'monospace',
         ],
       },
       boxShadow: {

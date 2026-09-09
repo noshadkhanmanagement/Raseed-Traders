@@ -51,13 +51,11 @@ export const Login: React.FC = () => {
         <div className="rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-6 sm:p-8 shadow-xl space-y-6">
           {/* Logo & Branding */}
           <div className="text-center space-y-3">
-            <div className="inline-block p-2 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xs">
-              <img
-                src={logoSrc}
-                alt="Raseed Traders Logo"
-                className="w-16 h-16 sm:w-20 sm:h-20 object-contain mx-auto"
-              />
-            </div>
+            <img
+              src={logoSrc}
+              alt="Raseed Traders Logo"
+              className="w-16 h-16 sm:w-20 sm:h-20 object-contain mx-auto"
+            />
             <div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-black dark:text-white uppercase font-sans">
                 Raseed Traders

@@ -47,7 +47,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <img
           src={logoSrc}
           alt="Logo"
-          className="w-9 h-9 rounded-lg object-contain shrink-0 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black icon-press"
+          className="w-9 h-9 object-contain shrink-0 icon-press"
         />
         <div className="min-w-0">
           <div className="text-sm font-bold text-black dark:text-white tracking-tight truncate">
