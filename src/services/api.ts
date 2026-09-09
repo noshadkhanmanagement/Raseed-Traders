@@ -1,5 +1,5 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import { localDb } from './localEngine';
+import { localDb, INITIAL_SCRAP_ITEMS } from './localEngine';
 import {
   Business,
   ScrapItem,
@@ -60,7 +60,15 @@ export const api = {
       let query = supabase.from('items').select('*').order('name');
       if (!includeInactive) query = query.eq('is_active', true);
       const { data, error } = await query;
-      if (!error && data) return data;
+      if (!error && data) {
+        // Auto-heal: If any standard items are missing (e.g. 2 TYRE accidentally deleted), restore in background!
+        const existingNames = new Set(data.map((i) => (i.name || '').toUpperCase().trim()));
+        const missing = INITIAL_SCRAP_ITEMS.filter((def) => !existingNames.has(def.name.toUpperCase().trim()));
+        if (missing.length > 0) {
+          this.restoreDefaultItems().catch((err) => console.warn('Auto-restore default items warning:', err));
+        }
+        return data.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      }
     }
     return localDb.getItems(includeInactive);
   },
@@ -374,6 +382,69 @@ export const api = {
     }
   },
 
+  async resetItemStock(id: string): Promise<ScrapItem> {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await Promise.allSettled([
+          supabase.from('stock_cost_history').delete().eq('item_id', id),
+          supabase.from('inventory_ledger').delete().eq('item_id', id),
+          supabase.from('stock_adjustments').delete().eq('item_id', id),
+        ]);
+        const { data, error } = await supabase
+          .from('items')
+          .update({
+            current_stock: 0,
+            average_cost: 0,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', id)
+          .select()
+          .single();
+        if (!error && data) {
+          try {
+            localDb.resetItemStock(id);
+          } catch {}
+          return data;
+        }
+      } catch (err) {
+        console.warn('Supabase resetItemStock warning, continuing with localDb:', err);
+      }
+    }
+    return localDb.resetItemStock(id);
+  },
+
+  async restoreDefaultItems(): Promise<ScrapItem[]> {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data: existing } = await supabase.from('items').select('*');
+        const existingMap = new Map((existing || []).map((it) => [(it.name || '').toUpperCase().trim(), it]));
+        const biz = await this.getBusiness();
+
+        for (const def of INITIAL_SCRAP_ITEMS) {
+          const norm = def.name.toUpperCase().trim();
+          if (!existingMap.has(norm)) {
+            await supabase.from('items').insert([{
+              business_id: biz.id,
+              name: def.name,
+              local_name: def.local_name,
+              default_unit: def.default_unit,
+              default_purchase_rate: 0,
+              default_sale_rate: 0,
+              current_stock: 0,
+              average_cost: 0,
+              is_active: true,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            }]);
+          }
+        }
+      } catch (err) {
+        console.warn('Supabase restoreDefaultItems warning:', err);
+      }
+    }
+    return localDb.restoreDefaultItems();
+  },
+
   async toggleItemActive(id: string): Promise<ScrapItem> {
     if (isSupabaseConfigured && supabase) {
       const { data: item } = await supabase.from('items').select('is_active').eq('id', id).single();
@@ -390,7 +461,7 @@ export const api = {
       let query = supabase.from('parties').select('*').order('name');
       if (!includeInactive) query = query.eq('is_active', true);
       const { data, error } = await query;
-      if (!error && data) return data;
+      if (!error && data) return data.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     }
     return localDb.getParties(includeInactive);
   },

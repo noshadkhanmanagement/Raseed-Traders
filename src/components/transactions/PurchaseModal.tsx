@@ -281,7 +281,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
             </button>
           </div>
           <div className="text-[10px] text-zinc-500 dark:text-zinc-400 mb-2">
-            💡 स्क्रैप के दाम हर बार अलग हो सकते हैं — इस समय की सटीक खरीद दर (Spot Rate ₹) दर्ज करें।
+            स्क्रैप के दाम हर बार अलग हो सकते हैं — इस समय की सटीक खरीद दर (Spot Rate ₹) दर्ज करें।
           </div>
 
           <div className="space-y-2 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 bg-zinc-50 dark:bg-zinc-900/50">

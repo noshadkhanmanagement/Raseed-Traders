@@ -1,6 +1,6 @@
 import React from 'react';
-import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { IconChevron } from '../common/Icons';
 
 interface PageHeaderProps {
   title: string;
@@ -26,7 +26,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             onClick={() => navigate(-1)}
             className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-500 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 icon-press"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <IconChevron direction="left" size={16} />
           </button>
         )}
         <div>

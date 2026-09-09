@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Lock, Eye, EyeOff, ArrowRight, ShieldCheck, Sun, Moon } from 'lucide-react';
+import { IconAlert } from '../components/common/Icons';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
@@ -71,7 +72,7 @@ export const Login: React.FC = () => {
           <form onSubmit={handleLogin} className="space-y-4">
             {error && (
               <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs font-semibold flex items-center gap-2">
-                <span>⚠️</span>
+                <IconAlert size={16} className="shrink-0" />
                 <span>गलत पासवर्ड! कृपया सही पासवर्ड दर्ज करें (Invalid password).</span>
               </div>
             )}

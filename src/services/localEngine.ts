@@ -138,12 +138,28 @@ class LocalEngine {
           parsed.business.name = 'Raseed Traders';
           parsed.business.phone = '+91 744 061 9649';
           parsed.business.address = 'Behind Masjid, Bus Stand, Lakhnadon 480886';
-          // Ensure PALIYA is correctly spelled as पलिया
-          parsed.items.forEach((it: ScrapItem) => {
-            if (it.name === 'PALIYA' && it.local_name === 'पालिया') {
-              it.local_name = 'पलिया';
+
+          // Strictly enforce ONLY the 25 allowed items, without extra unwanted items
+          const allowedNames = new Set(INITIAL_SCRAP_ITEMS.map((i) => i.name.toUpperCase().trim()));
+          parsed.items = parsed.items.filter((it: ScrapItem) => allowedNames.has((it.name || '').toUpperCase().trim()));
+
+          // Auto-heal/restore any missing items from the 25 (e.g. if 2 TYRE was accidentally deleted)
+          INITIAL_SCRAP_ITEMS.forEach((def, idx) => {
+            const found = parsed.items.find((it: ScrapItem) => (it.name || '').toUpperCase().trim() === def.name.toUpperCase().trim());
+            if (!found) {
+              parsed.items.push({
+                ...def,
+                id: `item-${String(idx + 1).padStart(3, '0')}`,
+                business_id: DEFAULT_BUSINESS_ID,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              });
+            } else {
+              found.local_name = def.local_name;
+              found.default_unit = def.default_unit;
             }
           });
+
           return parsed;
         }
       }
@@ -219,7 +235,9 @@ class LocalEngine {
 
   // --- ITEMS MASTER ---
   public getItems(includeInactive = false): ScrapItem[] {
-    return this.data.items.filter((item) => includeInactive || item.is_active);
+    return this.data.items
+      .filter((item) => includeInactive || item.is_active)
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
 
   public getItemById(id: string): ScrapItem | undefined {
@@ -337,6 +355,49 @@ class LocalEngine {
     this.saveToStorage();
   }
 
+  public resetItemStock(id: string): ScrapItem {
+    const item = this.getItemById(id);
+    if (!item) throw new Error('Item not found');
+    item.current_stock = 0;
+    item.average_cost = 0;
+    item.updated_at = new Date().toISOString();
+
+    // Reset ledger history and adjustment history for this item
+    this.data.inventory_ledger = this.data.inventory_ledger.filter((l) => l.item_id !== id);
+    this.data.stock_cost_history = this.data.stock_cost_history.filter((h) => h.item_id !== id);
+    this.data.stock_adjustments = this.data.stock_adjustments.filter((a) => a.item_id !== id);
+
+    this.saveToStorage();
+    return item;
+  }
+
+  public restoreDefaultItems(): ScrapItem[] {
+    const now = new Date().toISOString();
+    const allowedNames = new Set(INITIAL_SCRAP_ITEMS.map((i) => i.name.toUpperCase().trim()));
+
+    // Prune any rogue items
+    this.data.items = this.data.items.filter((it) => allowedNames.has((it.name || '').toUpperCase().trim()));
+
+    INITIAL_SCRAP_ITEMS.forEach((def, idx) => {
+      const existing = this.data.items.find((it) => (it.name || '').toUpperCase().trim() === def.name.toUpperCase().trim());
+      if (!existing) {
+        this.data.items.push({
+          ...def,
+          id: `item-${String(idx + 1).padStart(3, '0')}`,
+          business_id: DEFAULT_BUSINESS_ID,
+          created_at: now,
+          updated_at: now,
+        });
+      } else {
+        existing.local_name = def.local_name;
+        existing.default_unit = def.default_unit;
+      }
+    });
+
+    this.saveToStorage();
+    return this.data.items;
+  }
+
   public toggleItemActive(id: string): ScrapItem {
     const item = this.getItemById(id);
     if (!item) {
@@ -347,7 +408,9 @@ class LocalEngine {
 
   // --- PARTIES ---
   public getParties(includeInactive = false): Party[] {
-    return this.data.parties.filter((p) => includeInactive || p.is_active);
+    return this.data.parties
+      .filter((p) => includeInactive || p.is_active)
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
 
   public getPartyById(id: string): Party | undefined {

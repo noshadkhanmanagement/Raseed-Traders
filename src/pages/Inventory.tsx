@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { Search, Plus, SlidersHorizontal, Trash2, Edit3, History } from 'lucide-react';
+import {
+  IconSearch,
+  IconPlus,
+  IconAdjust,
+  IconDelete,
+  IconReset,
+  IconHistory,
+} from '../components/common/Icons';
 import { PageHeader } from '../components/layout/PageHeader';
+import { BottomSheet } from '../components/common/BottomSheet';
 import { ItemAdjustmentModal } from '../components/inventory/ItemAdjustmentModal';
 import { ItemModal } from '../components/transactions/ItemModal';
 import { ItemRateHistoryModal } from '../components/inventory/ItemRateHistoryModal';
@@ -27,6 +35,13 @@ export const Inventory: React.FC = () => {
   const [selectedItemToAdjust, setSelectedItemToAdjust] = useState<ScrapItem | null>(null);
   const [selectedItemToEdit, setSelectedItemToEdit] = useState<ScrapItem | null>(null);
   const [selectedHistoryItemId, setSelectedHistoryItemId] = useState<string | null>(null);
+
+  // 2-Option Deletion / Count Reset State
+  const [itemForDeletion, setItemForDeletion] = useState<ScrapItem | null>(null);
+  const [isDeleteChoiceModalOpen, setIsDeleteChoiceModalOpen] = useState(false);
+  const [isConfirmingPermanentDelete, setIsConfirmingPermanentDelete] = useState(false);
+  const [isProcessingAction, setIsProcessingAction] = useState(false);
+  const [isRestoringDefaults, setIsRestoringDefaults] = useState(false);
 
   const handleOpenHistory = (item: ScrapItem) => {
     setSelectedHistoryItemId(item.id);
@@ -77,17 +92,51 @@ export const Inventory: React.FC = () => {
     setIsItemModalOpen(true);
   };
 
-  const handleDeleteClick = async (item: ScrapItem) => {
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete "${item.name} — ${item.local_name}"?\n\nक्या आप वाकई इस सामग्री को हटाना चाहते हैं?`
-    );
-    if (!confirmDelete) return;
+  const handleDeleteClick = (item: ScrapItem) => {
+    setItemForDeletion(item);
+    setIsConfirmingPermanentDelete(false);
+    setIsDeleteChoiceModalOpen(true);
+  };
 
+  const handleResetCountsAction = async () => {
+    if (!itemForDeletion) return;
+    setIsProcessingAction(true);
     try {
-      await api.deleteItem(item.id);
+      await api.resetItemStock(itemForDeletion.id);
+      await loadInventory();
+      setIsDeleteChoiceModalOpen(false);
+      setItemForDeletion(null);
+    } catch (err: any) {
+      alert(err.message || 'Error resetting counts');
+    } finally {
+      setIsProcessingAction(false);
+    }
+  };
+
+  const handlePermanentDeleteAction = async () => {
+    if (!itemForDeletion) return;
+    setIsProcessingAction(true);
+    try {
+      await api.deleteItem(itemForDeletion.id);
+      await loadInventory();
+      setIsDeleteChoiceModalOpen(false);
+      setItemForDeletion(null);
+    } catch (err: any) {
+      alert(err.message || 'Error deleting item');
+    } finally {
+      setIsProcessingAction(false);
+    }
+  };
+
+  const handleRestoreDefaults = async () => {
+    setIsRestoringDefaults(true);
+    try {
+      await api.restoreDefaultItems();
       await loadInventory();
     } catch (err: any) {
-      alert(err.message || 'सामान हटाने में समस्या आई (Error deleting item).');
+      alert(err.message || 'Error restoring default items');
+    } finally {
+      setIsRestoringDefaults(false);
     }
   };
 
@@ -100,10 +149,20 @@ export const Inventory: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               type="button"
+              onClick={handleRestoreDefaults}
+              disabled={isRestoringDefaults}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 btn-press shadow-xs disabled:opacity-50"
+              title="Restore any missing default items (डिफ़ॉल्ट 25 सामग्री रीस्टोर करें)"
+            >
+              <IconReset size={14} className={isRestoringDefaults ? 'animate-spin' : ''} />
+              <span className="hidden sm:inline">{isRestoringDefaults ? 'Restoring...' : 'Restore 25 Items'}</span>
+            </button>
+            <button
+              type="button"
               onClick={() => handleAdjustClick()}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-black dark:text-white text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 btn-press shadow-xs"
             >
-              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <IconAdjust size={14} />
               <span>Adjust Stock (स्टॉक बदलें)</span>
             </button>
             <button
@@ -111,7 +170,7 @@ export const Inventory: React.FC = () => {
               onClick={handleAddNewClick}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black dark:bg-white text-white dark:text-black text-xs font-semibold hover:opacity-90 btn-press shadow-xs"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <IconPlus size={14} />
               <span>Add Material (नया सामान)</span>
             </button>
           </div>
@@ -143,7 +202,7 @@ export const Inventory: React.FC = () => {
 
       {/* Search Filter */}
       <div className="relative">
-        <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+        <IconSearch size={16} className="text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
         <input
           type="text"
           value={searchQuery}
@@ -196,7 +255,7 @@ export const Inventory: React.FC = () => {
                       >
                         <div className="font-bold text-sm text-black dark:text-white group-hover:underline flex items-center gap-1.5">
                           <span>{it.name}</span>
-                          <History className="w-3 h-3 text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <IconHistory size={12} className="text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
                         <div className="text-xs text-zinc-500 dark:text-zinc-400">{it.local_name}</div>
                       </td>
@@ -235,7 +294,7 @@ export const Inventory: React.FC = () => {
                             className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                             title="Rate Fluctuation Log (कब किस रेट में खरीदा गया)"
                           >
-                            <History className="w-3.5 h-3.5 text-zinc-400" />
+                            <IconHistory size={14} className="text-zinc-400" />
                             <span className="hidden sm:inline">Rates</span>
                           </button>
                           <button
@@ -244,7 +303,7 @@ export const Inventory: React.FC = () => {
                             className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold rounded-lg border border-black dark:border-white bg-black dark:bg-white text-white dark:text-black hover:opacity-90 transition-opacity btn-press shadow-xs"
                             title="Adjust Weight, Price & Delete (वजन, भाव व विलोपन)"
                           >
-                            <SlidersHorizontal className="w-3.5 h-3.5" />
+                            <IconAdjust size={14} />
                             <span>Adjust (सुधार)</span>
                           </button>
                           <button
@@ -253,7 +312,7 @@ export const Inventory: React.FC = () => {
                             className="p-1.5 text-xs font-semibold rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-400 hover:text-red-600 hover:border-red-300 dark:hover:border-red-800 transition-colors"
                             title="Delete Material (सामग्री हटाएं)"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <IconDelete size={14} />
                           </button>
                         </div>
                       </td>
@@ -299,6 +358,113 @@ export const Inventory: React.FC = () => {
         onRecordPurchase={(it) => openPurchase?.(it)}
         onRecordSale={(it) => openSale?.(it)}
       />
+
+      {/* 2-Option Delete / Reset Counts Modal */}
+      <BottomSheet
+        isOpen={isDeleteChoiceModalOpen && !!itemForDeletion}
+        onClose={() => {
+          setIsDeleteChoiceModalOpen(false);
+          setItemForDeletion(null);
+          setIsConfirmingPermanentDelete(false);
+        }}
+        title="Delete or Reset Material (सामग्री हटाएं या गिनती 0 करें)"
+        subtitle={itemForDeletion ? `${itemForDeletion.name} — ${itemForDeletion.local_name} (${itemForDeletion.default_unit})` : ''}
+        maxWidth="max-w-md"
+      >
+        {itemForDeletion && (
+          <div className="space-y-4">
+            <div className="p-3 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs">
+              <div className="font-extrabold text-black dark:text-white">
+                {itemForDeletion.name} <span className="text-zinc-500 font-normal">({itemForDeletion.local_name})</span>
+              </div>
+              <div className="font-mono font-bold text-zinc-700 dark:text-zinc-300">
+                Stock: {itemForDeletion.current_stock.toLocaleString('en-IN')} {itemForDeletion.default_unit}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {/* Option 1: Reset Counts / Stock to 0 */}
+              <div className="p-3.5 rounded-xl border border-amber-300/70 dark:border-amber-900/50 bg-amber-50/60 dark:bg-amber-950/20 space-y-2">
+                <div className="flex items-center gap-1.5 text-xs font-extrabold text-amber-900 dark:text-amber-200">
+                  <IconReset size={14} className="text-amber-600 dark:text-amber-400 shrink-0" />
+                  <span>Option 1: Delete Counts (सिर्फ गिनती / स्टॉक 0 करें)</span>
+                </div>
+                <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-snug">
+                  सामग्री लिस्ट में हमेशा सुरक्षित रहेगी, केवल इसका स्टॉक शून्य (0) हो जाएगा। (Keep in list, reset stock count to 0)
+                </p>
+                <button
+                  type="button"
+                  disabled={isProcessingAction}
+                  onClick={handleResetCountsAction}
+                  className="w-full py-2 px-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-50 btn-press"
+                >
+                  <IconReset size={14} />
+                  <span>{isProcessingAction ? 'Resetting...' : 'Reset Stock Count to 0 (गिनती 0 करें)'}</span>
+                </button>
+              </div>
+
+              {/* Option 2: Delete Completely from List */}
+              <div className="p-3.5 rounded-xl border border-red-300/70 dark:border-red-900/50 bg-red-50/60 dark:bg-red-950/20 space-y-2">
+                <div className="flex items-center gap-1.5 text-xs font-extrabold text-red-900 dark:text-red-200">
+                  <IconDelete size={14} className="text-red-600 dark:text-red-400 shrink-0" />
+                  <span>Option 2: Delete from List (सामग्री पूरी तरह हटाएं)</span>
+                </div>
+                <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-snug">
+                  सावधानी: यह सामग्री लिस्ट और इसके सभी रिकॉर्ड्स हमेशा के लिए हटा दिए जाएंगे।
+                </p>
+
+                {!isConfirmingPermanentDelete ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsConfirmingPermanentDelete(true)}
+                    className="w-full py-2 px-3 rounded-xl border border-red-400 dark:border-red-700 bg-white dark:bg-zinc-900 text-red-700 dark:text-red-400 text-xs font-bold hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors flex items-center justify-center gap-1.5 shadow-xs"
+                  >
+                    <IconDelete size={14} />
+                    <span>Delete "{itemForDeletion.name}" Permanently</span>
+                  </button>
+                ) : (
+                  <div className="p-2.5 rounded-lg bg-red-100/80 dark:bg-red-900/40 border border-red-300 dark:border-red-700 space-y-2">
+                    <p className="text-[11px] font-bold text-red-900 dark:text-red-200 leading-tight">
+                      क्या आप वाकई "{itemForDeletion.name}" को हमेशा के लिए हटाना चाहते हैं?
+                    </p>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setIsConfirmingPermanentDelete(false)}
+                        className="flex-1 py-1 px-2 rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-[10px] font-semibold text-zinc-700 dark:text-zinc-200"
+                      >
+                        रद्द करें (Keep)
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isProcessingAction}
+                        onClick={handlePermanentDeleteAction}
+                        className="flex-1 py-1 px-2 rounded-md bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold disabled:opacity-50 btn-press"
+                      >
+                        {isProcessingAction ? 'Deleting...' : 'हाँ, हमेशा हटाएं'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800 flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsDeleteChoiceModalOpen(false);
+                  setItemForDeletion(null);
+                  setIsConfirmingPermanentDelete(false);
+                }}
+                className="px-4 py-1.5 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white rounded-lg transition-colors"
+              >
+                रद्द करें (Cancel)
+              </button>
+            </div>
+          </div>
+        )}
+      </BottomSheet>
     </div>
   );
 };

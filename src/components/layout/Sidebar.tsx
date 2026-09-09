@@ -1,14 +1,16 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
-  LayoutDashboard,
-  ShoppingBag,
-  TrendingUp,
-  Package,
-  Calculator,
-  Settings as SettingsIcon,
-  PlusCircle,
-  Search,
+  NavHome,
+  NavBuy,
+  NavStock,
+  NavSell,
+  NavAnalytics,
+  NavSettings,
+  IconSearch,
+  IconPlus,
+} from '../common/Icons';
+import {
   Sun,
   Moon,
   Laptop,
@@ -30,12 +32,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { logout } = useAuth();
 
   const navItems = [
-    { to: '/', label: 'Dashboard (डैशबोर्ड)', icon: LayoutDashboard },
-    { to: '/purchases', label: 'Purchases (खरीदी)', icon: ShoppingBag },
-    { to: '/inventory', label: 'Stock (स्टॉक)', icon: Package },
-    { to: '/sales', label: 'Sales (बिक्री)', icon: TrendingUp },
-    { to: '/analytics', label: 'Analytics (हिसाब-किताब)', icon: Calculator },
-    { to: '/settings', label: 'Settings (सेटिंग्स)', icon: SettingsIcon },
+    { to: '/', label: 'Dashboard (डैशबोर्ड)', icon: NavHome },
+    { to: '/purchases', label: 'Purchases (खरीदी)', icon: NavBuy },
+    { to: '/inventory', label: 'Stock (स्टॉक)', icon: NavStock },
+    { to: '/sales', label: 'Sales (बिक्री)', icon: NavSell },
+    { to: '/analytics', label: 'Analytics (हिसाब-किताब)', icon: NavAnalytics },
+    { to: '/settings', label: 'Settings (सेटिंग्स)', icon: NavSettings },
   ];
 
   return (
@@ -64,7 +66,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           onClick={onOpenQuickAction}
           className="w-full flex items-center justify-center space-x-1.5 py-2 px-3 text-xs font-semibold text-white bg-black dark:text-black dark:bg-white rounded-lg shadow-sm hover:opacity-90 btn-press"
         >
-          <PlusCircle className="w-4 h-4 stroke-[2.2]" />
+          <IconPlus size={16} strokeWidth={2.2} />
           <span>New Entry (एंट्री करें)</span>
         </button>
 
@@ -74,7 +76,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           className="w-full flex items-center justify-between py-1.5 px-2.5 text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 transition-colors"
         >
           <span className="flex items-center space-x-1.5">
-            <Search className="w-3.5 h-3.5 text-zinc-400" />
+            <IconSearch size={14} className="text-zinc-400" />
             <span>Search (खोजें)...</span>
           </span>
           <kbd className="text-[10px] text-zinc-500 font-mono bg-zinc-200 dark:bg-zinc-800 px-1.5 py-0.5 rounded">
