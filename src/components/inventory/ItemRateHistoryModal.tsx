@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { BottomSheet } from '../common/BottomSheet';
 import { api } from '../../services/api';
 import { ScrapItem } from '../../types';
@@ -8,8 +8,6 @@ interface ItemRateHistoryModalProps {
   itemId: string | null;
   isOpen: boolean;
   onClose: () => void;
-  onRecordPurchase?: (item: ScrapItem) => void;
-  onRecordSale?: (item: ScrapItem) => void;
 }
 
 type TabType = 'BUY' | 'SELL';

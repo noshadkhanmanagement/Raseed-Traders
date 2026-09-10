@@ -15,7 +15,6 @@ import { CustomExpenseModal } from '../components/transactions/CustomExpenseModa
 import { BottomSheet } from '../components/common/BottomSheet';
 import { api } from '../services/api';
 import { ScrapItem } from '../types';
-import { formatCurrency } from '../utils/formatters';
 
 export const Dashboard: React.FC = () => {
   const [items, setItems] = useState<ScrapItem[]>([]);
@@ -158,7 +157,7 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 page-enter max-w-4xl mx-auto font-[-apple-system,BlinkMacSystemFont,'SF_Pro_Text','SF_Pro_Display',sans-serif]">
+    <div className="space-y-4 page-enter max-w-4xl mx-auto pb-32 font-[-apple-system,BlinkMacSystemFont,'SF_Pro_Text','SF_Pro_Display',sans-serif]">
       {/* 1. Shop Header - Apple iOS Large Title */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-black/5 dark:border-white/10">
         <div>
@@ -338,7 +337,7 @@ export const Dashboard: React.FC = () => {
         ) : filteredItems.length === 0 ? (
           <div className="py-16 text-center text-xs text-zinc-400 font-medium">No scrap materials found.</div>
         ) : (
-          filteredItems.map((it, idx) => {
+          filteredItems.map((it) => {
             const hasStock = it.current_stock > 0;
             return (
               <div

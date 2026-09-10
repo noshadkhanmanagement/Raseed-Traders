@@ -1,9 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  NavStock as IconStock,
-  IconAdjust,
-  IconDelete,
-  IconReset,
   IconAlert,
   IconCheck,
 } from '../common/Icons';
@@ -18,8 +14,6 @@ interface ItemAdjustmentModalProps {
   preselectedItemId?: string | null;
 }
 
-type StockAdjustMode = 'DIRECT' | 'DELTA';
-
 export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
   isOpen,
   onClose,
@@ -33,18 +27,11 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
   const [successMessage, setSuccessMessage] = useState('');
 
   // Form State: Weight / Stock
-  const [stockMode, setStockMode] = useState<StockAdjustMode>('DIRECT');
   const [directStockInput, setDirectStockInput] = useState('');
-  const [deltaDirection, setDeltaDirection] = useState<'ADD' | 'DEDUCT'>('ADD');
-  const [deltaQuantityInput, setDeltaQuantityInput] = useState('');
   const [reason, setReason] = useState('');
 
-  // Option 1: Delete / Reset Counts State
-  const [isConfirmingResetCounts, setIsConfirmingResetCounts] = useState(false);
+  // Option 1 & 2 loading states
   const [isResettingCounts, setIsResettingCounts] = useState(false);
-
-  // Option 2: Complete Deletion State
-  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const initItemFields = useCallback((itemId: string, itemList?: ScrapItem[]) => {
@@ -52,8 +39,6 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
     const it = list.find((x) => x.id === itemId);
     if (it) {
       setDirectStockInput(String(it.current_stock ?? 0));
-      setDeltaQuantityInput('');
-      setDeltaDirection('ADD');
       setReason('');
     }
   }, [items]);
@@ -75,8 +60,6 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       loadItems();
-      setIsConfirmingResetCounts(false);
-      setIsConfirmingDelete(false);
       setErrorMessage('');
       setSuccessMessage('');
     }
@@ -84,7 +67,6 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
 
   const handleItemChange = (itemId: string) => {
     setSelectedItemId(itemId);
-    setIsConfirmingDelete(false);
     setErrorMessage('');
     setSuccessMessage('');
     initItemFields(itemId);
@@ -96,23 +78,12 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
 
   // Compute calculated difference in stock
   let calculatedStockChange = 0;
-  let computedNewStock = currentStock;
-
-  if (stockMode === 'DIRECT') {
-    const directVal = parseFloat(directStockInput);
-    if (!isNaN(directVal)) {
-      computedNewStock = directVal;
-      calculatedStockChange = directVal - currentStock;
-    }
-  } else {
-    const deltaVal = parseFloat(deltaQuantityInput);
-    if (!isNaN(deltaVal) && deltaVal > 0) {
-      calculatedStockChange = deltaDirection === 'DEDUCT' ? -deltaVal : deltaVal;
-      computedNewStock = Math.max(0, currentStock + calculatedStockChange);
-    }
+  const directVal = parseFloat(directStockInput);
+  if (!isNaN(directVal)) {
+    calculatedStockChange = directVal - currentStock;
   }
 
-  // Handle Save (Weight + Price Adjustment)
+  // Handle Save (Physical Stock Adjustment)
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedItem) return;
@@ -123,13 +94,13 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
     try {
       const stockChanged = Math.abs(calculatedStockChange) > 0.0001;
 
-      // 1. If stock changed, apply stock adjustment record
+      // If stock changed, apply stock adjustment record
       if (stockChanged) {
         await api.createStockAdjustment({
           item_id: selectedItem.id,
           quantity: calculatedStockChange,
           adjustment_type: 'MANUAL',
-          reason: reason.trim() || (stockMode === 'DIRECT' ? 'Physical Stock Adjustment (कांटा मिलान)' : 'Manual Stock Correction'),
+          reason: reason.trim() || 'Physical Stock Adjustment (कांटा मिलान)',
         });
       }
 
@@ -153,7 +124,7 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
 
     try {
       await api.resetItemStock(selectedItem.id);
-      setSuccessMessage(`"${selectedItem.name}" का स्टॉक और गिनती 0 कर दी गई (Stock count reset to 0). सामग्री लिस्ट में सुरक्षित है।`);
+      setSuccessMessage(`"${selectedItem.name}" का स्टॉक और गिनती 0 कर दी गई (Stock count reset to 0).`);
       setTimeout(() => {
         onSuccess();
         onClose();
@@ -191,23 +162,23 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
       subtitle={selectedItem ? `Current Stock: ${currentStock.toLocaleString('en-IN')} ${unit} · Unit: ${unit}` : 'Update stock count'}
       maxWidth="max-w-md"
     >
-      <div className="space-y-3.5">
+      <div className="space-y-3.5 font-[-apple-system,BlinkMacSystemFont,'SF_Pro_Text','SF_Pro_Display',sans-serif]">
         {/* Status Messages */}
         {errorMessage && (
-          <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs font-semibold flex items-center gap-2">
+          <div className="p-3 rounded-[14px] bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs font-semibold flex items-center gap-2">
             <IconAlert size={15} className="shrink-0" />
             <span>{errorMessage}</span>
           </div>
         )}
 
         {successMessage && (
-          <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2">
+          <div className="p-3 rounded-[14px] bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2">
             <IconCheck size={15} className="shrink-0" />
             <span>{successMessage}</span>
           </div>
         )}
 
-        {/* Material Selector (only if multiple items and no preselected item or user wants to switch) */}
+        {/* Material Selector (only if multiple items and no preselected item) */}
         {!preselectedItemId && (
           <div>
             <label className="block text-[11px] font-bold text-zinc-500 mb-1">
@@ -216,7 +187,7 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
             <select
               value={selectedItemId}
               onChange={(e) => handleItemChange(e.target.value)}
-              className="w-full h-9 px-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-xs font-bold text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-all"
+              className="w-full h-11 px-3.5 rounded-[14px] border border-black/10 dark:border-white/10 bg-zinc-50 dark:bg-zinc-900 text-xs font-bold text-black dark:text-white outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all"
             >
               {items.map((it) => (
                 <option key={it.id} value={it.id}>
@@ -229,7 +200,7 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
 
         <form onSubmit={handleSave} className="space-y-3.5">
           {/* Stock Count Field */}
-          <div className="p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 space-y-2">
+          <div className="p-3.5 rounded-[20px] border border-black/5 dark:border-white/10 bg-zinc-50/80 dark:bg-zinc-900/60 space-y-2">
             <div className="flex items-center justify-between text-xs">
               <span className="font-bold text-zinc-700 dark:text-zinc-300">
                 Physical Stock (वास्तविक स्टॉक)
@@ -246,9 +217,9 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
                 value={directStockInput}
                 onChange={(e) => setDirectStockInput(e.target.value)}
                 placeholder="Enter new stock count..."
-                className="w-full h-10 px-3 pr-14 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm font-extrabold tabular-nums font-sans text-black dark:text-white outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-all"
+                className="w-full h-11 px-3.5 pr-14 rounded-[14px] border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-900 text-sm font-extrabold tabular-nums font-sans text-black dark:text-white outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 tabular-nums font-sans text-xs font-bold text-zinc-400 pointer-events-none">
+              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 tabular-nums font-sans text-xs font-bold text-zinc-400 pointer-events-none">
                 {unit}
               </span>
             </div>
@@ -270,7 +241,7 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3 px-4 rounded-2xl bg-black dark:bg-white text-white dark:text-black text-xs font-extrabold hover:opacity-90 disabled:opacity-50 transition-all btn-press shadow-xs"
+            className="w-full py-3 px-4 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-extrabold hover:opacity-90 disabled:opacity-50 transition-all btn-press shadow-[0_2px_10px_rgba(0,0,0,0.12)]"
           >
             {isSubmitting ? 'Saving...' : 'Save Adjustments (सुधार सुरक्षित करें)'}
           </button>
@@ -287,7 +258,7 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
                 type="button"
                 disabled={isResettingCounts}
                 onClick={handleResetCounts}
-                className="flex-1 py-2 px-3 rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 text-[11px] font-bold hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors"
+                className="flex-1 py-2.5 px-3 rounded-full border border-amber-300 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 text-[11px] font-bold hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors active:scale-95"
               >
                 {isResettingCounts ? 'Resetting...' : 'Reset Count to 0 (स्टॉक 0 करें)'}
               </button>
@@ -295,7 +266,7 @@ export const ItemAdjustmentModal: React.FC<ItemAdjustmentModalProps> = ({
                 type="button"
                 disabled={isDeleting}
                 onClick={handleDeleteItem}
-                className="flex-1 py-2 px-3 rounded-xl border border-red-300 dark:border-red-800 bg-red-50/50 dark:bg-red-950/20 text-red-700 dark:text-red-400 text-[11px] font-bold hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
+                className="flex-1 py-2.5 px-3 rounded-full border border-red-300 dark:border-red-800 bg-red-50/50 dark:bg-red-950/20 text-red-700 dark:text-red-400 text-[11px] font-bold hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors active:scale-95"
               >
                 {isDeleting ? 'Deleting...' : 'Delete from List (हटाएं)'}
               </button>

@@ -10,7 +10,6 @@ import { StockAdjustmentModal } from '../transactions/StockAdjustmentModal';
 import { ItemModal } from '../transactions/ItemModal';
 import {
   IconSearch,
-  IconPlus,
   IconSun,
   IconMoon,
   IconMonitor,

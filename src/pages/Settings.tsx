@@ -2,14 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   IconBuilding,
   IconSave,
-  IconDatabase,
   IconDownload,
   IconUpload,
   IconLock,
   IconAlert,
   IconReset,
   IconPlus,
-  IconEdit,
   IconDelete,
   IconLayers,
   IconCheck,
@@ -252,7 +250,7 @@ export const Settings: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-3xl mx-auto page-enter pb-16">
+    <div className="space-y-5 max-w-4xl mx-auto page-enter pb-32 font-[-apple-system,BlinkMacSystemFont,'SF_Pro_Text','SF_Pro_Display',sans-serif]">
       <PageHeader
         title="Settings (सेटिंग्स)"
         subtitle="Shop profile, material catalog management, and database tools"

@@ -236,7 +236,7 @@ export const Analytics: React.FC = () => {
   };
 
   return (
-    <div className="space-y-5 page-enter max-w-4xl mx-auto font-[-apple-system,BlinkMacSystemFont,'SF_Pro_Text','SF_Pro_Display',sans-serif]">
+    <div className="space-y-5 page-enter max-w-4xl mx-auto pb-32 font-[-apple-system,BlinkMacSystemFont,'SF_Pro_Text','SF_Pro_Display',sans-serif]">
       {/* 1. Header - Apple iOS Large Title */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-black/5 dark:border-white/10">
         <div>
