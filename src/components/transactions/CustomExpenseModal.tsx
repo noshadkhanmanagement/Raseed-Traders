@@ -78,7 +78,7 @@ export const CustomExpenseModal: React.FC<CustomExpenseModalProps> = ({
     <BottomSheet
       isOpen={isOpen}
       onClose={onClose}
-      title="Dukaan & Custom Expense (दुकान व अन्य ख़र्चे)"
+      title="Custom Kharcha (कस्टम ख़र्च)"
       subtitle="Enter recipient name, reason and amount (किसे दिया, कारण और रुपये)"
       maxWidth="max-w-lg"
     >

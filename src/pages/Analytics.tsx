@@ -475,7 +475,7 @@ export const Analytics: React.FC = () => {
         <div className="rounded-[22px] border border-black/5 dark:border-white/10 bg-white/85 dark:bg-[#1c1c1e]/85 backdrop-blur-2xl p-4 sm:p-5 shadow-[0_4px_24px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.4)]">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">
-              Dukaan Kharcha (कुल ख़र्च)
+              Custom Kharcha (कुल ख़र्च)
             </span>
             <span className="w-7 h-7 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center">
               <IconReceipt size={15} />
@@ -487,7 +487,7 @@ export const Analytics: React.FC = () => {
             </div>
             <div className="mt-1 flex items-center justify-between text-[11px] text-zinc-500 font-medium">
               <span>{rangeData.totalExpensesCount || 0} Entries</span>
-              <span>Dukaan Costs</span>
+              <span>Custom Costs</span>
             </div>
           </div>
         </div>
