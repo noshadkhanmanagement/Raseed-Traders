@@ -19,6 +19,8 @@ import {
   getLocalDateString,
   getDateRangePreset,
 } from '../utils/formatters';
+import { PrintOptionsModal, PrintConfig } from '../components/common/PrintOptionsModal';
+import { OfficialPrintStatement } from '../components/common/OfficialPrintStatement';
 
 type QuickRange = 'TODAY' | 'YESTERDAY' | 'THIS_MONTH' | 'LAST_MONTH' | 'LAST_30_DAYS';
 type TxFilter = 'ALL' | 'PURCHASE' | 'SALE';
@@ -50,6 +52,12 @@ export const Analytics: React.FC = () => {
   const [activeRange, setActiveRange] = useState<QuickRange | 'CUSTOM'>('TODAY');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [txFilter, setTxFilter] = useState<TxFilter>('ALL');
+
+  // Professional 1cm Border Print State
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState<boolean>(false);
+  const [printConfig, setPrintConfig] = useState<PrintConfig | null>(null);
+  const [printRangeData, setPrintRangeData] = useState<any>(null);
+  const [printTransactions, setPrintTransactions] = useState<UnifiedTx[]>([]);
 
   const [rangeData, setRangeData] = useState<{
     totalPurchasesCount: number;
@@ -219,7 +227,82 @@ export const Analytics: React.FC = () => {
   };
 
   const handlePrint = () => {
-    window.print();
+    setIsPrintModalOpen(true);
+  };
+
+  const handleExecutePrint = async (config: PrintConfig) => {
+    try {
+      let targetRangeData = rangeData;
+      let targetTransactions = unifiedTransactions;
+
+      if (config.startDate !== startDate || config.endDate !== endDate) {
+        const customRes = await api.getDateRangeAnalytics(config.startDate, config.endDate);
+        targetRangeData = customRes;
+
+        const list: UnifiedTx[] = [];
+        (customRes.purchases || []).forEach((p: any) => {
+          list.push({
+            id: p.id,
+            type: 'PURCHASE',
+            date: p.purchase_date,
+            created_at: p.created_at || p.purchase_date,
+            reference_number: p.purchase_number || p.id,
+            party_name: p.party_name || 'Walk-in Party (नकदी पार्टी)',
+            total_amount: Number(p.total_amount || 0),
+            total_weight: Number(p.total_weight || 0),
+            items: (p.items || []).map((it: any) => ({
+              item_name: it.item_name || 'Item',
+              item_local_name: it.item_local_name,
+              quantity: Number(it.quantity || 0),
+              unit: it.unit || 'KG',
+              rate: Number(it.rate || 0),
+              amount: Number(it.amount || 0),
+            })),
+          });
+        });
+
+        (customRes.sales || []).forEach((s: any) => {
+          list.push({
+            id: s.id,
+            type: 'SALE',
+            date: s.sale_date,
+            created_at: s.created_at || s.sale_date,
+            reference_number: s.sale_number || s.id,
+            party_name: s.party_name || 'Buyer Party (क्रेता पार्टी)',
+            total_amount: Number(s.total_amount || 0),
+            total_weight: Number(s.total_weight || 0),
+            items: (s.items || []).map((it: any) => ({
+              item_name: it.item_name || 'Item',
+              item_local_name: it.item_local_name,
+              quantity: Number(it.quantity || 0),
+              unit: it.unit || 'KG',
+              rate: Number(it.rate || 0),
+              amount: Number(it.amount || 0),
+            })),
+          });
+        });
+
+        list.sort((a, b) => {
+          const timeA = new Date(a.created_at || a.date).getTime();
+          const timeB = new Date(b.created_at || b.date).getTime();
+          return timeB - timeA;
+        });
+
+        targetTransactions = list;
+      }
+
+      setPrintConfig(config);
+      setPrintRangeData(targetRangeData);
+      setPrintTransactions(targetTransactions);
+
+      // Trigger standard print dialog after print state updates in DOM
+      setTimeout(() => {
+        window.print();
+      }, 120);
+    } catch (err) {
+      console.error('Failed to prepare print document', err);
+      window.print();
+    }
   };
 
   const handleDeleteExpense = async (id: string, name: string, amount: number) => {
@@ -819,6 +902,32 @@ export const Analytics: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Print Options & Date Range Modal */}
+      <PrintOptionsModal
+        isOpen={isPrintModalOpen}
+        onClose={() => setIsPrintModalOpen(false)}
+        currentStartDate={startDate}
+        currentEndDate={endDate}
+        onExecutePrint={handleExecutePrint}
+      />
+
+      {/* Formal Business Printed Statement (Hidden on screen, rendered on @media print with 1cm border) */}
+      <OfficialPrintStatement
+        config={
+          printConfig || {
+            startDate,
+            endDate,
+            includeSummary: true,
+            includeExpenses: true,
+            includeTransactions: true,
+            includeMaterialBreakdown: true,
+            includeSignatures: true,
+          }
+        }
+        rangeData={printRangeData || rangeData}
+        unifiedTransactions={printTransactions.length > 0 ? printTransactions : unifiedTransactions}
+      />
     </div>
   );
 };
