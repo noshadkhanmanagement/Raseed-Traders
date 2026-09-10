@@ -6,7 +6,6 @@ import {
   IconArrowUpRight,
   IconCalculator,
   IconRefresh,
-  IconPlus,
   IconReceipt,
   IconDelete,
 } from '../components/common/Icons';
@@ -20,7 +19,6 @@ import {
   getLocalDateString,
   getDateRangePreset,
 } from '../utils/formatters';
-import { CustomExpenseModal } from '../components/transactions/CustomExpenseModal';
 
 type QuickRange = 'TODAY' | 'YESTERDAY' | 'THIS_MONTH' | 'LAST_MONTH' | 'LAST_30_DAYS';
 type TxFilter = 'ALL' | 'PURCHASE' | 'SALE';
@@ -52,7 +50,6 @@ export const Analytics: React.FC = () => {
   const [activeRange, setActiveRange] = useState<QuickRange | 'CUSTOM'>('TODAY');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [txFilter, setTxFilter] = useState<TxFilter>('ALL');
-  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState<boolean>(false);
 
   const [rangeData, setRangeData] = useState<{
     totalPurchasesCount: number;
@@ -254,14 +251,6 @@ export const Analytics: React.FC = () => {
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-          <button
-            type="button"
-            onClick={() => setIsExpenseModalOpen(true)}
-            className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-full bg-rose-600 text-white hover:bg-rose-700 active:scale-95 transition-all shadow-[0_2px_10px_rgba(225,29,72,0.3)]"
-          >
-            <IconReceipt size={14} />
-            <span>+ Kharch Likhein</span>
-          </button>
           <button
             type="button"
             onClick={handlePrint}
@@ -498,13 +487,7 @@ export const Analytics: React.FC = () => {
             </div>
             <div className="mt-1 flex items-center justify-between text-[11px] text-zinc-500 font-medium">
               <span>{rangeData.totalExpensesCount || 0} Entries</span>
-              <button
-                type="button"
-                onClick={() => setIsExpenseModalOpen(true)}
-                className="text-[10px] font-bold text-rose-600 dark:text-rose-400 hover:underline"
-              >
-                + Kharch Likhein
-              </button>
+              <span>Dukaan Costs</span>
             </div>
           </div>
         </div>
@@ -542,7 +525,7 @@ export const Analytics: React.FC = () => {
       {/* 4. DEDICATED CUSTOM EXPENSES SECTION */}
       <div className="rounded-[24px] border border-black/5 dark:border-white/10 bg-white/85 dark:bg-[#1c1c1e]/85 backdrop-blur-2xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.4)] overflow-hidden">
         {/* Section Header */}
-        <div className="px-5 py-4 border-b border-black/5 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="px-5 py-4 border-b border-black/5 dark:border-white/10 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-[12px] bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200/40 dark:border-rose-900/40 flex items-center justify-center shrink-0">
               <IconReceipt size={18} />
@@ -561,15 +544,6 @@ export const Analytics: React.FC = () => {
               </p>
             </div>
           </div>
-
-          <button
-            type="button"
-            onClick={() => setIsExpenseModalOpen(true)}
-            className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-bold hover:opacity-90 active:scale-95 transition-all shadow-xs shrink-0"
-          >
-            <IconPlus size={13} strokeWidth={2.5} />
-            <span>+ Naya Kharch Likhein</span>
-          </button>
         </div>
 
         {/* Expenses Feed / List */}
@@ -845,13 +819,6 @@ export const Analytics: React.FC = () => {
           </table>
         </div>
       </div>
-
-      {/* Custom Expense Modal */}
-      <CustomExpenseModal
-        isOpen={isExpenseModalOpen}
-        onClose={() => setIsExpenseModalOpen(false)}
-        onSuccess={loadAnalytics}
-      />
     </div>
   );
 };

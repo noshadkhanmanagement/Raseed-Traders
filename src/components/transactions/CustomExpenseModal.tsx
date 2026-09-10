@@ -10,27 +10,6 @@ interface CustomExpenseModalProps {
   onSuccess: () => void;
 }
 
-const QUICK_RECIPIENTS = [
-  'Driver / Gaadi',
-  'Labour / Majdoor',
-  'Dukaan Maalik (Rent)',
-  'Chai-Nashta',
-  'Mistri / Electrician',
-  'Munshi / Staff',
-];
-
-const QUICK_REASONS = [
-  '⛽ Diesel / Gaadi Bhaada',
-  '👷 Labour / Majdoori',
-  '🏠 Dukaan Ka Kiraya',
-  '☕ Chai & Nashta',
-  '⚡ Bijli Bill',
-  '🔧 Kanta / Machine Repair',
-  '📝 Stationery / Khata Parchi',
-];
-
-const QUICK_AMOUNTS = [50, 100, 200, 500, 1000, 2000];
-
 export const CustomExpenseModal: React.FC<CustomExpenseModalProps> = ({
   isOpen,
   onClose,
@@ -55,11 +34,6 @@ export const CustomExpenseModal: React.FC<CustomExpenseModalProps> = ({
       setIsSubmitting(false);
     }
   }, [isOpen]);
-
-  const handleQuickAddAmount = (addVal: number) => {
-    const current = parseFloat(amount) || 0;
-    setAmount(String(current + addVal));
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,23 +110,6 @@ export const CustomExpenseModal: React.FC<CustomExpenseModalProps> = ({
             required
             autoFocus
           />
-          {/* Recipient Quick Chips */}
-          <div className="flex items-center gap-1.5 flex-wrap mt-2">
-            {QUICK_RECIPIENTS.map((rec) => (
-              <button
-                key={rec}
-                type="button"
-                onClick={() => setRecipientName(rec)}
-                className={`text-[11px] px-2.5 py-0.5 rounded-full border transition-all active:scale-95 ${
-                  recipientName === rec
-                    ? 'bg-black text-white dark:bg-white dark:text-black border-transparent font-bold shadow-xs'
-                    : 'bg-zinc-100/80 dark:bg-zinc-800/80 border-black/5 dark:border-white/5 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
-                }`}
-              >
-                {rec}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* 2. Reason Field */}
@@ -168,23 +125,6 @@ export const CustomExpenseModal: React.FC<CustomExpenseModalProps> = ({
             className="w-full h-11 px-3.5 rounded-[14px] border border-black/10 dark:border-white/10 bg-zinc-50 dark:bg-zinc-900 text-xs sm:text-sm font-semibold text-black dark:text-white outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all placeholder:text-zinc-400"
             required
           />
-          {/* Reason Quick Chips */}
-          <div className="flex items-center gap-1.5 flex-wrap mt-2">
-            {QUICK_REASONS.map((rsn) => (
-              <button
-                key={rsn}
-                type="button"
-                onClick={() => setReason(rsn)}
-                className={`text-[11px] px-2.5 py-0.5 rounded-full border transition-all active:scale-95 ${
-                  reason === rsn
-                    ? 'bg-black text-white dark:bg-white dark:text-black border-transparent font-bold shadow-xs'
-                    : 'bg-zinc-100/80 dark:bg-zinc-800/80 border-black/5 dark:border-white/5 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
-                }`}
-              >
-                {rsn}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* 3. Amount & Date Row */}
@@ -208,19 +148,6 @@ export const CustomExpenseModal: React.FC<CustomExpenseModalProps> = ({
                 className="w-full h-11 pl-8 pr-3.5 rounded-[14px] border border-black/10 dark:border-white/10 bg-zinc-50 dark:bg-zinc-900 text-base font-extrabold text-black dark:text-white outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all tabular-nums placeholder:text-zinc-400"
                 required
               />
-            </div>
-            {/* Quick Amount Adders */}
-            <div className="flex items-center gap-1.5 flex-wrap mt-2">
-              {QUICK_AMOUNTS.map((amt) => (
-                <button
-                  key={amt}
-                  type="button"
-                  onClick={() => handleQuickAddAmount(amt)}
-                  className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 active:scale-90 transition-all"
-                >
-                  +{amt}
-                </button>
-              ))}
             </div>
           </div>
 
