@@ -404,6 +404,50 @@ class LocalEngine {
     this.data.stock_cost_history = this.data.stock_cost_history.filter((h) => h.item_id !== actualId && h.item_id !== id);
     this.data.stock_adjustments = this.data.stock_adjustments.filter((a) => a.item_id !== actualId && a.item_id !== id);
 
+    // Clean up from purchases
+    const purchasesToRemove: string[] = [];
+    this.data.purchases.forEach((p) => {
+      if (p.items) {
+        p.items = p.items.filter((it) => it.item_id !== actualId && it.item_id !== id);
+        if (p.items.length === 0) {
+          purchasesToRemove.push(p.id);
+        } else {
+          p.total_amount = p.items.reduce((sum, it) => sum + it.amount, 0);
+          p.subtotal = p.total_amount;
+          p.total_weight = p.items.reduce((sum, it) => sum + it.quantity, 0);
+          p.paid_amount = p.total_amount;
+          p.due_amount = 0;
+        }
+      }
+    });
+    if (purchasesToRemove.length > 0) {
+      this.data.purchases = this.data.purchases.filter((p) => !purchasesToRemove.includes(p.id));
+      this.data.payments = this.data.payments.filter((pay) => !pay.purchase_id || !purchasesToRemove.includes(pay.purchase_id));
+    }
+
+    // Clean up from sales
+    const salesToRemove: string[] = [];
+    this.data.sales.forEach((s) => {
+      if (s.items) {
+        s.items = s.items.filter((it) => it.item_id !== actualId && it.item_id !== id);
+        if (s.items.length === 0) {
+          salesToRemove.push(s.id);
+        } else {
+          s.total_amount = s.items.reduce((sum, it) => sum + it.amount, 0);
+          s.subtotal = s.total_amount;
+          s.total_weight = s.items.reduce((sum, it) => sum + it.quantity, 0);
+          s.total_cost = s.items.reduce((sum, it) => sum + (it.cost_amount || 0), 0);
+          s.total_profit = s.total_amount - s.total_cost;
+          s.received_amount = s.total_amount;
+          s.due_amount = 0;
+        }
+      }
+    });
+    if (salesToRemove.length > 0) {
+      this.data.sales = this.data.sales.filter((s) => !salesToRemove.includes(s.id));
+      this.data.payments = this.data.payments.filter((pay) => !pay.sale_id || !salesToRemove.includes(pay.sale_id));
+    }
+
     this.saveToStorage();
     return item;
   }
