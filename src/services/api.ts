@@ -942,34 +942,101 @@ export const api = {
         .from('expenses')
         .select('*')
         .order('expense_date', { ascending: false });
-      if (!error && data) return data;
+      if (!error && data) {
+        return data.map((e: any) => {
+          let recipient_name = '';
+          let reason = '';
+          let extraNotes = e.notes || '';
+          if (e.notes) {
+            try {
+              const parsed = JSON.parse(e.notes);
+              if (parsed && typeof parsed === 'object') {
+                recipient_name = parsed.recipient_name || '';
+                reason = parsed.reason || '';
+                extraNotes = parsed.notes || '';
+              }
+            } catch {
+              if (e.notes.includes(' · ')) {
+                const parts = e.notes.split(' · ');
+                recipient_name = parts[0] || '';
+                reason = parts[1] || '';
+              } else {
+                reason = e.notes;
+              }
+            }
+          }
+          return {
+            ...e,
+            recipient_name: recipient_name || 'Walk-in / Cash',
+            reason: reason || e.category || 'Other Expense',
+            notes: extraNotes,
+          };
+        });
+      }
     }
     return localDb.getExpenses();
   },
 
   async createExpense(payload: {
-    category: any;
+    recipient_name: string;
+    reason: string;
     amount: number;
     expense_date: string;
+    category?: any;
+    payment_method?: string;
+    notes?: string;
   }): Promise<Expense> {
     if (isSupabaseConfigured && supabase) {
-      const biz = await this.getBusiness();
-      const today = payload.expense_date.replace(/-/g, '');
-      const expNum = `EXP-${today}-${Date.now().toString().slice(-4)}`;
-      const { data, error } = await supabase
-        .from('expenses')
-        .insert([{
-          business_id: biz.id,
-          expense_number: expNum,
-          category: payload.category,
-          amount: payload.amount,
-          expense_date: payload.expense_date,
-        }])
-        .select()
-        .single();
-      if (!error && data) return data;
+      try {
+        const biz = await this.getBusiness();
+        const today = payload.expense_date.replace(/-/g, '');
+        const expNum = `EXP-${today}-${Date.now().toString().slice(-4)}`;
+        const notesPayload = JSON.stringify({
+          recipient_name: payload.recipient_name.trim(),
+          reason: payload.reason.trim(),
+          notes: payload.notes?.trim() || '',
+        });
+        const { data, error } = await supabase
+          .from('expenses')
+          .insert([{
+            business_id: biz.id,
+            expense_number: expNum,
+            category: payload.category || 'OTHER',
+            amount: payload.amount,
+            expense_date: payload.expense_date,
+            payment_method: payload.payment_method || 'CASH',
+            notes: notesPayload,
+          }])
+          .select()
+          .single();
+        if (!error && data) {
+          try {
+            localDb.createExpense({ ...payload, id: data.id, expense_number: data.expense_number });
+          } catch (e) {
+            console.error('Error syncing expense to localDb:', e);
+          }
+          return {
+            ...data,
+            recipient_name: payload.recipient_name.trim(),
+            reason: payload.reason.trim(),
+          };
+        }
+      } catch (err) {
+        console.warn('Supabase createExpense error, fallback to localDb:', err);
+      }
     }
     return localDb.createExpense(payload);
+  },
+
+  async deleteExpense(id: string): Promise<void> {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('expenses').delete().eq('id', id);
+      } catch (err) {
+        console.warn('Supabase deleteExpense error, fallback to localDb:', err);
+      }
+    }
+    localDb.deleteExpense(id);
   },
 
   // Ledger
@@ -1048,10 +1115,11 @@ export const api = {
 
   // Analytics
   async getDateRangeAnalytics(startDate: string, endDate: string) {
-    const [purchases, sales, items] = await Promise.all([
+    const [purchases, sales, items, expenses] = await Promise.all([
       this.getPurchases(),
       this.getSales(),
       this.getItems(),
+      this.getExpenses(),
     ]);
 
     const filteredPurchases = purchases.filter(
@@ -1060,12 +1128,17 @@ export const api = {
     const filteredSales = sales.filter(
       (s) => s.sale_date >= startDate && s.sale_date <= endDate && s.status === 'FINAL'
     );
+    const filteredExpenses = expenses.filter(
+      (e) => e.expense_date >= startDate && e.expense_date <= endDate
+    );
 
     const totalPurchaseAmount = filteredPurchases.reduce((sum, p) => sum + p.total_amount, 0);
     const totalPurchaseWeight = filteredPurchases.reduce((sum, p) => sum + (p.total_weight || 0), 0);
     const totalSaleAmount = filteredSales.reduce((sum, s) => sum + s.total_amount, 0);
     const totalSaleWeight = filteredSales.reduce((sum, s) => sum + (s.total_weight || 0), 0);
-    const netBalance = totalSaleAmount - totalPurchaseAmount;
+    const totalExpenseAmount = filteredExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+    const tradeBalance = totalSaleAmount - totalPurchaseAmount;
+    const netBalance = tradeBalance - totalExpenseAmount;
 
     const itemMap: Record<
       string,
@@ -1126,13 +1199,17 @@ export const api = {
       endDate,
       totalPurchasesCount: filteredPurchases.length,
       totalSalesCount: filteredSales.length,
+      totalExpensesCount: filteredExpenses.length,
       totalPurchaseAmount: Number(totalPurchaseAmount.toFixed(2)),
       totalPurchaseWeight: Number(totalPurchaseWeight.toFixed(2)),
       totalSaleAmount: Number(totalSaleAmount.toFixed(2)),
       totalSaleWeight: Number(totalSaleWeight.toFixed(2)),
+      totalExpenseAmount: Number(totalExpenseAmount.toFixed(2)),
+      tradeBalance: Number(tradeBalance.toFixed(2)),
       netBalance: Number(netBalance.toFixed(2)),
       purchases: filteredPurchases,
       sales: filteredSales,
+      expenses: filteredExpenses,
       itemBreakdown: Object.values(itemMap),
     };
   },

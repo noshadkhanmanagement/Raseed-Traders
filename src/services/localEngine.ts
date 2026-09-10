@@ -1174,26 +1174,44 @@ class LocalEngine {
 
   // --- EXPENSES ---
   public createExpense(payload: {
-    category: any;
+    recipient_name: string;
+    reason: string;
     amount: number;
     expense_date: string;
+    category?: any;
+    payment_method?: string;
+    notes?: string;
+    id?: string;
+    expense_number?: string;
   }): Expense {
     const now = new Date().toISOString();
-    const expNumber = this.generateDocNumber('EXP', payload.expense_date, this.data.expenses);
-    const expId = `exp-${Date.now()}`;
+    const expNumber = payload.expense_number || this.generateDocNumber('EXP', payload.expense_date, this.data.expenses);
+    const expId = payload.id || `exp-${Date.now()}`;
 
     const expense: Expense = {
       id: expId,
       business_id: this.data.business.id,
       expense_number: expNumber,
-      category: payload.category,
+      category: payload.category || 'OTHER',
+      recipient_name: payload.recipient_name,
+      reason: payload.reason,
       amount: Number(payload.amount),
       expense_date: payload.expense_date,
+      payment_method: payload.payment_method || 'CASH',
+      notes: payload.notes,
       created_at: now,
     };
     this.data.expenses.unshift(expense);
     this.saveToStorage();
     return expense;
+  }
+
+  public deleteExpense(id: string): void {
+    const idx = this.data.expenses.findIndex((e) => e.id === id);
+    if (idx !== -1) {
+      this.data.expenses.splice(idx, 1);
+      this.saveToStorage();
+    }
   }
 
   // --- QUERIES & REPORTS ---
@@ -1440,11 +1458,17 @@ class LocalEngine {
       (s) => s.sale_date >= startDate && s.sale_date <= endDate && s.status === 'FINAL'
     );
 
+    const expenses = this.data.expenses.filter(
+      (e) => e.expense_date >= startDate && e.expense_date <= endDate
+    );
+
     const totalPurchaseAmount = purchases.reduce((sum, p) => sum + p.total_amount, 0);
     const totalPurchaseWeight = purchases.reduce((sum, p) => sum + (p.total_weight || 0), 0);
     const totalSaleAmount = sales.reduce((sum, s) => sum + s.total_amount, 0);
     const totalSaleWeight = sales.reduce((sum, s) => sum + (s.total_weight || 0), 0);
-    const netBalance = totalSaleAmount - totalPurchaseAmount;
+    const totalExpenseAmount = expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+    const tradeBalance = totalSaleAmount - totalPurchaseAmount;
+    const netBalance = tradeBalance - totalExpenseAmount;
 
     // Item breakdown for this date range
     const itemMap: Record<
@@ -1506,13 +1530,17 @@ class LocalEngine {
       endDate,
       totalPurchasesCount: purchases.length,
       totalSalesCount: sales.length,
+      totalExpensesCount: expenses.length,
       totalPurchaseAmount: Number(totalPurchaseAmount.toFixed(2)),
       totalPurchaseWeight: Number(totalPurchaseWeight.toFixed(2)),
       totalSaleAmount: Number(totalSaleAmount.toFixed(2)),
       totalSaleWeight: Number(totalSaleWeight.toFixed(2)),
+      totalExpenseAmount: Number(totalExpenseAmount.toFixed(2)),
+      tradeBalance: Number(tradeBalance.toFixed(2)),
       netBalance: Number(netBalance.toFixed(2)),
       purchases,
       sales,
+      expenses,
       itemBreakdown: Object.values(itemMap),
     };
   }

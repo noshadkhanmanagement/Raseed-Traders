@@ -163,12 +163,16 @@ export interface Payment {
 
 export interface Expense {
   id: string;
-  business_id: string;
+  business_id?: string;
   expense_number: string;
-  category: ExpenseCategory;
+  category?: ExpenseCategory;
+  recipient_name: string; // Jisko paise diye (Recipient Name)
+  reason: string;         // Kharch ka karan (Reason)
   amount: number;
   expense_date: string;
-  created_at: string;
+  payment_method?: string;
+  notes?: string;
+  created_at?: string;
 }
 
 export interface InventoryLedgerEntry {

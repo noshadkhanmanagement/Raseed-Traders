@@ -6,10 +6,12 @@ import {
   IconReset,
   IconChevron,
   IconClose,
+  IconReceipt,
 } from '../components/common/Icons';
 import { QuickTradeModal } from '../components/transactions/QuickTradeModal';
 import { ItemAdjustmentModal } from '../components/inventory/ItemAdjustmentModal';
 import { ItemRateHistoryModal } from '../components/inventory/ItemRateHistoryModal';
+import { CustomExpenseModal } from '../components/transactions/CustomExpenseModal';
 import { BottomSheet } from '../components/common/BottomSheet';
 import { api } from '../services/api';
 import { ScrapItem } from '../types';
@@ -45,6 +47,9 @@ export const Dashboard: React.FC = () => {
   const [itemToReset, setItemToReset] = useState<ScrapItem | null>(null);
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
   const [isProcessingReset, setIsProcessingReset] = useState(false);
+
+  // Custom Expense Modal State
+  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -176,24 +181,33 @@ export const Dashboard: React.FC = () => {
           </p>
         </div>
 
-        {/* 2. Primary Buy & Sell Apple Capsule Buttons */}
-        <div className="grid grid-cols-2 gap-2.5 w-full sm:w-auto">
+        {/* 2. Action Capsule Buttons: Buy, Sell, and Kharch (Custom Expense) */}
+        <div className="grid grid-cols-3 gap-2 sm:gap-2.5 w-full sm:w-auto">
           <button
             type="button"
             onClick={() => handleOpenBuy()}
-            className="flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs sm:text-sm font-bold active:scale-[0.97] transition-all duration-150 shadow-[0_2px_10px_rgba(0,0,0,0.15)] hover:opacity-90"
+            className="flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 sm:py-3 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs sm:text-sm font-bold active:scale-[0.97] transition-all duration-150 shadow-[0_2px_10px_rgba(0,0,0,0.15)] hover:opacity-90 whitespace-nowrap"
           >
-            <IconPlus size={16} strokeWidth={2.5} />
+            <IconPlus size={15} strokeWidth={2.5} />
             <span>Kharidi (Buy)</span>
           </button>
 
           <button
             type="button"
             onClick={() => handleOpenSell()}
-            className="flex items-center justify-center gap-2 px-5 py-3 rounded-full border border-black/15 dark:border-white/20 bg-white/90 dark:bg-zinc-900/90 text-black dark:text-white text-xs sm:text-sm font-bold active:scale-[0.97] transition-all duration-150 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:bg-zinc-50 dark:hover:bg-zinc-800"
+            className="flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 sm:py-3 rounded-full border border-black/15 dark:border-white/20 bg-white/90 dark:bg-zinc-900/90 text-black dark:text-white text-xs sm:text-sm font-bold active:scale-[0.97] transition-all duration-150 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:bg-zinc-50 dark:hover:bg-zinc-800 whitespace-nowrap"
           >
-            <IconMinus size={16} strokeWidth={2.5} />
+            <IconMinus size={15} strokeWidth={2.5} />
             <span>Bikri (Sell)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsExpenseModalOpen(true)}
+            className="flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 sm:py-3 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-bold active:scale-[0.97] transition-all duration-150 shadow-[0_2px_10px_rgba(225,29,72,0.22)] whitespace-nowrap"
+          >
+            <IconReceipt size={15} strokeWidth={2.5} />
+            <span>Kharch (Expense)</span>
           </button>
         </div>
       </div>
@@ -497,6 +511,13 @@ export const Dashboard: React.FC = () => {
           </div>
         )}
       </BottomSheet>
+
+      {/* Custom Expense Modal */}
+      <CustomExpenseModal
+        isOpen={isExpenseModalOpen}
+        onClose={() => setIsExpenseModalOpen(false)}
+        onSuccess={loadData}
+      />
     </div>
   );
 };
