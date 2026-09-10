@@ -3,11 +3,14 @@ import { BottomSheet } from '../common/BottomSheet';
 import { api } from '../../services/api';
 import { ScrapItem } from '../../types';
 import { formatCurrency, formatDateTime12Hr } from '../../utils/formatters';
+import { IconEdit, IconDelete } from '../common/Icons';
+import { TransactionEditModal, UnifiedTx } from '../transactions/TransactionEditModal';
 
 interface ItemRateHistoryModalProps {
   itemId: string | null;
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
 type TabType = 'BUY' | 'SELL';
@@ -16,9 +19,13 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
   itemId,
   isOpen,
   onClose,
+  onSuccess,
 }) => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('BUY');
+  const [catalogItems, setCatalogItems] = useState<ScrapItem[]>([]);
+  const [transactionToEdit, setTransactionToEdit] = useState<UnifiedTx | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [historyData, setHistoryData] = useState<{
     item?: ScrapItem;
     purchases: Array<{
@@ -69,9 +76,144 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
     }
   }, [isOpen, itemId, loadData]);
 
+  useEffect(() => {
+    api.getItems().then(setCatalogItems).catch(() => {});
+  }, []);
+
   const item = historyData.item;
   const purchases = historyData.purchases;
   const sales = historyData.sales;
+
+  // Edit Purchase Handler
+  const handleEditPurchase = async (p: (typeof purchases)[0]) => {
+    try {
+      const allPurchases = await api.getPurchases();
+      const fullPurchase = allPurchases.find((pur) => pur.id === p.purchase_id);
+      const tx: UnifiedTx = {
+        id: p.purchase_id,
+        type: 'PURCHASE',
+        date: fullPurchase?.purchase_date || p.purchase_date,
+        created_at: fullPurchase?.created_at || p.created_at,
+        reference_number: fullPurchase?.purchase_number || p.purchase_number,
+        party_name: fullPurchase?.party_name || p.party_name,
+        total_amount: fullPurchase?.total_amount || p.amount,
+        total_weight: fullPurchase?.total_weight || p.quantity,
+        items: (fullPurchase?.items && fullPurchase.items.length > 0)
+          ? fullPurchase.items.map((it: any) => ({
+              item_id: it.item_id,
+              item_name: it.item_name || (item && it.item_id === item.id ? item.name : 'Item'),
+              item_local_name: it.item_local_name || (item && it.item_id === item.id ? item.local_name : undefined),
+              quantity: Number(it.quantity || 0),
+              unit: it.unit || p.unit,
+              rate: Number(it.rate || 0),
+              amount: Number(it.amount || 0),
+            }))
+          : [{
+              item_id: item?.id || itemId || '',
+              item_name: item?.name || 'Item',
+              item_local_name: item?.local_name,
+              quantity: p.quantity,
+              unit: p.unit,
+              rate: p.rate,
+              amount: p.amount,
+            }],
+      };
+      setTransactionToEdit(tx);
+      setIsEditModalOpen(true);
+    } catch (err) {
+      console.error('Failed to prepare purchase for editing:', err);
+    }
+  };
+
+  // Edit Sale Handler
+  const handleEditSale = async (s: (typeof sales)[0]) => {
+    try {
+      const allSales = await api.getSales();
+      const fullSale = allSales.find((sl) => sl.id === s.sale_id);
+      const tx: UnifiedTx = {
+        id: s.sale_id,
+        type: 'SALE',
+        date: fullSale?.sale_date || s.sale_date,
+        created_at: fullSale?.created_at || s.created_at,
+        reference_number: fullSale?.sale_number || s.sale_number,
+        party_name: fullSale?.party_name || s.party_name,
+        total_amount: fullSale?.total_amount || s.amount,
+        total_weight: fullSale?.total_weight || s.quantity,
+        items: (fullSale?.items && fullSale.items.length > 0)
+          ? fullSale.items.map((it: any) => ({
+              item_id: it.item_id,
+              item_name: it.item_name || (item && it.item_id === item.id ? item.name : 'Item'),
+              item_local_name: it.item_local_name || (item && it.item_id === item.id ? item.local_name : undefined),
+              quantity: Number(it.quantity || 0),
+              unit: it.unit || s.unit,
+              rate: Number(it.rate || 0),
+              amount: Number(it.amount || 0),
+            }))
+          : [{
+              item_id: item?.id || itemId || '',
+              item_name: item?.name || 'Item',
+              item_local_name: item?.local_name,
+              quantity: s.quantity,
+              unit: s.unit,
+              rate: s.rate,
+              amount: s.amount,
+            }],
+      };
+      setTransactionToEdit(tx);
+      setIsEditModalOpen(true);
+    } catch (err) {
+      console.error('Failed to prepare sale for editing:', err);
+    }
+  };
+
+  // Delete Purchase Handler
+  const handleDeletePurchase = async (p: (typeof purchases)[0]) => {
+    const confirmMsg = `"${p.party_name}" ki Kharidi (BUY) bill (${p.purchase_number}) delete karein?\n\nYard stock se maal ghat jayega (-${p.quantity} ${p.unit}).\n\nKya aap nishchit hain?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    // Immediately remove from history buy list
+    setHistoryData((prev) => ({
+      ...prev,
+      purchases: prev.purchases.filter((item) => item.purchase_id !== p.purchase_id),
+    }));
+
+    try {
+      await api.deletePurchase(p.purchase_id);
+      await loadData();
+      onSuccess?.();
+    } catch (err: any) {
+      alert(err.message || 'Purchase bill delete karne me samasya aayi.');
+      await loadData();
+    }
+  };
+
+  // Delete Sale Handler
+  const handleDeleteSale = async (s: (typeof sales)[0]) => {
+    const confirmMsg = `"${s.party_name}" ki Bikri (SELL) bill (${s.sale_number}) delete karein?\n\nYard stock me ${s.quantity} ${s.unit} wapas jud jayega.\n\nKya aap nishchit hain?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    // Immediately remove from history sell list
+    setHistoryData((prev) => ({
+      ...prev,
+      sales: prev.sales.filter((item) => item.sale_id !== s.sale_id),
+    }));
+
+    try {
+      await api.deleteSale(s.sale_id);
+      await loadData();
+      onSuccess?.();
+    } catch (err: any) {
+      alert(err.message || 'Sale bill delete karne me samasya aayi.');
+      await loadData();
+    }
+  };
+
+  const handleEditSuccess = async () => {
+    setIsEditModalOpen(false);
+    setTransactionToEdit(null);
+    await loadData();
+    onSuccess?.();
+  };
 
   return (
     <BottomSheet
@@ -154,7 +296,7 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                     {purchases.map((p, idx) => (
                       <div
                         key={p.purchase_id || idx}
-                        className="px-4 py-3 flex items-center justify-between gap-3 hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-colors"
+                        className="px-4 py-3 flex items-center justify-between gap-3 hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-colors group"
                       >
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
@@ -176,12 +318,34 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                           </div>
                         </div>
 
-                        <div className="text-right shrink-0">
-                          <div className="text-xs font-extrabold text-black dark:text-white tabular-nums font-sans">
-                            {p.quantity.toLocaleString('en-IN')} {p.unit}
+                        <div className="flex items-center gap-3 shrink-0">
+                          <div className="text-right">
+                            <div className="text-xs font-extrabold text-black dark:text-white tabular-nums font-sans">
+                              {p.quantity.toLocaleString('en-IN')} {p.unit}
+                            </div>
+                            <div className="text-[11px] font-bold text-zinc-600 dark:text-zinc-300 tabular-nums font-sans mt-0.5">
+                              {formatCurrency(p.amount)}
+                            </div>
                           </div>
-                          <div className="text-[11px] font-bold text-zinc-600 dark:text-zinc-300 tabular-nums font-sans mt-0.5">
-                            {formatCurrency(p.amount)}
+
+                          {/* Action Buttons: Edit & Delete */}
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleEditPurchase(p)}
+                              className="p-1.5 rounded-full text-zinc-400 hover:text-black dark:hover:text-white active:scale-90 transition-all"
+                              title="Edit this purchase (खरीदी बिल सुधारें)"
+                            >
+                              <IconEdit size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeletePurchase(p)}
+                              className="p-1.5 rounded-full text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 active:scale-90 transition-all"
+                              title="Delete this purchase (खरीदी बिल हटाएं)"
+                            >
+                              <IconDelete size={14} />
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -203,7 +367,7 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                     {sales.map((s, idx) => (
                       <div
                         key={s.sale_id || idx}
-                        className="px-4 py-3 flex items-center justify-between gap-3 hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-colors"
+                        className="px-4 py-3 flex items-center justify-between gap-3 hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-colors group"
                       >
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
@@ -225,12 +389,34 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
                           </div>
                         </div>
 
-                        <div className="text-right shrink-0">
-                          <div className="text-xs font-extrabold text-black dark:text-white tabular-nums font-sans">
-                            {s.quantity.toLocaleString('en-IN')} {s.unit}
+                        <div className="flex items-center gap-3 shrink-0">
+                          <div className="text-right">
+                            <div className="text-xs font-extrabold text-black dark:text-white tabular-nums font-sans">
+                              {s.quantity.toLocaleString('en-IN')} {s.unit}
+                            </div>
+                            <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 tabular-nums font-sans mt-0.5">
+                              {formatCurrency(s.amount)}
+                            </div>
                           </div>
-                          <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 tabular-nums font-sans mt-0.5">
-                            {formatCurrency(s.amount)}
+
+                          {/* Action Buttons: Edit & Delete */}
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleEditSale(s)}
+                              className="p-1.5 rounded-full text-zinc-400 hover:text-black dark:hover:text-white active:scale-90 transition-all"
+                              title="Edit this sale (बिक्री बिल सुधारें)"
+                            >
+                              <IconEdit size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteSale(s)}
+                              className="p-1.5 rounded-full text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 active:scale-90 transition-all"
+                              title="Delete this sale (बिक्री बिल हटाएं)"
+                            >
+                              <IconDelete size={14} />
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -242,6 +428,18 @@ export const ItemRateHistoryModal: React.FC<ItemRateHistoryModalProps> = ({
           </>
         )}
       </div>
+
+      {/* Transaction Edit Modal */}
+      <TransactionEditModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setTransactionToEdit(null);
+        }}
+        onSuccess={handleEditSuccess}
+        transaction={transactionToEdit}
+        itemsList={catalogItems}
+      />
     </BottomSheet>
   );
 };

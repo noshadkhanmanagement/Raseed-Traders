@@ -452,6 +452,7 @@ export const Dashboard: React.FC = () => {
           setHistoryItemId(null);
         }}
         itemId={historyItemId}
+        onSuccess={loadData}
       />
 
       {/* RESET COUNT & RATE TO 0 CONFIRMATION SHEET */}
