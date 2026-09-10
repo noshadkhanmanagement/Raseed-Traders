@@ -867,11 +867,11 @@ export const Settings: React.FC = () => {
                   Anurag Mishra
                 </span>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
-                  Lead Developer
+                  Engineer
                 </span>
               </div>
               <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">
-                Software Architect & Full Stack Engineer
+                Software Engineer & Architect
               </p>
             </div>
           </div>

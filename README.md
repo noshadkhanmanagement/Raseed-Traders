@@ -1,4 +1,4 @@
-# 📦 Raseed Traders (रसीद ट्रेडर्स) — Scrap Management & Hisaab System
+# Raseed Traders (रसीद ट्रेडर्स) — Scrap Management & Hisaab System
 
 [![Vercel Deployment](https://img.shields.io/badge/Vercel-Live-black?style=flat&logo=vercel)](https://raseed-traders-management.vercel.app/)
 [![React 19](https://img.shields.io/badge/React-19-blue?style=flat&logo=react)](https://react.dev/)
@@ -10,11 +10,11 @@ A modern, fast, and easy-to-use business software designed specially for **Rasee
 
 This system helps scrap merchants handle daily buying and selling, track custom shop expenses, calculate exact profit/loss for any date period, and print high-quality business statements wrapped in an exact **1cm border** with zero clutter.
 
-**🌐 Live Production Web App**: [https://raseed-traders-management.vercel.app/](https://raseed-traders-management.vercel.app/)
+**Live Production Web App**: [https://raseed-traders-management.vercel.app/](https://raseed-traders-management.vercel.app/)
 
 ---
 
-## 🏢 Business Overview (दुकान की जानकारी)
+## Business Overview (दुकान की जानकारी)
 
 - **Firm Name**: Raseed Traders (रसीद ट्रेडर्स)
 - **Business Type**: Scrap Merchants & Commission Agents (कबाड़ व्यापार व कमीशन एजेंट)
@@ -25,24 +25,24 @@ This system helps scrap merchants handle daily buying and selling, track custom 
 
 ---
 
-## 🌟 What This Software Does (मुख्य खूबियाँ - आसान भाषा में)
+## Core System Modules & Capabilities
 
-### 1. 🖨️ Professional 1cm-Border Print System (प्रिंट और PDF रिपोर्ट)
+### 1. Professional 1cm-Border Print System (प्रिंट और PDF रिपोर्ट)
 When you tap the **Print** button in the Hisaab screen, it does **NOT** print an ugly screenshot or messy web buttons. Instead:
 - **Print Options Dialog**: Opens an interactive popup where you choose:
   - **Date Period**: One-click buttons for *Today (आज)*, *Yesterday (कल)*, *This Month (इस महीने)*, *Last Month (पिछले)*, *30 Days*, or any custom *From/To* dates.
   - **What to Print Checklist**:
-    - ✅ **Executive Hisaab Summary**: Total bought, total sold, shop expenses, and net balance.
-    - ✅ **Custom Kharcha Statement**: Itemized list of shop expenses with name, reason, and amount.
-    - ✅ **Detailed Transaction Bills**: Complete list of buy and sell receipts with exact 12-hour timestamps.
-    - ✅ **Material-wise Breakdown Table**: Item-by-item breakdown of buying vs. selling weights and rates.
-    - ✅ **Authorized Signatory Stamp Box**: Official signature lines for Munshi and Proprietor.
+    - **Executive Hisaab Summary**: Total bought, total sold, shop expenses, and net balance.
+    - **Custom Kharcha Statement**: Itemized list of shop expenses with name, reason, and amount.
+    - **Detailed Transaction Bills**: Complete list of buy and sell receipts with exact 12-hour timestamps.
+    - **Material-wise Breakdown Table**: Item-by-item breakdown of buying vs. selling weights and rates.
+    - **Authorized Signatory Stamp Box**: Official signature lines for Munshi and Proprietor.
 - **Strict 1cm Border**: The printed sheet has an exact 1cm blank margin from the paper edges and is framed inside a sharp, high-contrast black border. Zero web UI artifacts, 100% formal business grade.
 - **Ready for PDF**: You can print directly to your physical printer or choose "Save as PDF" to share via WhatsApp.
 
 ---
 
-### 2. 💸 Custom Kharcha Tracking (दुकान व अन्य खर्च)
+### 2. Custom Kharcha Tracking (दुकान व अन्य खर्च)
 In scrap yards, small and large daily expenses happen constantly (e.g. truck rent, labor, tea, weighing scale maintenance).
 - **Clean Entry**: Accessible via the dedicated **Custom Kharcha (कस्टम खर्च)** button on the Stock page.
 - **Three Simple Fields**:
@@ -54,7 +54,7 @@ In scrap yards, small and large daily expenses happen constantly (e.g. truck ren
 
 ---
 
-### 3. 🧮 Hisaab & Calculator (तारीख़ से तारीख़ हिसाब)
+### 3. Hisaab & Calculator (तारीख़ से तारीख़ हिसाब)
 Know exactly how much money came in, how much went out, and what the net profit/loss is:
 - **Total Khareeda (कुल खरीदी)**: Total money spent buying scrap, total kilograms/pieces, and bill count.
 - **Total Becha (कुल बिक्री)**: Total money received selling scrap, total quantities, and bill count.
@@ -67,7 +67,7 @@ Know exactly how much money came in, how much went out, and what the net profit/
 
 ---
 
-### 4. ⚖️ Spot Market Pricing (Strict Zero Default Rate)
+### 4. Spot Market Pricing (Strict Zero Default Rate)
 Scrap rates in Mandi change every single day or even hour:
 - Rate input boxes start completely blank (`placeholder="0.00"`).
 - The operator types the exact rate negotiated right at the weighing scale.
@@ -75,14 +75,14 @@ Scrap rates in Mandi change every single day or even hour:
 
 ---
 
-### 5. 🔄 Stock Reset Without Polluting Hisaab (सुरक्षित स्टॉक रीसेट)
+### 5. Stock Reset Safety (सुरक्षित स्टॉक रीसेट)
 If a physical yard audit shows an item is sold or cleared out:
 - Tapping **Reset Stock** sets the available yard count back to `0 KG` or `0 PIECE`.
 - **Hisaab Protection**: Resetting stock does NOT delete or alter past financial records or purchase/sale bills. Your accounting and cash drawers stay 100% accurate.
 
 ---
 
-### 6. 📱 Apple iOS Liquid Glass Design System
+### 6. Apple iOS Design System
 - Built to feel just like a native iPhone application.
 - Fluid bottom navigation pill with tactile feedback and spring micro-animations.
 - Inset grouped cards, smooth rounded corners, and native light/dark mode support.
@@ -90,13 +90,13 @@ If a physical yard audit shows an item is sold or cleared out:
 
 ---
 
-### 7. ☁️ Dual Offline & Cloud Engine (इंटरनेट न होने पर भी चलेगा)
+### 7. Dual Offline and Cloud Architecture
 - **Offline First**: Works instantly even if the internet drops at the counter using local browser storage (`LocalEngine`).
 - **Cloud Backup**: Automatically syncs with a secure Supabase PostgreSQL database whenever online.
 
 ---
 
-## 📋 Master Materials Catalog (25 अधिकृत सामग्री सूची)
+## Master Materials Catalog (25 अधिकृत सामग्री सूची)
 
 The system is hard-locked to the 25 official materials traded by Raseed Traders:
 
@@ -130,7 +130,7 @@ The system is hard-locked to the 25 official materials traded by Raseed Traders:
 
 ---
 
-## 🚀 How to Run the Project Locally (कंप्यूटर पर कैसे चलाएं)
+## Local Setup & Development Guide
 
 ### Requirements
 - [Node.js](https://nodejs.org/) (Version 18 or higher)
@@ -172,7 +172,7 @@ npm run build
 
 ---
 
-## 📁 Project Structure (फ़ोल्डर संरचना)
+## Project Structure (फ़ोल्डर संरचना)
 
 ```text
 ├── src/
@@ -188,6 +188,10 @@ npm run build
 │   │   │   ├── QuickPurchaseModal.tsx    # Rapid scrap buy voucher
 │   │   │   ├── QuickSaleModal.tsx        # Rapid scrap sell voucher
 │   │   │   └── ItemRateHistoryModal.tsx  # Interactive rate audit sheet
+│   │   ├── layout/
+│   │   │   ├── AppShell.tsx              # Main layout structure
+│   │   │   ├── MobileTabBar.tsx          # Responsive mobile navigation dock
+│   │   │   └── PageHeader.tsx            # Top header bar
 │   ├── context/
 │   │   ├── AuthContext.tsx               # Password-protected session gate
 │   │   └── ThemeContext.tsx              # Monochrome Light/Dark theme provider
@@ -196,7 +200,7 @@ npm run build
 │   │   ├── Dashboard.tsx                 # Live stock and rapid trading hub
 │   │   ├── Inventory.tsx                 # Stock management and adjustments
 │   │   ├── Login.tsx                     # Password security gate
-│   │   └── Settings.tsx                  # Business settings, backups, units
+│   │   └── Settings.tsx                  # Business settings, backups, developer credit
 │   ├── services/
 │   │   ├── api.ts                        # Unified cloud/local data service
 │   │   └── localEngine.ts                # Offline transactional storage engine
@@ -214,19 +218,19 @@ npm run build
 
 ---
 
-## 📜 Documentation Index
+## Documentation Index
 
 For detailed guides, please see:
-- 📖 [**Staff & Counter User Guide (उपयोगकर्ता मार्गदर्शिका)**](file:///c:/Users/anura/Desktop/Noshad/docs/USER_GUIDE.md)
-- 🖨️ [**1cm Print System Technical Spec (प्रिंट सिस्टम विवरण)**](file:///c:/Users/anura/Desktop/Noshad/docs/PRINT_SYSTEM_SPEC.md)
+- [**Staff & Counter User Guide (उपयोगकर्ता मार्गदर्शिका)**](docs/USER_GUIDE.md)
+- [**1cm Print System Technical Spec (प्रिंट सिस्टम विवरण)**](docs/PRINT_SYSTEM_SPEC.md)
 
 ---
 
-## 👨‍💻 Engineering & Developer Credit (डेवलपर संपर्क)
+## Developer & Engineering Credit
 
 This application was designed, engineered, and tailored exclusively for **Raseed Traders** by:
 
-- **Lead Engineer**: Anurag Mishra
+- **Software Engineer**: Anurag Mishra
 - **Contact / Phone**: [+91 93027 86886](tel:9302786886) (`9302786886`)
 - **Email**: [anurag.mishra.core@gmail.com](mailto:anurag.mishra.core@gmail.com)
 - **LinkedIn**: [linkedin.com/in/4nur4gmishra](https://www.linkedin.com/in/4nur4gmishra/)
@@ -236,7 +240,6 @@ For any software maintenance, customizations, feature requests, or technical sup
 
 ---
 
-## 🛡️ License & Rights
+## License & Rights
 
 Proprietary Software. Developed exclusively for **Raseed Traders**, Lakhnadon, Madhya Pradesh. All rights reserved.
-

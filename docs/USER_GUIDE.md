@@ -1,10 +1,10 @@
-# 📖 Raseed Traders — Counter Staff & User Guide (उपयोगकर्ता मार्गदर्शिका)
+# Raseed Traders — Counter Staff & User Guide (उपयोगकर्ता मार्गदर्शिका)
 
 Welcome to the official User Guide for **Raseed Traders** (रसीद ट्रेडर्स). This guide is written in simple, plain language with step-by-step instructions so anyone can use the system without confusion.
 
 ---
 
-## 📑 Table of Contents (विषय सूची)
+## Table of Contents (विषय सूची)
 1. [लॉगिन और पासवर्ड (Login & Password Gate)](#1-लॉगिन-और-पासवर्ड-login--password-gate)
 2. [कबाड़ की खरीदी दर्ज करना (Buying Scrap / Kharidi)](#2-कबाड़-की-खरीदी-दर्ज-करना-buying-scrap--kharidi)
 3. [कबाड़ की बिक्री दर्ज करना (Selling Scrap / Bikri)](#3-कबाड़-की-बिक्री-दर्ज-करना-selling-scrap--bikri)
@@ -103,11 +103,11 @@ To print a physical paper statement or save a PDF to send to partners:
 3. The **Print Options Modal (प्रिंट विकल्प)** will appear.
 4. **Choose your Date Period**: Select Today, Yesterday, This Month, or enter custom dates.
 5. **Tick or Untick What You Want to Print**:
-   - ☑ **Executive Hisaab Summary**: Big KPI totals (Khareeda, Becha, Kharcha, Net).
-   - ☑ **Custom Kharcha Statement**: Full list of shop expenses with names and reasons.
-   - ☑ **Detailed Transaction Bills**: Complete list of buy/sell bills.
-   - ☑ **Material-wise Breakdown Table**: Item-by-item table of quantities and amounts.
-   - ☑ **Authorized Signatory Stamp Box**: Signature box for Munshi and Proprietor.
+   - [x] **Executive Hisaab Summary**: Big KPI totals (Khareeda, Becha, Kharcha, Net).
+   - [x] **Custom Kharcha Statement**: Full list of shop expenses with names and reasons.
+   - [x] **Detailed Transaction Bills**: Complete list of buy/sell bills.
+   - [x] **Material-wise Breakdown Table**: Item-by-item table of quantities and amounts.
+   - [x] **Authorized Signatory Stamp Box**: Signature box for Munshi and Proprietor.
 6. Tap **Print Official Report (प्रिंट निकालें)**.
 7. Your computer or phone's standard print window will open:
    - **Strict 1cm Border**: Notice how the printed document has an exact 1cm border surrounding the page.
@@ -153,4 +153,3 @@ What if you cleared out the yard and want to set an item's stock count back to z
 - **ईमेल (Email)**: [anurag.mishra.core@gmail.com](mailto:anurag.mishra.core@gmail.com)
 - **LinkedIn**: [linkedin.com/in/4nur4gmishra](https://www.linkedin.com/in/4nur4gmishra/)
 - **GitHub**: [github.com/4nur4gmishr4](https://github.com/4nur4gmishr4)
-

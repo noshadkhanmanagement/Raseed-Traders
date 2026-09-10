@@ -1,4 +1,4 @@
-# 🖨️ Raseed Traders — Professional 1cm Print System Specification
+# Raseed Traders — Professional 1cm Print System Specification
 
 This document details the architecture, design principles, and technical implementation of the formal accounting print engine in Raseed Traders.
 
