@@ -13,6 +13,7 @@ Welcome to the official User Guide for **Raseed Traders** (रसीद ट्�
 6. [1cm बॉर्डर वाली प्रोफेशनल रिपोर्ट प्रिंट करना (Printing & Saving PDF)](#6-1cm-बॉर्डर-वाली-प्रोफेशनल-रिपोर्ट-प्रिंट-करना-printing--saving-pdf)
 7. [स्टॉक रीसेट करना (Stock Reset Safety)](#7-स्टॉक-रीसेट-करना-stock-reset-safety)
 8. [अक्सर पूछे जाने वाले सवाल (FAQ)](#8-अक्सर-पूछे-जाने-वाले-सवाल-faq)
+9. [डेवलपर और तकनीकी सहायता (Developer & Support)](#9-डेवलपर-और-तकनीकी-सहायता-developer--support)
 
 ---
 
@@ -140,3 +141,16 @@ What if you cleared out the yard and want to set an item's stock count back to z
 
 ### Q4: कस्टम खर्च में क्या-क्या लिख सकते हैं?
 **उत्तर**: दुकान के किसी भी प्रकार के खर्च जैसे गाड़ी भाड़ा, हम्माली / लेबर, चाय-नाश्ता, कांटा रिपेयरिंग आदि। इसमें जिसे पैसे दिए उसका नाम, कारण और रुपये लिखकर सेव कर दें।
+
+---
+
+## 9. डेवलपर और तकनीकी सहायता (Developer & Support)
+
+सॉफ़्टवेयर से संबंधित किसी भी तकनीकी सहायता, नए फ़ीचर जुड़वाने या कस्टमाइज़ेशन के लिए डेवलपर से सीधे संपर्क कर सकते हैं:
+
+- **डेवलपर (Developer)**: अनुराग मिश्रा (Anurag Mishra)
+- **फ़ोन / कॉल (Phone)**: [+91 93027 86886](tel:9302786886) (`9302786886`)
+- **ईमेल (Email)**: [anurag.mishra.core@gmail.com](mailto:anurag.mishra.core@gmail.com)
+- **LinkedIn**: [linkedin.com/in/4nur4gmishra](https://www.linkedin.com/in/4nur4gmishra/)
+- **GitHub**: [github.com/4nur4gmishr4](https://github.com/4nur4gmishr4)
+

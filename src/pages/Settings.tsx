@@ -13,6 +13,11 @@ import {
   IconCheck,
   IconSearch,
   IconClose,
+  IconPhone,
+  IconMail,
+  IconLinkedin,
+  IconGithub,
+  IconExternalLink,
 } from '../components/common/Icons';
 import { PageHeader } from '../components/layout/PageHeader';
 import { ItemModal } from '../components/transactions/ItemModal';
@@ -839,6 +844,115 @@ export const Settings: React.FC = () => {
               <IconReset size={12} className={isResetting ? 'animate-spin' : ''} />
               <span>{isResetting ? 'Resetting...' : 'Reset to 0'}</span>
             </button>
+          </div>
+        </div>
+      </div>
+
+      {/* SECTION E: DEVELOPER CREDIT (डेवलपर संपर्क) */}
+      <div className="space-y-1.5 pt-2">
+        <div className="px-3 text-[11px] font-bold text-zinc-400 uppercase tracking-wider flex items-center justify-between">
+          <span>Engineering & Developer Credit</span>
+          <span className="text-[10px] text-zinc-400 font-normal">v1.0.0</span>
+        </div>
+
+        <div className="rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 shadow-xs overflow-hidden p-4 sm:p-5 space-y-3.5">
+          {/* Top profile header */}
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-black to-zinc-700 dark:from-white dark:to-zinc-300 text-white dark:text-black flex items-center justify-center font-black text-sm shadow-md shrink-0">
+              AM
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-black dark:text-white tracking-tight truncate">
+                  Anurag Mishra
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
+                  Lead Developer
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">
+                Software Architect & Full Stack Engineer
+              </p>
+            </div>
+          </div>
+
+          {/* Contact & Socials Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-0.5">
+            {/* Phone */}
+            <a
+              href="tel:9302786886"
+              className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-zinc-200/70 dark:border-zinc-800/80 bg-zinc-50/60 dark:bg-zinc-800/30 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 text-black dark:text-white transition-all group btn-press"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                  <IconPhone size={14} />
+                </div>
+                <div className="truncate">
+                  <div className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider leading-none mb-0.5">Phone / Call</div>
+                  <div className="text-xs font-semibold font-mono tracking-tight">+91 93027 86886</div>
+                </div>
+              </div>
+              <IconExternalLink size={12} className="text-zinc-400 opacity-60 group-hover:opacity-100 shrink-0" />
+            </a>
+
+            {/* Email */}
+            <a
+              href="mailto:anurag.mishra.core@gmail.com"
+              className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-zinc-200/70 dark:border-zinc-800/80 bg-zinc-50/60 dark:bg-zinc-800/30 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 text-black dark:text-white transition-all group btn-press"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                  <IconMail size={14} />
+                </div>
+                <div className="truncate">
+                  <div className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider leading-none mb-0.5">Email</div>
+                  <div className="text-xs font-semibold tracking-tight truncate">anurag.mishra.core@gmail.com</div>
+                </div>
+              </div>
+              <IconExternalLink size={12} className="text-zinc-400 opacity-60 group-hover:opacity-100 shrink-0" />
+            </a>
+
+            {/* LinkedIn */}
+            <a
+              href="https://www.linkedin.com/in/4nur4gmishra/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-zinc-200/70 dark:border-zinc-800/80 bg-zinc-50/60 dark:bg-zinc-800/30 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 text-black dark:text-white transition-all group btn-press"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-[#0077B5]/10 text-[#0077B5] dark:text-[#3897f0] flex items-center justify-center shrink-0">
+                  <IconLinkedin size={14} />
+                </div>
+                <div className="truncate">
+                  <div className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider leading-none mb-0.5">LinkedIn</div>
+                  <div className="text-xs font-semibold tracking-tight">in/4nur4gmishra</div>
+                </div>
+              </div>
+              <IconExternalLink size={12} className="text-zinc-400 opacity-60 group-hover:opacity-100 shrink-0" />
+            </a>
+
+            {/* GitHub */}
+            <a
+              href="https://github.com/4nur4gmishr4"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-zinc-200/70 dark:border-zinc-800/80 bg-zinc-50/60 dark:bg-zinc-800/30 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 text-black dark:text-white transition-all group btn-press"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-zinc-900/10 dark:bg-white/10 text-black dark:text-white flex items-center justify-center shrink-0">
+                  <IconGithub size={14} />
+                </div>
+                <div className="truncate">
+                  <div className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider leading-none mb-0.5">GitHub</div>
+                  <div className="text-xs font-semibold tracking-tight">@4nur4gmishr4</div>
+                </div>
+              </div>
+              <IconExternalLink size={12} className="text-zinc-400 opacity-60 group-hover:opacity-100 shrink-0" />
+            </a>
+          </div>
+
+          <div className="text-center text-[10px] text-zinc-400 dark:text-zinc-500 pt-1 border-t border-zinc-100 dark:border-zinc-800/60">
+            Crafted with precision for Raseed Traders, Lakhnadon (M.P.) • All Rights Reserved
           </div>
         </div>
       </div>

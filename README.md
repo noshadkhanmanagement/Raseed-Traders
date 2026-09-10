@@ -222,6 +222,21 @@ For detailed guides, please see:
 
 ---
 
+## 👨‍💻 Engineering & Developer Credit (डेवलपर संपर्क)
+
+This application was designed, engineered, and tailored exclusively for **Raseed Traders** by:
+
+- **Lead Engineer**: Anurag Mishra
+- **Contact / Phone**: [+91 93027 86886](tel:9302786886) (`9302786886`)
+- **Email**: [anurag.mishra.core@gmail.com](mailto:anurag.mishra.core@gmail.com)
+- **LinkedIn**: [linkedin.com/in/4nur4gmishra](https://www.linkedin.com/in/4nur4gmishra/)
+- **GitHub**: [github.com/4nur4gmishr4](https://github.com/4nur4gmishr4)
+
+For any software maintenance, customizations, feature requests, or technical support, reach out directly to the developer above.
+
+---
+
 ## 🛡️ License & Rights
 
 Proprietary Software. Developed exclusively for **Raseed Traders**, Lakhnadon, Madhya Pradesh. All rights reserved.
+

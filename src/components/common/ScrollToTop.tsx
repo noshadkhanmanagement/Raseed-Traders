@@ -12,8 +12,15 @@ export const ScrollToTop: React.FC = () => {
 
   useEffect(() => {
     if (hash) {
-      const elementId = hash.replace('#', '');
-      const targetElement = document.getElementById(elementId) || document.querySelector(hash);
+      const elementId = hash.replace(/^#/, '');
+      let targetElement = document.getElementById(elementId);
+      if (!targetElement) {
+        try {
+          targetElement = document.querySelector(hash);
+        } catch {
+          // Ignore invalid CSS selectors
+        }
+      }
       if (targetElement) {
         // Allow DOM to settle, then scroll to the exact target section
         requestAnimationFrame(() => {
