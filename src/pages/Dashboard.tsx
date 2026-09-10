@@ -3,7 +3,6 @@ import {
   IconPlus,
   IconMinus,
   IconSearch,
-  IconAdjust,
   IconReset,
   IconChevron,
   IconClose,
@@ -20,7 +19,7 @@ export const Dashboard: React.FC = () => {
   const [items, setItems] = useState<ScrapItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [stockFilter, setStockFilter] = useState<'ALL' | 'IN_STOCK' | 'ZERO_STOCK'>('ALL');
-  const [sortBy, setSortBy] = useState<'name' | 'stock_desc' | 'rate_desc' | 'recently_traded'>('stock_desc');
+  const [sortBy, setSortBy] = useState<'name' | 'stock_desc' | 'recently_traded'>('stock_desc');
   const [isLoading, setIsLoading] = useState(true);
 
   // Trade Modal State
@@ -81,7 +80,6 @@ export const Dashboard: React.FC = () => {
       .sort((a, b) => {
         if (sortBy === 'name') return a.name.localeCompare(b.name);
         if (sortBy === 'stock_desc') return b.current_stock - a.current_stock;
-        if (sortBy === 'rate_desc') return (b.default_purchase_rate || 0) - (a.default_purchase_rate || 0);
         if (sortBy === 'recently_traded') {
           const tA = new Date(a.updated_at || a.created_at || 0).getTime();
           const tB = new Date(b.updated_at || b.created_at || 0).getTime();
@@ -208,7 +206,7 @@ export const Dashboard: React.FC = () => {
             {items.length} Materials · <strong className="text-black dark:text-white font-bold">{stockSummary.kg.toLocaleString('en-IN')} KG</strong>
             {stockSummary.piece > 0 ? (
               <> · <strong className="text-black dark:text-white font-bold">{stockSummary.piece.toLocaleString('en-IN')} PIECE</strong></>
-            ) : null} Stock
+            ) : null} Total Stock
           </span>
         </div>
         <span className="text-[11px] text-zinc-400 font-medium">

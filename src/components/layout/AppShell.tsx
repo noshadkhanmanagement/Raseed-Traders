@@ -64,7 +64,7 @@ export const AppShell: React.FC = () => {
     if (action === 'item') setIsItemOpen(true);
   };
 
-  const handleSearchResultClick = () => {
+  const handleSearchResultClick = (_type: string, _id: string) => {
     navigate('/');
   };
 
