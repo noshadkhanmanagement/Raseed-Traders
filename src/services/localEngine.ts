@@ -396,9 +396,19 @@ class LocalEngine {
     if (!item) throw new Error('Item not found');
     item.current_stock = 0;
     item.average_cost = 0;
+    item.default_purchase_rate = 0;
+    item.default_sale_rate = 0;
     item.updated_at = new Date().toISOString();
 
     const actualId = item.id;
+    const itemNameNorm = (item.name || '').toUpperCase().trim();
+    const isMatchingItem = (it: any) => {
+      if (!it) return false;
+      if (it.item_id === actualId || it.item_id === id) return true;
+      if (it.item_name && it.item_name.toUpperCase().trim() === itemNameNorm) return true;
+      return false;
+    };
+
     // Reset ledger history and adjustment history for this item
     this.data.inventory_ledger = this.data.inventory_ledger.filter((l) => l.item_id !== actualId && l.item_id !== id);
     this.data.stock_cost_history = this.data.stock_cost_history.filter((h) => h.item_id !== actualId && h.item_id !== id);
@@ -408,7 +418,7 @@ class LocalEngine {
     const purchasesToRemove: string[] = [];
     this.data.purchases.forEach((p) => {
       if (p.items) {
-        p.items = p.items.filter((it) => it.item_id !== actualId && it.item_id !== id);
+        p.items = p.items.filter((it) => !isMatchingItem(it));
         if (p.items.length === 0) {
           purchasesToRemove.push(p.id);
         } else {
@@ -429,7 +439,7 @@ class LocalEngine {
     const salesToRemove: string[] = [];
     this.data.sales.forEach((s) => {
       if (s.items) {
-        s.items = s.items.filter((it) => it.item_id !== actualId && it.item_id !== id);
+        s.items = s.items.filter((it) => !isMatchingItem(it));
         if (s.items.length === 0) {
           salesToRemove.push(s.id);
         } else {
@@ -1188,11 +1198,11 @@ class LocalEngine {
 
   // --- QUERIES & REPORTS ---
   public getPurchases(): Purchase[] {
-    return this.data.purchases;
+    return this.data.purchases.filter((p) => p.items && p.items.length > 0);
   }
 
   public getSales(): Sale[] {
-    return this.data.sales;
+    return this.data.sales.filter((s) => s.items && s.items.length > 0);
   }
 
   public getPayments(): Payment[] {

@@ -398,32 +398,118 @@ export const api = {
   async resetItemStock(id: string): Promise<ScrapItem> {
     if (isSupabaseConfigured && supabase) {
       try {
+        let itemName = '';
+        let targetId = id;
+        const { data: itemData } = await supabase.from('items').select('*').eq('id', id).maybeSingle();
+        if (itemData) {
+          itemName = itemData.name;
+          targetId = itemData.id;
+        }
+
+        // 1. Delete item-specific ledger, cost history, adjustments
         await Promise.allSettled([
-          supabase.from('stock_cost_history').delete().eq('item_id', id),
-          supabase.from('inventory_ledger').delete().eq('item_id', id),
-          supabase.from('stock_adjustments').delete().eq('item_id', id),
+          supabase.from('stock_cost_history').delete().eq('item_id', targetId),
+          supabase.from('inventory_ledger').delete().eq('item_id', targetId),
+          supabase.from('stock_adjustments').delete().eq('item_id', targetId),
         ]);
+
+        // 2. Clean up Purchases containing this item
+        const { data: purchaseItems } = await supabase
+          .from('purchase_items')
+          .select('id, purchase_id, item_id, amount')
+          .eq('item_id', targetId);
+
+        if (purchaseItems && purchaseItems.length > 0) {
+          const purchaseIds = Array.from(new Set(purchaseItems.map((pi: any) => pi.purchase_id)));
+          for (const pId of purchaseIds) {
+            const { data: allItemsOfP } = await supabase
+              .from('purchase_items')
+              .select('id, item_id, amount')
+              .eq('purchase_id', pId);
+
+            const remainingItems = (allItemsOfP || []).filter((pi: any) => pi.item_id !== targetId);
+            if (remainingItems.length === 0) {
+              await Promise.allSettled([
+                supabase.from('inventory_ledger').delete().eq('reference_id', pId),
+                supabase.from('payments').delete().eq('purchase_id', pId),
+                supabase.from('purchase_items').delete().eq('purchase_id', pId),
+              ]);
+              await supabase.from('purchases').delete().eq('id', pId);
+            } else {
+              await supabase.from('purchase_items').delete().eq('purchase_id', pId).eq('item_id', targetId);
+              const newTotal = remainingItems.reduce((sum: number, it: any) => sum + Number(it.amount || 0), 0);
+              await supabase.from('purchases').update({
+                total_amount: newTotal,
+                subtotal: newTotal,
+                paid_amount: newTotal,
+                due_amount: 0,
+              }).eq('id', pId);
+            }
+          }
+        }
+
+        // 3. Clean up Sales containing this item
+        const { data: saleItems } = await supabase
+          .from('sale_items')
+          .select('id, sale_id, item_id, amount')
+          .eq('item_id', targetId);
+
+        if (saleItems && saleItems.length > 0) {
+          const saleIds = Array.from(new Set(saleItems.map((si: any) => si.sale_id)));
+          for (const sId of saleIds) {
+            const { data: allItemsOfS } = await supabase
+              .from('sale_items')
+              .select('id, item_id, amount')
+              .eq('sale_id', sId);
+
+            const remainingItems = (allItemsOfS || []).filter((si: any) => si.item_id !== targetId);
+            if (remainingItems.length === 0) {
+              await Promise.allSettled([
+                supabase.from('inventory_ledger').delete().eq('reference_id', sId),
+                supabase.from('payments').delete().eq('sale_id', sId),
+                supabase.from('sale_items').delete().eq('sale_id', sId),
+              ]);
+              await supabase.from('sales').delete().eq('id', sId);
+            } else {
+              await supabase.from('sale_items').delete().eq('sale_id', sId).eq('item_id', targetId);
+              const newTotal = remainingItems.reduce((sum: number, it: any) => sum + Number(it.amount || 0), 0);
+              await supabase.from('sales').update({
+                total_amount: newTotal,
+                subtotal: newTotal,
+                received_amount: newTotal,
+                due_amount: 0,
+              }).eq('id', sId);
+            }
+          }
+        }
+
+        // 4. Update the item itself in Supabase
         const { data, error } = await supabase
           .from('items')
           .update({
             current_stock: 0,
             average_cost: 0,
+            default_purchase_rate: 0,
+            default_sale_rate: 0,
             updated_at: new Date().toISOString(),
           })
-          .eq('id', id)
+          .eq('id', targetId)
           .select()
           .single();
-        if (!error && data) {
-          try {
-            const localItem = localDb.getItemById(id) || localDb.getItems(true).find(i => (i.name || '').toUpperCase().trim() === (data.name || '').toUpperCase().trim());
-            if (localItem) {
-              localDb.resetItemStock(localItem.id);
-            } else {
-              localDb.resetItemStock(id);
-            }
-          } catch (e) {
-            console.error('Error syncing reset to localDb:', e);
+
+        // 5. Sync to localDb
+        try {
+          const localItem = localDb.getItemById(targetId) || (itemName ? localDb.getItems(true).find(i => (i.name || '').toUpperCase().trim() === itemName.toUpperCase().trim()) : undefined);
+          if (localItem) {
+            localDb.resetItemStock(localItem.id);
+          } else {
+            localDb.resetItemStock(targetId);
           }
+        } catch (e) {
+          console.error('Error syncing reset to localDb:', e);
+        }
+
+        if (!error && data) {
           return data;
         }
       } catch (err) {
@@ -523,15 +609,17 @@ export const api = {
         .select('*, party:parties(name), items:purchase_items(*, item:items(name, local_name))')
         .order('purchase_date', { ascending: false });
       if (!error && data) {
-        return data.map((p: any) => ({
-          ...p,
-          party_name: p.party?.name,
-          items: p.items?.map((it: any) => ({
-            ...it,
-            item_name: it.item?.name,
-            item_local_name: it.item?.local_name,
-          })),
-        }));
+        return data
+          .map((p: any) => ({
+            ...p,
+            party_name: p.party?.name,
+            items: (p.items || []).map((it: any) => ({
+              ...it,
+              item_name: it.item?.name,
+              item_local_name: it.item?.local_name,
+            })),
+          }))
+          .filter((p: any) => p.items && p.items.length > 0);
       }
     }
     return localDb.getPurchases();
@@ -643,15 +731,17 @@ export const api = {
         .select('*, party:parties(name), items:sale_items(*, item:items(name, local_name))')
         .order('sale_date', { ascending: false });
       if (!error && data) {
-        return data.map((s: any) => ({
-          ...s,
-          party_name: s.party?.name,
-          items: s.items?.map((it: any) => ({
-            ...it,
-            item_name: it.item?.name,
-            item_local_name: it.item?.local_name,
-          })),
-        }));
+        return data
+          .map((s: any) => ({
+            ...s,
+            party_name: s.party?.name,
+            items: (s.items || []).map((it: any) => ({
+              ...it,
+              item_name: it.item?.name,
+              item_local_name: it.item?.local_name,
+            })),
+          }))
+          .filter((s: any) => s.items && s.items.length > 0);
       }
     }
     return localDb.getSales();
