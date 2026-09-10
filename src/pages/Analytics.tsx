@@ -8,6 +8,7 @@ import {
   IconRefresh,
   IconReceipt,
   IconDelete,
+  IconEdit,
 } from '../components/common/Icons';
 import { api } from '../services/api';
 import {
@@ -21,6 +22,9 @@ import {
 } from '../utils/formatters';
 import { PrintOptionsModal, PrintConfig } from '../components/common/PrintOptionsModal';
 import { OfficialPrintStatement } from '../components/common/OfficialPrintStatement';
+import { CustomExpenseModal } from '../components/transactions/CustomExpenseModal';
+import { TransactionEditModal } from '../components/transactions/TransactionEditModal';
+import { Expense, ScrapItem } from '../types';
 
 type QuickRange = 'TODAY' | 'YESTERDAY' | 'THIS_MONTH' | 'LAST_MONTH' | 'LAST_30_DAYS';
 type TxFilter = 'ALL' | 'PURCHASE' | 'SALE';
@@ -35,6 +39,7 @@ interface UnifiedTx {
   total_amount: number;
   total_weight?: number;
   items: Array<{
+    item_id?: string;
     item_name: string;
     item_local_name?: string;
     quantity: number;
@@ -58,6 +63,19 @@ export const Analytics: React.FC = () => {
   const [printConfig, setPrintConfig] = useState<PrintConfig | null>(null);
   const [printRangeData, setPrintRangeData] = useState<any>(null);
   const [printTransactions, setPrintTransactions] = useState<UnifiedTx[]>([]);
+
+  // Edit Expense State
+  const [expenseToEdit, setExpenseToEdit] = useState<Expense | null>(null);
+  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState<boolean>(false);
+
+  // Edit Transaction State
+  const [transactionToEdit, setTransactionToEdit] = useState<UnifiedTx | null>(null);
+  const [isTransactionEditModalOpen, setIsTransactionEditModalOpen] = useState<boolean>(false);
+  const [catalogItems, setCatalogItems] = useState<ScrapItem[]>([]);
+
+  useEffect(() => {
+    api.getItems().then(setCatalogItems).catch(() => {});
+  }, []);
 
   const [rangeData, setRangeData] = useState<{
     totalPurchasesCount: number;
@@ -138,6 +156,7 @@ export const Analytics: React.FC = () => {
         total_amount: Number(p.total_amount || 0),
         total_weight: Number(p.total_weight || 0),
         items: (p.items || []).map((it: any) => ({
+          item_id: it.item_id,
           item_name: it.item_name || 'Item',
           item_local_name: it.item_local_name,
           quantity: Number(it.quantity || 0),
@@ -159,6 +178,7 @@ export const Analytics: React.FC = () => {
         total_amount: Number(s.total_amount || 0),
         total_weight: Number(s.total_weight || 0),
         items: (s.items || []).map((it: any) => ({
+          item_id: it.item_id,
           item_name: it.item_name || 'Item',
           item_local_name: it.item_local_name,
           quantity: Number(it.quantity || 0),
@@ -312,6 +332,39 @@ export const Analytics: React.FC = () => {
       await loadAnalytics();
     } catch (err: any) {
       alert(err.message || 'Kharcha delete karne me samasya aayi');
+    }
+  };
+
+  const handleEditExpense = (expense: any) => {
+    setExpenseToEdit(expense);
+    setIsExpenseModalOpen(true);
+  };
+
+  const handleEditTransaction = (tx: UnifiedTx) => {
+    setTransactionToEdit(tx);
+    setIsTransactionEditModalOpen(true);
+  };
+
+  const handleDeleteTransaction = async (tx: UnifiedTx) => {
+    const isPurchase = tx.type === 'PURCHASE';
+    const actionName = isPurchase ? 'Kharidi (BUY)' : 'Bikri (SELL)';
+    const impactText = isPurchase
+      ? `Yard stock se maal ghat jayega (-${tx.total_weight || 0} KG/PIECE).`
+      : `Yard stock me maal wapas jud jayega (+${tx.total_weight || 0} KG/PIECE).`;
+
+    const confirmMsg = `"${tx.party_name}" ki ${formatCurrency(tx.total_amount)} ki ${actionName} bill (${tx.reference_number}) delete karein?\n\n${impactText}\n\nKya aap nishchit hain?`;
+
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      if (isPurchase) {
+        await api.deletePurchase(tx.id);
+      } else {
+        await api.deleteSale(tx.id);
+      }
+      await loadAnalytics();
+    } catch (err: any) {
+      alert(err.message || 'Transaction delete karne me samasya aayi.');
     }
   };
 
@@ -668,8 +721,8 @@ export const Analytics: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Right: Amount & Delete Action */}
-                <div className="flex items-center gap-3 shrink-0">
+                {/* Right: Amount & Actions */}
+                <div className="flex items-center gap-2 shrink-0">
                   <div className="text-right">
                     <div className="text-sm sm:text-base font-extrabold text-rose-600 dark:text-rose-400 tabular-nums tracking-tight">
                       -{formatCurrency(exp.amount)}
@@ -679,14 +732,24 @@ export const Analytics: React.FC = () => {
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteExpense(exp.id, exp.recipient_name, exp.amount)}
-                    className="p-1.5 rounded-full text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 active:scale-90 transition-all opacity-70 group-hover:opacity-100"
-                    title="Delete this expense"
-                  >
-                    <IconDelete size={14} />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleEditExpense(exp)}
+                      className="p-1.5 rounded-full text-zinc-400 hover:text-black dark:hover:text-white active:scale-90 transition-all opacity-70 group-hover:opacity-100"
+                      title="Edit this expense (खर्च सुधारें)"
+                    >
+                      <IconEdit size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteExpense(exp.id, exp.recipient_name, exp.amount)}
+                      className="p-1.5 rounded-full text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 active:scale-90 transition-all opacity-70 group-hover:opacity-100"
+                      title="Delete this expense"
+                    >
+                      <IconDelete size={14} />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))
@@ -799,7 +862,7 @@ export const Analytics: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Right: Total Amount */}
+                  {/* Right: Total Amount & Actions */}
                   <div className="text-right shrink-0">
                     <div
                       className={`text-sm sm:text-base font-extrabold tabular-nums tracking-tight ${
@@ -816,6 +879,26 @@ export const Analytics: React.FC = () => {
                         {tx.total_weight} KG
                       </div>
                     ) : null}
+
+                    {/* Bill Edit & Delete Action Buttons */}
+                    <div className="flex items-center justify-end gap-1 mt-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleEditTransaction(tx)}
+                        className="p-1.5 rounded-full text-zinc-400 hover:text-black dark:hover:text-white active:scale-90 transition-all"
+                        title="Edit bill (बिल सुधारें)"
+                      >
+                        <IconEdit size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteTransaction(tx)}
+                        className="p-1.5 rounded-full text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 active:scale-90 transition-all"
+                        title="Delete bill (बिल हटाएं)"
+                      >
+                        <IconDelete size={14} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
@@ -927,6 +1010,33 @@ export const Analytics: React.FC = () => {
         }
         rangeData={printRangeData || rangeData}
         unifiedTransactions={printTransactions.length > 0 ? printTransactions : unifiedTransactions}
+      />
+
+      {/* Edit Custom Kharcha Modal */}
+      <CustomExpenseModal
+        isOpen={isExpenseModalOpen}
+        onClose={() => {
+          setIsExpenseModalOpen(false);
+          setExpenseToEdit(null);
+        }}
+        onSuccess={() => {
+          loadAnalytics();
+        }}
+        expenseToEdit={expenseToEdit}
+      />
+
+      {/* Edit Transaction Modal (Buy & Sell) */}
+      <TransactionEditModal
+        isOpen={isTransactionEditModalOpen}
+        onClose={() => {
+          setIsTransactionEditModalOpen(false);
+          setTransactionToEdit(null);
+        }}
+        onSuccess={() => {
+          loadAnalytics();
+        }}
+        transaction={transactionToEdit}
+        itemsList={catalogItems}
       />
     </div>
   );

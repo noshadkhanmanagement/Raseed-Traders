@@ -693,6 +693,7 @@ export const api = {
   async updatePurchaseTransaction(
     purchaseId: string,
     updates: {
+      party_name?: string;
       items: { item_id: string; quantity: number; rate: number; amount: number }[];
       paid_amount?: number;
     }
@@ -710,12 +711,13 @@ export const api = {
           await supabase.from('purchase_items').update({ quantity: it.quantity, rate: it.rate, amount: it.amount }).eq('purchase_id', purchaseId).eq('item_id', it.item_id);
         }
         const totalAmount = updates.items.reduce((s, it) => s + it.amount, 0);
-        await supabase.from('purchases').update({
+        const purchaseUpdates: any = {
           total_amount: totalAmount,
           subtotal: totalAmount,
           paid_amount: totalAmount,
           due_amount: 0,
-        }).eq('id', purchaseId);
+        };
+        await supabase.from('purchases').update(purchaseUpdates).eq('id', purchaseId);
       } catch (e) {
         console.warn('Supabase updatePurchaseTransaction fallback:', e);
       }
@@ -815,6 +817,7 @@ export const api = {
   async updateSaleTransaction(
     saleId: string,
     updates: {
+      party_name?: string;
       items: { item_id: string; quantity: number; rate: number; amount: number }[];
       received_amount?: number;
     }
@@ -832,12 +835,13 @@ export const api = {
           await supabase.from('sale_items').update({ quantity: it.quantity, rate: it.rate, amount: it.amount }).eq('sale_id', saleId).eq('item_id', it.item_id);
         }
         const totalAmount = updates.items.reduce((s, it) => s + it.amount, 0);
-        await supabase.from('sales').update({
+        const saleUpdates: any = {
           total_amount: totalAmount,
           subtotal: totalAmount,
           received_amount: totalAmount,
           due_amount: 0,
-        }).eq('id', saleId);
+        };
+        await supabase.from('sales').update(saleUpdates).eq('id', saleId);
       } catch (e) {
         console.warn('Supabase updateSaleTransaction fallback:', e);
       }
@@ -1037,6 +1041,54 @@ export const api = {
       }
     }
     localDb.deleteExpense(id);
+  },
+
+  async updateExpense(
+    id: string,
+    payload: {
+      recipient_name: string;
+      reason: string;
+      amount: number;
+      expense_date: string;
+      notes?: string;
+    }
+  ): Promise<Expense> {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const notesPayload = JSON.stringify({
+          recipient_name: payload.recipient_name.trim(),
+          reason: payload.reason.trim(),
+          notes: payload.notes?.trim() || '',
+        });
+        const { data, error } = await supabase
+          .from('expenses')
+          .update({
+            amount: payload.amount,
+            expense_date: payload.expense_date,
+            notes: notesPayload,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', id)
+          .select()
+          .single();
+
+        if (!error && data) {
+          try {
+            localDb.updateExpense(id, payload);
+          } catch (e) {
+            console.error('Error syncing update expense to localDb:', e);
+          }
+          return {
+            ...data,
+            recipient_name: payload.recipient_name.trim(),
+            reason: payload.reason.trim(),
+          };
+        }
+      } catch (err) {
+        console.warn('Supabase updateExpense error, fallback to localDb:', err);
+      }
+    }
+    return localDb.updateExpense(id, payload);
   },
 
   // Ledger

@@ -3,17 +3,20 @@ import { BottomSheet } from '../common/BottomSheet';
 import { api } from '../../services/api';
 import { formatCurrency, getLocalDateString } from '../../utils/formatters';
 import { IconReceipt, IconClose } from '../common/Icons';
+import { Expense } from '../../types';
 
 interface CustomExpenseModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  expenseToEdit?: Expense | null;
 }
 
 export const CustomExpenseModal: React.FC<CustomExpenseModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
+  expenseToEdit,
 }) => {
   const [recipientName, setRecipientName] = useState('');
   const [reason, setReason] = useState('');
@@ -25,15 +28,23 @@ export const CustomExpenseModal: React.FC<CustomExpenseModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      setRecipientName('');
-      setReason('');
-      setAmount('');
-      setExpenseDate(getLocalDateString());
-      setNotes('');
+      if (expenseToEdit) {
+        setRecipientName(expenseToEdit.recipient_name || '');
+        setReason(expenseToEdit.reason || '');
+        setAmount(String(expenseToEdit.amount || ''));
+        setExpenseDate(expenseToEdit.expense_date || getLocalDateString());
+        setNotes(expenseToEdit.notes || '');
+      } else {
+        setRecipientName('');
+        setReason('');
+        setAmount('');
+        setExpenseDate(getLocalDateString());
+        setNotes('');
+      }
       setErrorMessage('');
       setIsSubmitting(false);
     }
-  }, [isOpen]);
+  }, [isOpen, expenseToEdit]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,13 +66,23 @@ export const CustomExpenseModal: React.FC<CustomExpenseModalProps> = ({
 
     setIsSubmitting(true);
     try {
-      await api.createExpense({
-        recipient_name: recipientName.trim(),
-        reason: reason.trim(),
-        amount: parsedAmount,
-        expense_date: expenseDate,
-        notes: notes.trim(),
-      });
+      if (expenseToEdit) {
+        await api.updateExpense(expenseToEdit.id, {
+          recipient_name: recipientName.trim(),
+          reason: reason.trim(),
+          amount: parsedAmount,
+          expense_date: expenseDate,
+          notes: notes.trim(),
+        });
+      } else {
+        await api.createExpense({
+          recipient_name: recipientName.trim(),
+          reason: reason.trim(),
+          amount: parsedAmount,
+          expense_date: expenseDate,
+          notes: notes.trim(),
+        });
+      }
 
       onSuccess();
       onClose();
@@ -78,8 +99,12 @@ export const CustomExpenseModal: React.FC<CustomExpenseModalProps> = ({
     <BottomSheet
       isOpen={isOpen}
       onClose={onClose}
-      title="Custom Kharcha (कस्टम ख़र्च)"
-      subtitle="Enter recipient name, reason and amount (किसे दिया, कारण और रुपये)"
+      title={expenseToEdit ? 'Edit Custom Kharcha (ख़र्च सुधारें)' : 'Custom Kharcha (कस्टम ख़र्च)'}
+      subtitle={
+        expenseToEdit
+          ? 'Update recipient name, reason or amount (किसे दिया, कारण या रुपये बदलें)'
+          : 'Enter recipient name, reason and amount (किसे दिया, कारण और रुपये)'
+      }
       maxWidth="max-w-lg"
     >
       <form onSubmit={handleSubmit} className="space-y-4 font-[-apple-system,BlinkMacSystemFont,'SF_Pro_Text','SF_Pro_Display',sans-serif]">
@@ -198,6 +223,8 @@ export const CustomExpenseModal: React.FC<CustomExpenseModalProps> = ({
             <span>
               {isSubmitting
                 ? 'Saving...'
+                : expenseToEdit
+                ? `Save Changes (${formatCurrency(parsedAmount)})`
                 : parsedAmount > 0
                 ? `Kharch Likhein (- ${formatCurrency(parsedAmount)})`
                 : 'Kharch Likhein (Record Expense)'}

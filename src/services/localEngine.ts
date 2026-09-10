@@ -972,14 +972,37 @@ class LocalEngine {
   public updatePurchaseTransaction(
     purchaseId: string,
     updates: {
+      party_name?: string;
       items: { item_id: string; quantity: number; rate: number; amount: number }[];
       paid_amount?: number;
     }
   ): Purchase {
-    const purchase = this.data.purchases.find((p) => p.id === purchaseId);
-    if (!purchase) throw new Error('Purchase not found');
-
     const now = new Date().toISOString();
+    let purchase = this.data.purchases.find((p) => p.id === purchaseId || p.purchase_number === purchaseId);
+    if (!purchase) {
+      purchase = {
+        id: purchaseId,
+        business_id: this.data.business.id,
+        purchase_number: `PUR-${Date.now()}`,
+        party_id: 'walkin',
+        party_name: updates.party_name || 'Walk-in Party',
+        purchase_date: new Date().toISOString().split('T')[0],
+        subtotal: 0,
+        total_amount: 0,
+        paid_amount: 0,
+        due_amount: 0,
+        status: 'FINAL',
+        items: [],
+        created_at: now,
+        updated_at: now,
+      };
+      this.data.purchases.unshift(purchase);
+    }
+
+    if (updates.party_name !== undefined) {
+      purchase.party_name = updates.party_name;
+    }
+
     for (const newItem of updates.items) {
       const oldItem = purchase.items?.find((it) => it.item_id === newItem.item_id);
       const oldQty = oldItem ? Number(oldItem.quantity) : 0;
@@ -1013,14 +1036,39 @@ class LocalEngine {
   public updateSaleTransaction(
     saleId: string,
     updates: {
+      party_name?: string;
       items: { item_id: string; quantity: number; rate: number; amount: number }[];
       received_amount?: number;
     }
   ): Sale {
-    const sale = this.data.sales.find((s) => s.id === saleId);
-    if (!sale) throw new Error('Sale not found');
-
     const now = new Date().toISOString();
+    let sale = this.data.sales.find((s) => s.id === saleId || s.sale_number === saleId);
+    if (!sale) {
+      sale = {
+        id: saleId,
+        business_id: this.data.business.id,
+        sale_number: `SALE-${Date.now()}`,
+        party_id: 'buyer',
+        party_name: updates.party_name || 'Buyer Party',
+        sale_date: new Date().toISOString().split('T')[0],
+        subtotal: 0,
+        total_amount: 0,
+        received_amount: 0,
+        due_amount: 0,
+        total_cost: 0,
+        total_profit: 0,
+        status: 'FINAL',
+        items: [],
+        created_at: now,
+        updated_at: now,
+      };
+      this.data.sales.unshift(sale);
+    }
+
+    if (updates.party_name !== undefined) {
+      sale.party_name = updates.party_name;
+    }
+
     for (const newItem of updates.items) {
       const oldItem = sale.items?.find((it) => it.item_id === newItem.item_id);
       const oldQty = oldItem ? Number(oldItem.quantity) : 0;
@@ -1212,6 +1260,42 @@ class LocalEngine {
       this.data.expenses.splice(idx, 1);
       this.saveToStorage();
     }
+  }
+
+  public updateExpense(
+    id: string,
+    payload: {
+      recipient_name?: string;
+      reason?: string;
+      amount?: number;
+      expense_date?: string;
+      notes?: string;
+    }
+  ): Expense {
+    let expense = this.data.expenses.find((e) => e.id === id);
+    if (!expense) {
+      expense = {
+        id,
+        expense_number: `EXP-${Date.now().toString().slice(-4)}`,
+        recipient_name: payload.recipient_name || 'Cash',
+        reason: payload.reason || 'Expense',
+        amount: Number(payload.amount) || 0,
+        expense_date: payload.expense_date || new Date().toISOString().split('T')[0],
+        notes: payload.notes || '',
+        updated_at: new Date().toISOString(),
+      };
+      this.data.expenses.push(expense);
+    } else {
+      if (payload.recipient_name !== undefined) expense.recipient_name = payload.recipient_name;
+      if (payload.reason !== undefined) expense.reason = payload.reason;
+      if (payload.amount !== undefined) expense.amount = Number(payload.amount);
+      if (payload.expense_date !== undefined) expense.expense_date = payload.expense_date;
+      if (payload.notes !== undefined) expense.notes = payload.notes;
+      expense.updated_at = new Date().toISOString();
+    }
+
+    this.saveToStorage();
+    return expense;
   }
 
   // --- QUERIES & REPORTS ---
