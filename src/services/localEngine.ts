@@ -902,19 +902,9 @@ class LocalEngine {
     const pIdx = this.data.purchases.findIndex((p) => p.id === purchaseId);
     if (pIdx === -1) return;
     const purchase = this.data.purchases[pIdx];
+    const affectedItemIds = (purchase.items || []).map((it) => it.item_id);
 
-    // 1. Rollback stock for all items purchased
-    if (purchase.items) {
-      for (const it of purchase.items) {
-        const item = this.getItemById(it.item_id);
-        if (item) {
-          item.current_stock = Math.max(0, Number(item.current_stock || 0) - Number(it.quantity || 0));
-          item.updated_at = new Date().toISOString();
-        }
-      }
-    }
-
-    // 2. Rollback party balance if due amount was added
+    // 1. Rollback party balance if due amount was added
     if (purchase.party_id && purchase.due_amount > 0) {
       const party = this.getPartyById(purchase.party_id);
       if (party) {
@@ -923,16 +913,29 @@ class LocalEngine {
       }
     }
 
-    // 3. Remove inventory ledger entries for this purchase
+    // 2. Remove inventory ledger entries for this purchase
     this.data.inventory_ledger = this.data.inventory_ledger.filter(
       (l) => l.reference_id !== purchaseId && l.reference_number !== purchase.purchase_number
     );
 
-    // 4. Remove payments linked to this purchase
+    // 3. Remove payments linked to this purchase
     this.data.payments = this.data.payments.filter((pay) => pay.purchase_id !== purchaseId);
 
-    // 5. Remove the purchase record
+    // 4. Remove the purchase record
     this.data.purchases.splice(pIdx, 1);
+
+    // 5. Recalculate true current_stock for affected items from remaining ledger
+    const zeroFloor = this.data.business?.settings?.negative_stock_zero_floor ?? false;
+    for (const itemId of affectedItemIds) {
+      const item = this.getItemById(itemId);
+      if (item) {
+        const itemLedger = this.data.inventory_ledger.filter((l) => l.item_id === itemId);
+        const sumChange = itemLedger.reduce((s, l) => s + Number(l.quantity_change || 0), 0);
+        item.current_stock = zeroFloor ? Math.max(0, sumChange) : sumChange;
+        item.updated_at = new Date().toISOString();
+      }
+    }
+
     this.saveToStorage();
   }
 
@@ -940,19 +943,9 @@ class LocalEngine {
     const sIdx = this.data.sales.findIndex((s) => s.id === saleId);
     if (sIdx === -1) return;
     const sale = this.data.sales[sIdx];
+    const affectedItemIds = (sale.items || []).map((it) => it.item_id);
 
-    // 1. Return stock for all items sold
-    if (sale.items) {
-      for (const it of sale.items) {
-        const item = this.getItemById(it.item_id);
-        if (item) {
-          item.current_stock = Number(item.current_stock || 0) + Number(it.quantity || 0);
-          item.updated_at = new Date().toISOString();
-        }
-      }
-    }
-
-    // 2. Rollback party balance if due amount was added
+    // 1. Rollback party balance if due amount was added
     if (sale.party_id && sale.due_amount > 0) {
       const party = this.getPartyById(sale.party_id);
       if (party) {
@@ -961,16 +954,29 @@ class LocalEngine {
       }
     }
 
-    // 3. Remove inventory ledger entries for this sale
+    // 2. Remove inventory ledger entries for this sale
     this.data.inventory_ledger = this.data.inventory_ledger.filter(
       (l) => l.reference_id !== saleId && l.reference_number !== sale.sale_number
     );
 
-    // 4. Remove payments linked to this sale
+    // 3. Remove payments linked to this sale
     this.data.payments = this.data.payments.filter((pay) => pay.sale_id !== saleId);
 
-    // 5. Remove the sale record
+    // 4. Remove the sale record
     this.data.sales.splice(sIdx, 1);
+
+    // 5. Recalculate true current_stock for affected items from remaining ledger
+    const zeroFloor = this.data.business?.settings?.negative_stock_zero_floor ?? false;
+    for (const itemId of affectedItemIds) {
+      const item = this.getItemById(itemId);
+      if (item) {
+        const itemLedger = this.data.inventory_ledger.filter((l) => l.item_id === itemId);
+        const sumChange = itemLedger.reduce((s, l) => s + Number(l.quantity_change || 0), 0);
+        item.current_stock = zeroFloor ? Math.max(0, sumChange) : sumChange;
+        item.updated_at = new Date().toISOString();
+      }
+    }
+
     this.saveToStorage();
   }
 

@@ -671,21 +671,35 @@ export const api = {
     if (isSupabaseConfigured && supabase) {
       try {
         const { data: pItems } = await supabase.from('purchase_items').select('*').eq('purchase_id', purchaseId);
-        if (pItems && pItems.length > 0) {
-          for (const it of pItems) {
-            const { data: item } = await supabase.from('items').select('current_stock').eq('id', it.item_id).single();
-            if (item) {
-              const newStock = Math.max(0, Number(item.current_stock || 0) - Number(it.quantity || 0));
-              await supabase.from('items').update({ current_stock: newStock }).eq('id', it.item_id);
-            }
-          }
-        }
+        const affectedItemIds = (pItems || []).map((it) => it.item_id);
+
         await Promise.allSettled([
           supabase.from('inventory_ledger').delete().eq('reference_id', purchaseId),
           supabase.from('payments').delete().eq('purchase_id', purchaseId),
           supabase.from('purchase_items').delete().eq('purchase_id', purchaseId),
         ]);
         await supabase.from('purchases').delete().eq('id', purchaseId);
+
+        // Recalculate true current_stock from remaining ledger entries
+        const biz = await this.getBusiness();
+        const zeroFloor = biz?.settings?.negative_stock_zero_floor ?? false;
+
+        for (const itemId of affectedItemIds) {
+          const { data: remainingLedger } = await supabase
+            .from('inventory_ledger')
+            .select('quantity_change')
+            .eq('item_id', itemId);
+
+          const trueStock = (remainingLedger || []).reduce(
+            (sum: number, l: any) => sum + Number(l.quantity_change || 0),
+            0
+          );
+          const finalStock = zeroFloor ? Math.max(0, trueStock) : trueStock;
+          await supabase
+            .from('items')
+            .update({ current_stock: finalStock, updated_at: new Date().toISOString() })
+            .eq('id', itemId);
+        }
       } catch (e) {
         console.warn('Supabase deletePurchase warning, continuing with localDb:', e);
       }
@@ -900,21 +914,35 @@ export const api = {
     if (isSupabaseConfigured && supabase) {
       try {
         const { data: sItems } = await supabase.from('sale_items').select('*').eq('sale_id', saleId);
-        if (sItems && sItems.length > 0) {
-          for (const it of sItems) {
-            const { data: item } = await supabase.from('items').select('current_stock').eq('id', it.item_id).single();
-            if (item) {
-              const newStock = Number(item.current_stock || 0) + Number(it.quantity || 0);
-              await supabase.from('items').update({ current_stock: newStock }).eq('id', it.item_id);
-            }
-          }
-        }
+        const affectedItemIds = (sItems || []).map((it) => it.item_id);
+
         await Promise.allSettled([
           supabase.from('inventory_ledger').delete().eq('reference_id', saleId),
           supabase.from('payments').delete().eq('sale_id', saleId),
           supabase.from('sale_items').delete().eq('sale_id', saleId),
         ]);
         await supabase.from('sales').delete().eq('id', saleId);
+
+        // Recalculate true current_stock from remaining ledger entries
+        const biz = await this.getBusiness();
+        const zeroFloor = biz?.settings?.negative_stock_zero_floor ?? false;
+
+        for (const itemId of affectedItemIds) {
+          const { data: remainingLedger } = await supabase
+            .from('inventory_ledger')
+            .select('quantity_change')
+            .eq('item_id', itemId);
+
+          const trueStock = (remainingLedger || []).reduce(
+            (sum: number, l: any) => sum + Number(l.quantity_change || 0),
+            0
+          );
+          const finalStock = zeroFloor ? Math.max(0, trueStock) : trueStock;
+          await supabase
+            .from('items')
+            .update({ current_stock: finalStock, updated_at: new Date().toISOString() })
+            .eq('id', itemId);
+        }
       } catch (e) {
         console.warn('Supabase deleteSale warning, continuing with localDb:', e);
       }
