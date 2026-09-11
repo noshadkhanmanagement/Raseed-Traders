@@ -34,10 +34,12 @@ export const Settings: React.FC = () => {
   const [address, setAddress] = useState('Behind Masjid, Bus Stand, Lakhnadon 480886');
 
   const [allowNegativeStock, setAllowNegativeStock] = useState(false);
+  const [negativeStockZeroFloor, setNegativeStockZeroFloor] = useState(false);
   const [defaultUnit, setDefaultUnit] = useState<ScrapUnit>('KG');
 
   const [isSaved, setIsSaved] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
+  const [isSettingsLoaded, setIsSettingsLoaded] = useState(false);
 
   // Manage Materials State
   const [items, setItems] = useState<ScrapItem[]>([]);
@@ -65,9 +67,12 @@ export const Settings: React.FC = () => {
       setPhone(biz.phone || '+91 744 061 9649');
       setAddress(biz.address || 'Behind Masjid, Bus Stand, Lakhnadon 480886');
       setAllowNegativeStock(biz.settings?.allow_negative_stock ?? false);
+      setNegativeStockZeroFloor(biz.settings?.negative_stock_zero_floor ?? false);
       setDefaultUnit(biz.settings?.default_unit ?? 'KG');
+      setIsSettingsLoaded(true);
     } catch (err) {
       console.error(err);
+      setIsSettingsLoaded(true);
     }
   }, []);
 
@@ -97,6 +102,7 @@ export const Settings: React.FC = () => {
       await api.updateBusiness({ name, phone, address });
       await api.updateSettings({
         allow_negative_stock: allowNegativeStock,
+        negative_stock_zero_floor: negativeStockZeroFloor,
         default_unit: defaultUnit,
       });
 
@@ -109,6 +115,40 @@ export const Settings: React.FC = () => {
     } catch (err) {
       console.error(err);
       setSaveMessage('Error updating settings.');
+    }
+  };
+
+  const handleToggleNegativeStock = async (checked: boolean) => {
+    setAllowNegativeStock(checked);
+    if (checked) {
+      setNegativeStockZeroFloor(false);
+    }
+    try {
+      await api.updateSettings({
+        allow_negative_stock: checked,
+        negative_stock_zero_floor: checked ? false : negativeStockZeroFloor,
+      });
+      setItemMessage(checked ? 'Allow Negative Stock enabled (stock can go minus)' : 'Strict stock mode enabled');
+      setTimeout(() => setItemMessage(''), 3000);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleToggleZeroFloor = async (checked: boolean) => {
+    setNegativeStockZeroFloor(checked);
+    if (checked) {
+      setAllowNegativeStock(false);
+    }
+    try {
+      await api.updateSettings({
+        negative_stock_zero_floor: checked,
+        allow_negative_stock: checked ? false : allowNegativeStock,
+      });
+      setItemMessage(checked ? 'Zero-floor enabled (stock stays at 0, not below 0)' : 'Strict stock mode enabled');
+      setTimeout(() => setItemMessage(''), 3000);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -726,6 +766,86 @@ export const Settings: React.FC = () => {
             </button>
           </div>
         </form>
+      </div>
+
+      {/* SECTION: STOCK & SELLING RULES (स्टॉक व बिक्री नियम) */}
+      <div className="space-y-1.5">
+        <div className="px-3 text-[11px] font-bold text-zinc-400 uppercase tracking-wider flex items-center justify-between">
+          <span>Stock & Selling Rules (स्टॉक व बिक्री नियम)</span>
+          <span className="text-[10px] text-zinc-400 font-normal">Negative & 0-Floor</span>
+        </div>
+
+        <div className="rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs divide-y divide-zinc-100 dark:divide-zinc-800/80 overflow-hidden">
+          {/* Option 1: Allow Negative Stock */}
+          <div className="p-3 sm:px-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-rose-500 text-white flex items-center justify-center shrink-0">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              </div>
+              <div>
+                <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
+                  Allow Negative Stock (नेगेटिव स्टॉक अनुमति)
+                </div>
+                <div className="text-[10px] text-zinc-400">
+                  बिक्री पर स्टॉक माइनस में जा सकता है (जैसे: -2,000 kg)
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              id="toggle-allow-negative-stock"
+              data-loaded={isSettingsLoaded}
+              aria-checked={allowNegativeStock}
+              onClick={() => handleToggleNegativeStock(!allowNegativeStock)}
+              className={`w-11 h-6 rounded-full transition-colors relative focus:outline-none shrink-0 flex items-center px-0.5 ${
+                allowNegativeStock ? 'bg-emerald-500' : 'bg-zinc-300 dark:bg-zinc-700'
+              }`}
+            >
+              <span
+                className={`block w-5 h-5 rounded-full bg-white shadow-xs transition-transform transform ${
+                  allowNegativeStock ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* Option 2: Allow Negative Entries with 0 Floor */}
+          <div className="p-3 sm:px-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-teal-500 text-white flex items-center justify-center shrink-0 font-black text-xs">
+                0
+              </div>
+              <div>
+                <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
+                  Allow Negative Entries with 0 Floor (0 से नीचे न जाने दें)
+                </div>
+                <div className="text-[10px] text-zinc-400">
+                  ओवरसेलिंग की अनुमति होगी, पर स्टॉक 0 पर ही रुकेगा (माइनस में नहीं जाएगा)
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              id="toggle-negative-zero-floor"
+              data-loaded={isSettingsLoaded}
+              aria-checked={negativeStockZeroFloor}
+              onClick={() => handleToggleZeroFloor(!negativeStockZeroFloor)}
+              className={`w-11 h-6 rounded-full transition-colors relative focus:outline-none shrink-0 flex items-center px-0.5 ${
+                negativeStockZeroFloor ? 'bg-emerald-500' : 'bg-zinc-300 dark:bg-zinc-700'
+              }`}
+            >
+              <span
+                className={`block w-5 h-5 rounded-full bg-white shadow-xs transition-transform transform ${
+                  negativeStockZeroFloor ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* SECTION B: DATA & BACKUP (डेटा बैकअप) */}

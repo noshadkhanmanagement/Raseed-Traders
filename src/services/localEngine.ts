@@ -98,6 +98,7 @@ export const getInitialData = (): AppDatabaseSchema => {
     address: 'Behind Masjid, Bus Stand, Lakhnadon 480886',
     settings: {
       allow_negative_stock: false,
+      negative_stock_zero_floor: false,
       default_unit: 'KG',
       stock_warning_threshold: 50,
       currency: '₹',
@@ -769,13 +770,15 @@ class LocalEngine {
     const safeParty: Party = party;
 
     const allowNegativeStock = this.data.business.settings?.allow_negative_stock ?? false;
+    const negativeStockZeroFloor = this.data.business.settings?.negative_stock_zero_floor ?? false;
+    const canOversell = allowNegativeStock || negativeStockZeroFloor;
 
     // 1. Stock Validation Check First
     for (const it of payload.items) {
       const item = this.getItemById(it.item_id);
       if (!item) throw new Error(`Item ${it.item_id} not found`);
 
-      if (!allowNegativeStock && (item.current_stock || 0) < it.quantity) {
+      if (!canOversell && (item.current_stock || 0) < it.quantity) {
         throw new Error(
           `Insufficient stock for ${item.name} (${item.local_name}). Available: ${item.current_stock} ${item.default_unit}. Requested: ${it.quantity} ${item.default_unit}. Enable negative stock in Settings to bypass.`
         );
@@ -806,7 +809,9 @@ class LocalEngine {
       totalCogs += lineCost;
       totalGrossProfit += lineProfit;
 
-      const newStock = currStock - qty;
+      const newStock = negativeStockZeroFloor
+        ? Math.max(0, currStock - qty)
+        : (currStock - qty);
       item.current_stock = newStock;
       item.default_sale_rate = rate;
       item.updated_at = now;
@@ -1069,6 +1074,9 @@ class LocalEngine {
       sale.party_name = updates.party_name;
     }
 
+    const allowNegativeStock = this.data.business.settings?.allow_negative_stock ?? false;
+    const negativeStockZeroFloor = this.data.business.settings?.negative_stock_zero_floor ?? false;
+
     for (const newItem of updates.items) {
       const oldItem = sale.items?.find((it) => it.item_id === newItem.item_id);
       const oldQty = oldItem ? Number(oldItem.quantity) : 0;
@@ -1077,7 +1085,9 @@ class LocalEngine {
 
       const item = this.getItemById(newItem.item_id);
       if (item) {
-        item.current_stock = Math.max(0, Number(item.current_stock || 0) - diff);
+        item.current_stock = (negativeStockZeroFloor || !allowNegativeStock)
+          ? Math.max(0, Number(item.current_stock || 0) - diff)
+          : Number(item.current_stock || 0) - diff;
         item.default_sale_rate = newItem.rate;
         item.updated_at = now;
       }

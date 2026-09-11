@@ -76,11 +76,14 @@ export const api = {
   },
 
   async getItemRateHistory(itemId: string) {
-    const [items, purchases, sales] = await Promise.all([
+    const [items, purchases, sales, biz] = await Promise.all([
       this.getItems(true),
       this.getPurchases(),
       this.getSales(),
+      this.getBusiness(),
     ]);
+
+    const zeroFloor = biz?.settings?.negative_stock_zero_floor ?? false;
 
     const item = items.find((it) => it.id === itemId);
 
@@ -214,7 +217,7 @@ export const api = {
       if (m.type === 'PURCHASE') {
         runningStock += m.quantity;
       } else {
-        runningStock -= m.quantity;
+        runningStock = zeroFloor ? Math.max(0, runningStock - m.quantity) : (runningStock - m.quantity);
         saleRemainingMap.set(m.id, Number(runningStock.toFixed(3)));
       }
       return {
@@ -759,26 +762,131 @@ export const api = {
     if (isSupabaseConfigured && supabase) {
       try {
         const biz = await this.getBusiness();
+        const allowNegative = biz?.settings?.allow_negative_stock ?? false;
+        const zeroFloor = biz?.settings?.negative_stock_zero_floor ?? false;
+        const canOversell = allowNegative || zeroFloor;
+
         const saleNumber = `SALE-${payload.sale_date.replace(/-/g, '')}-${Date.now().toString().slice(-4)}`;
         const totalAmount = payload.items.reduce((s, it) => s + it.amount, 0);
 
         const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         const safePartyId = isValidUUID.test(payload.party_id) ? payload.party_id : '00000000-0000-0000-0000-000000000002';
 
-        const rpcPayload = {
+        // 1. Stock check if neither negative mode is enabled
+        if (!canOversell) {
+          for (const it of payload.items) {
+            const { data: curItem } = await supabase.from('items').select('*').eq('id', it.item_id).single();
+            if (curItem && (curItem.current_stock || 0) < it.quantity) {
+              throw new Error(
+                `Insufficient stock for ${curItem.name}. Available: ${curItem.current_stock} ${curItem.default_unit}. Requested: ${it.quantity} ${curItem.default_unit}.`
+              );
+            }
+          }
+        }
+
+        // 2. If allowNegative (without zeroFloor), try Postgres RPC first
+        if (allowNegative && !zeroFloor) {
+          const rpcPayload = {
+            business_id: biz.id,
+            sale_number: saleNumber,
+            party_id: safePartyId,
+            sale_date: payload.sale_date,
+            total_amount: totalAmount,
+            received_amount: payload.received_amount,
+            items: payload.items,
+          };
+
+          const { data, error } = await supabase.rpc('rpc_create_sale', { p_payload: rpcPayload });
+          if (!error && data?.success) {
+            const sales = await this.getSales();
+            const created = sales.find((s) => s.id === data.sale_id);
+            if (created) return created;
+          }
+        }
+
+        // 3. Direct Supabase insert (handles zero-floor clamping and standard sales)
+        const saleId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : '00000000-0000-0000-0000-' + Date.now().toString().slice(-12);
+        const nowIso = new Date().toISOString();
+
+        const { data: newSale, error: saleErr } = await supabase.from('sales').insert([{
+          id: saleId,
           business_id: biz.id,
           sale_number: saleNumber,
           party_id: safePartyId,
           sale_date: payload.sale_date,
+          subtotal: totalAmount,
           total_amount: totalAmount,
           received_amount: payload.received_amount,
-          items: payload.items,
-        };
+          due_amount: 0,
+          total_cost: 0,
+          total_profit: 0,
+          status: 'FINAL',
+          created_at: nowIso,
+          updated_at: nowIso,
+        }]).select().single();
 
-        const { data, error } = await supabase.rpc('rpc_create_sale', { p_payload: rpcPayload });
-        if (!error && data?.success) {
+        if (!saleErr && newSale) {
+          for (const it of payload.items) {
+            const saleItemId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : '00000000-0000-0000-0001-' + Date.now().toString().slice(-12);
+            await supabase.from('sale_items').insert([{
+              id: saleItemId,
+              sale_id: saleId,
+              item_id: it.item_id,
+              quantity: it.quantity,
+              unit: it.unit,
+              rate: it.rate,
+              amount: it.amount,
+            }]);
+
+            // Update item stock with zeroFloor clamping
+            let targetStock = 0;
+            const { data: curItem } = await supabase.from('items').select('current_stock').eq('id', it.item_id).single();
+            if (curItem) {
+              const currStock = Number(curItem.current_stock || 0);
+              targetStock = zeroFloor
+                ? Math.max(0, currStock - it.quantity)
+                : (currStock - it.quantity);
+              await supabase.from('items').update({
+                current_stock: targetStock,
+                default_sale_rate: it.rate,
+                updated_at: nowIso,
+              }).eq('id', it.item_id);
+            }
+
+            // Ledger entry
+            await supabase.from('inventory_ledger').insert([{
+              business_id: biz.id,
+              item_id: it.item_id,
+              transaction_type: 'SALE',
+              reference_id: saleId,
+              reference_number: saleNumber,
+              quantity_change: -it.quantity,
+              running_quantity: targetStock,
+              party_id: safePartyId,
+              unit: it.unit,
+              rate: it.rate,
+              created_at: nowIso,
+            }]);
+          }
+
+          // Payment entry
+          if (payload.received_amount > 0) {
+            const payNum = `PAY-${payload.sale_date.replace(/-/g, '')}-${Date.now().toString().slice(-4)}`;
+            await supabase.from('payments').insert([{
+              business_id: biz.id,
+              party_id: safePartyId,
+              payment_number: payNum,
+              sale_id: saleId,
+              amount: payload.received_amount,
+              payment_type: 'PAYMENT_FROM_CUSTOMER',
+              payment_method: 'CASH',
+              payment_date: payload.sale_date,
+              created_at: nowIso,
+            }]);
+          }
+
           const sales = await this.getSales();
-          const created = sales.find((s) => s.id === data.sale_id);
+          const created = sales.find((s) => s.id === saleId);
           if (created) return created;
         }
       } catch (e) {
@@ -824,13 +932,20 @@ export const api = {
   ): Promise<Sale> {
     if (isSupabaseConfigured && supabase) {
       try {
+        const biz = await this.getBusiness();
+        const zeroFloor = biz?.settings?.negative_stock_zero_floor ?? false;
+        const allowNeg = biz?.settings?.allow_negative_stock ?? false;
+
         for (const it of updates.items) {
           const { data: existingIt } = await supabase.from('sale_items').select('quantity').eq('sale_id', saleId).eq('item_id', it.item_id).single();
           const oldQty = existingIt ? Number(existingIt.quantity) : 0;
           const diff = Number(it.quantity) - oldQty;
           const { data: curItem } = await supabase.from('items').select('current_stock').eq('id', it.item_id).single();
           if (curItem) {
-            await supabase.from('items').update({ current_stock: Math.max(0, Number(curItem.current_stock || 0) - diff), default_sale_rate: it.rate }).eq('id', it.item_id);
+            const targetStock = (zeroFloor || !allowNeg)
+              ? Math.max(0, Number(curItem.current_stock || 0) - diff)
+              : Number(curItem.current_stock || 0) - diff;
+            await supabase.from('items').update({ current_stock: targetStock, default_sale_rate: it.rate }).eq('id', it.item_id);
           }
           await supabase.from('sale_items').update({ quantity: it.quantity, rate: it.rate, amount: it.amount }).eq('sale_id', saleId).eq('item_id', it.item_id);
         }

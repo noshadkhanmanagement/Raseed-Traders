@@ -164,7 +164,8 @@ export const SaleModal: React.FC<SaleModalProps> = ({
     }
 
     // Stock check if negative stock is not allowed
-    if (!settings?.allow_negative_stock) {
+    const canOversell = Boolean(settings?.allow_negative_stock || settings?.negative_stock_zero_floor);
+    if (!canOversell) {
       for (const line of validLines) {
         const item = items.find((it) => it.id === line.item_id);
         const reqQty = parseFloat(line.quantity);

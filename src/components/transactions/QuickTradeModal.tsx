@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { BottomSheet } from '../common/BottomSheet';
-import { ScrapItem } from '../../types';
+import { ScrapItem, BusinessSettings } from '../../types';
 import { api } from '../../services/api';
 import { formatCurrency, getLocalDateString } from '../../utils/formatters';
 import { IconPlus, IconClose } from '../common/Icons';
@@ -36,12 +36,16 @@ export const QuickTradeModal: React.FC<QuickTradeModalProps> = ({
   const [partyName, setPartyName] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [settings, setSettings] = useState<BusinessSettings | null>(null);
 
   const isBuy = type === 'buy';
 
   useEffect(() => {
     if (isOpen) {
       setErrorMessage('');
+      api.getBusiness().then((biz) => {
+        if (biz?.settings) setSettings(biz.settings);
+      }).catch(console.error);
       const defaultId = initialItemId || (items.length > 0 ? items[0].id : '');
       setTradeLines([{ id: nextLineId(), itemId: defaultId, quantity: '', rate: '' }]);
       setPartyName('');
@@ -112,7 +116,8 @@ export const QuickTradeModal: React.FC<QuickTradeModalProps> = ({
         setErrorMessage(`Please enter a valid rate for ${ld.item.name}.`);
         return;
       }
-      if (!isBuy && ld.qty > ld.item.current_stock) {
+      const canOversell = Boolean(settings?.allow_negative_stock || settings?.negative_stock_zero_floor);
+      if (!isBuy && !canOversell && ld.qty > ld.item.current_stock) {
         setErrorMessage(`Insufficient stock for ${ld.item.name}! Available: ${ld.item.current_stock} ${ld.item.default_unit}`);
         return;
       }

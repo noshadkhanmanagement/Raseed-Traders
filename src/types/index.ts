@@ -21,6 +21,7 @@ export type ExpenseCategory =
 
 export interface BusinessSettings {
   allow_negative_stock: boolean;
+  negative_stock_zero_floor?: boolean;
   default_unit: ScrapUnit;
   stock_warning_threshold: number;
   currency: string;
